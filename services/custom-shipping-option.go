@@ -2,49 +2,61 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
 
 type CustomShippingOptionService struct {
-	ctx  context.Context
-	repo *repository.CustomShippingOptionRepo
+	ctx context.Context
+	r   Registry
 }
 
 func NewCustomShippingOptionService(
-	ctx context.Context,
-	repo *repository.CustomShippingOptionRepo,
+	r Registry,
 ) *CustomShippingOptionService {
 	return &CustomShippingOptionService{
-		ctx,
-		repo,
+		context.Background(),
+		r,
 	}
 }
 
-func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config repository.Options) (*models.CustomShippingOption, error) {
+func (s *CustomShippingOptionService) SetContext(context context.Context) *CustomShippingOptionService {
+	s.ctx = context
+	return s
+}
+
+func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config sql.Options) (*models.CustomShippingOption, *utils.ApplictaionError) {
+	if id == uuid.Nil {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"id" must be defined`,
+			"500",
+			nil,
+		)
+	}
 	var res *models.CustomShippingOption
-	query := repository.BuildQuery(models.CustomShippingOption{Model: core.Model{Id: id}}, config)
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
-		return nil, errors.New("Custom shipping option with id: " + id.String() + " was not found.")
-	}
-	return res, nil
-}
-
-func (s *CustomShippingOptionService) List(selector models.CustomShippingOption, config repository.Options) ([]models.CustomShippingOption, error) {
-	var res []models.CustomShippingOption
-	query := repository.BuildQuery(selector, config)
-	if err := s.repo.Find(s.ctx, res, query); err != nil {
+	query := sql.BuildQuery(models.CustomShippingOption{Model: core.Model{Id: id}}, config)
+	if err := s.r.CustomShippingOptionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *CustomShippingOptionService) Create(data []models.CustomShippingOption) ([]models.CustomShippingOption, error) {
-	if err := s.repo.SaveSlice(s.ctx, data); err != nil {
+func (s *CustomShippingOptionService) List(selector models.CustomShippingOption, config sql.Options) ([]models.CustomShippingOption, *utils.ApplictaionError) {
+	var res []models.CustomShippingOption
+	query := sql.BuildQuery(selector, config)
+	if err := s.r.CustomShippingOptionRepository().Find(s.ctx, res, query); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (s *CustomShippingOptionService) Create(data []models.CustomShippingOption) ([]models.CustomShippingOption, *utils.ApplictaionError) {
+	if err := s.r.CustomShippingOptionRepository().SaveSlice(s.ctx, data); err != nil {
 		return nil, err
 	}
 

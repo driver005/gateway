@@ -1,6 +1,9 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/driver005/gateway/core"
+	"github.com/google/uuid"
+)
 
 // ReturnItem - Correlates a Line Item with a Return, keeping track of the quantity of the Line Item that will be returned.
 type ReturnItem struct {
@@ -22,10 +25,10 @@ type ReturnItem struct {
 	IsRequested bool `json:"is_requested" gorm:"default:null"`
 
 	// The quantity that was originally requested to be returned.
-	RequestedQuantity int32 `json:"requested_quantity" gorm:"default:null"`
+	RequestedQuantity int `json:"requested_quantity" gorm:"default:null"`
 
 	// The quantity that was received in the warehouse.
-	RecievedQuantity int32 `json:"recieved_quantity" gorm:"default:null"`
+	RecievedQuantity int `json:"recieved_quantity" gorm:"default:null"`
 
 	// The ID of the reason for returning the item.
 	ReasonId uuid.NullUUID `json:"reason_id" gorm:"default:null"`
@@ -34,4 +37,6 @@ type ReturnItem struct {
 
 	// An optional note with additional details about the Return.
 	Note string `json:"note" gorm:"default:null"`
+
+	Metadata core.JSONB `json:"metadata" gorm:"default:null"`
 }

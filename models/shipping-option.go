@@ -17,7 +17,7 @@ type ShippingOption struct {
 	// The data needed for the Fulfillment Provider to identify the Shipping Option.
 	Data core.JSONB `json:"data" gorm:"default:null"`
 
-	// [EXPERIMENTAL] Does the shipping option price include tax
+	// Does the shipping option price include tax
 	IncludesTax bool `json:"includes_tax" gorm:"default:null"`
 
 	// Flag to indicate if the Shipping Option can be used for Return shipments.

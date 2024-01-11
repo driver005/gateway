@@ -7,11 +7,6 @@ type ReturnedData struct {
 }
 
 type INotificationService interface {
-	SendNotification(event string, data interface{}, attachmentGenerator interface{}) (ReturnedData, error)
-	ResendNotification(notification interface{}, config interface{}, attachmentGenerator interface{}) (ReturnedData, error)
-}
-
-func IsNotificationService(object interface{}) bool {
-	_, ok := object.(INotificationService)
-	return ok
+	SendNotification(event string, data interface{}, attachmentGenerator interface{}) (*ReturnedData, error)
+	ResendNotification(notification interface{}, config interface{}, attachmentGenerator interface{}) (*ReturnedData, error)
 }

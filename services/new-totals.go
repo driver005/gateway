@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"math"
 
 	"github.com/driver005/gateway/interfaces"
@@ -13,24 +12,25 @@ import (
 )
 
 type NewTotalsService struct {
-	ctx                    context.Context
-	taxProviderService     *TaxProviderService
-	taxCalculationStrategy interfaces.ITaxCalculationStrategy
+	ctx context.Context
+	r   Registry
 }
 
 func NewNewTotalsServices(
-	ctx context.Context,
-	taxProviderService *TaxProviderService,
-	taxCalculationStrategy interfaces.ITaxCalculationStrategy,
+	r Registry,
 ) *NewTotalsService {
 	return &NewTotalsService{
-		ctx,
-		taxProviderService,
-		taxCalculationStrategy,
+		context.Background(),
+		r,
 	}
 }
 
-func (s *NewTotalsService) GetLineItemTotals(items []models.LineItem, includeTax bool, calculationContext *interfaces.TaxCalculationContext, taxRate *float64) (map[uuid.UUID]LineItemTotals, error) {
+func (s *NewTotalsService) SetContext(context context.Context) *NewTotalsService {
+	s.ctx = context
+	return s
+}
+
+func (s *NewTotalsService) GetLineItemTotals(items []models.LineItem, includeTax bool, calculationContext *interfaces.TaxCalculationContext, taxRate *float64) (map[uuid.UUID]models.LineItem, *utils.ApplictaionError) {
 	lineItemsTaxLinesMap := make(map[uuid.UUID][]models.LineItemTaxLine)
 	if taxRate == nil && includeTax {
 		itemContainsTaxLines := false
@@ -41,7 +41,7 @@ func (s *NewTotalsService) GetLineItemTotals(items []models.LineItem, includeTax
 			}
 		}
 		if !itemContainsTaxLines {
-			lineItemsTaxLines, err := s.taxProviderService.GetTaxLinesMap(items, calculationContext)
+			lineItemsTaxLines, err := s.r.TaxProviderService().SetContext(s.ctx).GetTaxLinesMap(items, calculationContext)
 			if err != nil {
 				return nil, err
 			}
@@ -58,27 +58,27 @@ func (s *NewTotalsService) GetLineItemTotals(items []models.LineItem, includeTax
 		lineItemAllocation types.LineAllocations,
 		taxLines []models.LineItemTaxLine,
 		calculationContext *interfaces.TaxCalculationContext,
-	) (LineItemTotals, error)
+	) (*models.LineItem, *utils.ApplictaionError)
 	if taxRate != nil {
 		calculationMethod = s.getLineItemTotalsLegacy
 	} else {
 		calculationMethod = s.getLineItemTotals
 	}
 
-	itemsTotals := make(map[uuid.UUID]LineItemTotals)
+	itemsTotals := make(map[uuid.UUID]models.LineItem)
 	for _, item := range items {
 		lineItemAllocation := calculationContext.AllocationMap[item.Id]
 		totals, err := calculationMethod(item, taxRate, includeTax, lineItemAllocation, lineItemsTaxLinesMap[item.Id], calculationContext)
 		if err != nil {
 			return nil, err
 		}
-		itemsTotals[item.Id] = totals
+		itemsTotals[item.Id] = *totals
 	}
 
 	return itemsTotals, nil
 }
 
-func (s *NewTotalsService) getLineItemTotals(item models.LineItem, taxRate *float64, includeTax bool, lineItemAllocation types.LineAllocations, taxLines []models.LineItemTaxLine, calculationContext *interfaces.TaxCalculationContext) (LineItemTotals, error) {
+func (s *NewTotalsService) getLineItemTotals(item models.LineItem, taxRate *float64, includeTax bool, lineItemAllocation types.LineAllocations, taxLines []models.LineItemTaxLine, calculationContext *interfaces.TaxCalculationContext) (*models.LineItem, *utils.ApplictaionError) {
 	subtotal := item.UnitPrice * float64(item.Quantity)
 	feature := true
 	if feature && item.IncludesTax {
@@ -88,7 +88,7 @@ func (s *NewTotalsService) getLineItemTotals(item models.LineItem, taxRate *floa
 	rawDiscountTotal := lineItemAllocation.Discount.Amount
 	discountTotal := math.Round(rawDiscountTotal)
 
-	totals := LineItemTotals{
+	totals := &models.LineItem{
 		UnitPrice:        item.UnitPrice,
 		Quantity:         item.Quantity,
 		Subtotal:         subtotal,
@@ -106,27 +106,37 @@ func (s *NewTotalsService) getLineItemTotals(item models.LineItem, taxRate *floa
 			totals.TaxLines = taxLines
 		}
 		if totals.TaxLines == nil && item.VariantId.UUID != uuid.Nil {
-			return LineItemTotals{}, errors.New("Tax Lines must be joined to calculate taxes")
+			return nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				"Tax Lines must be joined to calculate taxes",
+				"500",
+				nil,
+			)
 		}
 	}
 
 	if item.IsReturn {
 		if item.TaxLines == nil && item.VariantId.UUID != uuid.Nil {
-			return LineItemTotals{}, errors.New("Return Line Items must join tax lines")
+			return nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				"Return Line Items must join tax lines",
+				"500",
+				nil,
+			)
 		}
 	}
 
 	if len(totals.TaxLines) > 0 {
-		taxTotal, err := s.taxCalculationStrategy.Calculate([]models.LineItem{item}, totals.TaxLines, calculationContext)
+		taxTotal, err := s.r.TaxCalculationStrategy().Calculate([]models.LineItem{item}, totals.TaxLines, calculationContext)
 		if err != nil {
-			return LineItemTotals{}, err
+			return nil, err
 		}
 
 		noDiscountContext := calculationContext
 		noDiscountContext.AllocationMap = types.LineAllocationsMap{}
-		originalTaxTotal, err := s.taxCalculationStrategy.Calculate([]models.LineItem{item}, totals.TaxLines, noDiscountContext)
+		originalTaxTotal, err := s.r.TaxCalculationStrategy().Calculate([]models.LineItem{item}, totals.TaxLines, noDiscountContext)
 		if err != nil {
-			return LineItemTotals{}, err
+			return nil, err
 		}
 
 		feature = true
@@ -145,7 +155,7 @@ func (s *NewTotalsService) getLineItemTotals(item models.LineItem, taxRate *floa
 	return totals, nil
 }
 
-func (s *NewTotalsService) getLineItemTotalsLegacy(item models.LineItem, taxRate *float64, includeTax bool, lineItemAllocation types.LineAllocations, taxLines []models.LineItemTaxLine, calculationContext *interfaces.TaxCalculationContext) (LineItemTotals, error) {
+func (s *NewTotalsService) getLineItemTotalsLegacy(item models.LineItem, taxRate *float64, includeTax bool, lineItemAllocation types.LineAllocations, taxLines []models.LineItemTaxLine, calculationContext *interfaces.TaxCalculationContext) (*models.LineItem, *utils.ApplictaionError) {
 	subtotal := item.UnitPrice * float64(item.Quantity)
 	feature := true
 	if feature && item.IncludesTax {
@@ -155,7 +165,7 @@ func (s *NewTotalsService) getLineItemTotalsLegacy(item models.LineItem, taxRate
 	rawDiscountTotal := lineItemAllocation.Discount.Amount
 	discountTotal := math.Round(rawDiscountTotal)
 
-	totals := LineItemTotals{
+	totals := &models.LineItem{
 		UnitPrice:        item.UnitPrice,
 		Quantity:         item.Quantity,
 		Subtotal:         subtotal,
@@ -189,7 +199,7 @@ func (s *NewTotalsService) getLineItemTotalsLegacy(item models.LineItem, taxRate
 	return totals, nil
 }
 
-func (s *NewTotalsService) GetLineItemRefund(lineItem models.LineItem, calculationContext *interfaces.TaxCalculationContext, taxRate *float64) (float64, error) {
+func (s *NewTotalsService) GetLineItemRefund(lineItem models.LineItem, calculationContext *interfaces.TaxCalculationContext, taxRate *float64) (float64, *utils.ApplictaionError) {
 	if taxRate != nil {
 		return s.getLineItemRefundLegacy(lineItem, calculationContext, taxRate)
 	}
@@ -198,7 +208,12 @@ func (s *NewTotalsService) GetLineItemRefund(lineItem models.LineItem, calculati
 	includesTax := feature && lineItem.IncludesTax
 	discountAmount := calculationContext.AllocationMap[lineItem.Id].Discount.UnitAmount * float64(lineItem.Quantity)
 	if lineItem.TaxLines == nil {
-		return 0, errors.New("Cannot compute line item refund amount, tax lines are missing from the line item")
+		return 0, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"Cannot compute line item refund amount, tax lines are missing from the line item",
+			"500",
+			nil,
+		)
 	}
 
 	totalTaxRate := 0.0
@@ -220,7 +235,7 @@ func (s *NewTotalsService) GetLineItemRefund(lineItem models.LineItem, calculati
 	return lineSubtotal + taxTotal, nil
 }
 
-func (s *NewTotalsService) getLineItemRefundLegacy(lineItem models.LineItem, calculationContext *interfaces.TaxCalculationContext, taxRate *float64) (float64, error) {
+func (s *NewTotalsService) getLineItemRefundLegacy(lineItem models.LineItem, calculationContext *interfaces.TaxCalculationContext, taxRate *float64) (float64, *utils.ApplictaionError) {
 	feature := true
 	includesTax := feature && lineItem.IncludesTax
 	taxAmountIncludedInPrice := 0.0
@@ -233,9 +248,14 @@ func (s *NewTotalsService) getLineItemRefundLegacy(lineItem models.LineItem, cal
 	return math.Round(lineSubtotal * (1 + *taxRate/100)), nil
 }
 
-func (s *NewTotalsService) GetGiftCardTotals(giftCardableAmount float64, giftCardTransactions []models.GiftCardTransaction, region *models.Region, giftCards []models.GiftCard) (*Total, error) {
+func (s *NewTotalsService) GetGiftCardTotals(giftCardableAmount float64, giftCardTransactions []models.GiftCardTransaction, region *models.Region, giftCards []models.GiftCard) (*Total, *utils.ApplictaionError) {
 	if len(giftCards) == 0 && len(giftCardTransactions) == 0 {
-		return nil, errors.New("Cannot calculate the gift cart totals. Neither the gift cards or gift card transactions have been provided")
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"Cannot calculate the gift cart totals. Neither the gift cards or gift card transactions have been provided",
+			"500",
+			nil,
+		)
 	}
 
 	if len(giftCardTransactions) > 0 {
@@ -284,7 +304,7 @@ func (s *NewTotalsService) GetGiftCardTransactionsTotals(giftCardTransactions []
 	return result
 }
 
-func (s *NewTotalsService) GetShippingMethodTotals(shippingMethods []models.ShippingMethod, includeTax bool, discounts []models.Discount, taxRate *float64, calculationContext *interfaces.TaxCalculationContext) (map[uuid.UUID]ShippingMethodTotals, error) {
+func (s *NewTotalsService) GetShippingMethodTotals(shippingMethods []models.ShippingMethod, includeTax bool, discounts []models.Discount, taxRate *float64, calculationContext *interfaces.TaxCalculationContext) (map[uuid.UUID]models.ShippingMethod, *utils.ApplictaionError) {
 	shippingMethodsTaxLinesMap := make(map[uuid.UUID][]models.ShippingMethodTaxLine)
 	if taxRate == nil && includeTax {
 		shippingMethodContainsTaxLines := false
@@ -296,7 +316,7 @@ func (s *NewTotalsService) GetShippingMethodTotals(shippingMethods []models.Ship
 		}
 		if !shippingMethodContainsTaxLines {
 			calculationContext.ShippingMethods = shippingMethods
-			shippingMethodsTaxLines, err := s.taxProviderService.GetTaxLinesMap([]models.LineItem{}, calculationContext)
+			shippingMethodsTaxLines, err := s.r.TaxProviderService().SetContext(s.ctx).GetTaxLinesMap([]models.LineItem{}, calculationContext)
 			if err != nil {
 				return nil, err
 			}
@@ -306,14 +326,14 @@ func (s *NewTotalsService) GetShippingMethodTotals(shippingMethods []models.Ship
 		}
 	}
 
-	var calculationMethod func(shippingMethod models.ShippingMethod, includeTax bool, calculationContext *interfaces.TaxCalculationContext, taxLines []models.ShippingMethodTaxLine, discounts []models.Discount, taxRate float64) (*ShippingMethodTotals, error)
+	var calculationMethod func(shippingMethod models.ShippingMethod, includeTax bool, calculationContext *interfaces.TaxCalculationContext, taxLines []models.ShippingMethodTaxLine, discounts []models.Discount, taxRate float64) (*models.ShippingMethod, *utils.ApplictaionError)
 	if taxRate != nil {
 		calculationMethod = s.getShippingMethodTotalsLegacy
 	} else {
 		calculationMethod = s.getShippingMethodTotals
 	}
 
-	var shippingMethodsTotals map[uuid.UUID]ShippingMethodTotals
+	shippingMethodsTotals := make(map[uuid.UUID]models.ShippingMethod)
 	for _, method := range shippingMethods {
 		totals, err := calculationMethod(method, includeTax, calculationContext, shippingMethodsTaxLinesMap[method.Id], discounts, *taxRate)
 		if err != nil {
@@ -339,8 +359,8 @@ func (s *NewTotalsService) getShippingMethodTotals(
 	taxLines []models.ShippingMethodTaxLine,
 	discounts []models.Discount,
 	taxRate float64,
-) (*ShippingMethodTotals, error) {
-	totals := &ShippingMethodTotals{
+) (*models.ShippingMethod, *utils.ApplictaionError) {
+	totals := &models.ShippingMethod{
 		Price:            shippingMethod.Price,
 		OriginalTotal:    shippingMethod.Price,
 		Total:            shippingMethod.Price,
@@ -356,7 +376,12 @@ func (s *NewTotalsService) getShippingMethodTotals(
 		}
 
 		if len(totals.TaxLines) == 0 {
-			return totals, errors.New("Tax Lines must be joined to calculate shipping taxes")
+			return totals, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				"Tax Lines must be joined to calculate shipping taxes",
+				"500",
+				nil,
+			)
 		}
 	}
 
@@ -365,9 +390,9 @@ func (s *NewTotalsService) getShippingMethodTotals(
 	feature := false
 
 	if len(totals.TaxLines) > 0 {
-		var err error
+		var err *utils.ApplictaionError
 		includesTax := feature && shippingMethod.IncludesTax
-		totals.OriginalTaxTotal, err = s.taxCalculationStrategy.Calculate([]models.LineItem{}, totals.TaxLines, calculationContext)
+		totals.OriginalTaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{}, totals.TaxLines, calculationContext)
 		if err != nil {
 			return totals, err
 		}
@@ -383,7 +408,7 @@ func (s *NewTotalsService) getShippingMethodTotals(
 
 	hasFreeShipping := false
 	for _, d := range discounts {
-		if d.Rule.Type == models.DiscountRuleFreeShiping {
+		if d.Rule.Type == models.DiscountRuleFreeShipping {
 			hasFreeShipping = true
 			break
 		}
@@ -405,8 +430,8 @@ func (s *NewTotalsService) getShippingMethodTotalsLegacy(
 	taxLines []models.ShippingMethodTaxLine,
 	discounts []models.Discount,
 	taxRate float64,
-) (*ShippingMethodTotals, error) {
-	totals := &ShippingMethodTotals{
+) (*models.ShippingMethod, *utils.ApplictaionError) {
+	totals := &models.ShippingMethod{
 		Price:            shippingMethod.Price,
 		OriginalTotal:    shippingMethod.Price,
 		Total:            shippingMethod.Price,
@@ -421,7 +446,7 @@ func (s *NewTotalsService) getShippingMethodTotalsLegacy(
 
 	hasFreeShipping := false
 	for _, d := range discounts {
-		if d.Rule.Type == models.DiscountRuleFreeShiping {
+		if d.Rule.Type == models.DiscountRuleFreeShipping {
 			hasFreeShipping = true
 			break
 		}

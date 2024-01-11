@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type FulfillmentProviderRepo struct {
-	Repository[models.FulfillmentProvider]
+	sql.Repository[models.FulfillmentProvider]
 }
 
-func FulfillmentProviderRepository(db *gorm.DB) FulfillmentProviderRepo {
-	return FulfillmentProviderRepo{*NewRepository[models.FulfillmentProvider](db)}
+func FulfillmentProviderRepository(db *gorm.DB) *FulfillmentProviderRepo {
+	return &FulfillmentProviderRepo{*sql.NewRepository[models.FulfillmentProvider](db)}
 }

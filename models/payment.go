@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -38,7 +39,7 @@ type Payment struct {
 	Currency *Currency `json:"currency" gorm:"foreignKey:code;references:currency_code"`
 
 	// The amount of the original Payment amount that has been refunded back to the Customer.
-	AmountRefunded int32 `json:"amount_refunded" gorm:"default:null"`
+	AmountRefunded float64 `json:"amount_refunded" gorm:"default:null"`
 
 	// The id of the Payment Provider that is responsible for the Payment
 	ProviderId uuid.NullUUID `json:"provider_id"`
@@ -47,11 +48,32 @@ type Payment struct {
 	Data JSONB `json:"data" gorm:"default:null"`
 
 	// The date with timezone at which the Payment was captured.
-	CapturedAt time.Time `json:"captured_at" gorm:"default:null"`
+	CapturedAt *time.Time `json:"captured_at" gorm:"default:null"`
 
 	// The date with timezone at which the Payment was canceled.
-	CanceledAt time.Time `json:"canceled_at" gorm:"default:null"`
+	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
 
 	// Randomly generated key used to continue the completion of a payment in case of failure.
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
+}
+
+type PaymentStatus string
+
+const (
+	PaymentStatusNotPaid           PaymentStatus = "not_paid"
+	PaymentStatusAwaiting          PaymentStatus = "awaiting"
+	PaymentStatusCaptured          PaymentStatus = "captured"
+	PaymentStatusPartiallyRefunded PaymentStatus = "partially_refunded"
+	PaymentStatusRefunded          PaymentStatus = "refunded"
+	PaymentStatusCanceled          PaymentStatus = "canceled"
+	PaymentStatusRequiresAction    PaymentStatus = "requires_action"
+)
+
+func (pl *PaymentStatus) Scan(value interface{}) error {
+	*pl = PaymentStatus(value.([]byte))
+	return nil
+}
+
+func (pl PaymentStatus) Value() (driver.Value, error) {
+	return string(pl), nil
 }

@@ -2,14 +2,16 @@ package interfaces
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/google/uuid"
 )
 
 type PaymentProcessorContext struct {
+	Id                 uuid.UUID
 	BillingAddress     *models.Address
 	Email              string
 	CurrencyCode       string
 	Amount             float64
-	ResourceID         string
+	ResourceId         uuid.UUID
 	Customer           *models.Customer
 	Context            map[string]interface{}
 	PaymentSessionData map[string]interface{}
@@ -26,22 +28,22 @@ type PaymentProcessorError struct {
 	Detail interface{}
 }
 
-type PaymentProcessor interface {
+type IPaymentProcessor interface {
 	GetIdentifier() string
-	InitiatePayment(context PaymentProcessorContext) (*PaymentProcessorError, *PaymentProcessorSessionResponse)
-	UpdatePayment(context PaymentProcessorContext) (*PaymentProcessorError, *PaymentProcessorSessionResponse, error)
-	RefundPayment(paymentSessionData map[string]interface{}, refundAmount float64) (*PaymentProcessorError, map[string]interface{})
-	AuthorizePayment(paymentSessionData map[string]interface{}, context map[string]interface{}) (*PaymentProcessorError, *models.PaymentSessionStatus, map[string]interface{})
-	CapturePayment(paymentSessionData map[string]interface{}) (*PaymentProcessorError, map[string]interface{})
-	DeletePayment(paymentSessionData map[string]interface{}) (*PaymentProcessorError, map[string]interface{})
-	RetrievePayment(paymentSessionData map[string]interface{}) (*PaymentProcessorError, map[string]interface{})
-	CancelPayment(paymentSessionData map[string]interface{}) (*PaymentProcessorError, map[string]interface{})
-	GetPaymentStatus(paymentSessionData map[string]interface{}) (*models.PaymentSessionStatus, error)
-	UpdatePaymentData(sessionID string, data map[string]interface{}) (*PaymentProcessorError, map[string]interface{})
+	InitiatePayment(context *PaymentProcessorContext) (*PaymentProcessorSessionResponse, *PaymentProcessorError)
+	UpdatePayment(context *PaymentProcessorContext) (*PaymentProcessorSessionResponse, *PaymentProcessorError)
+	RefundPayment(paymentSessionData map[string]interface{}, refundAmount float64) (map[string]interface{}, *PaymentProcessorError)
+	AuthorizePayment(paymentSessionData map[string]interface{}, context map[string]interface{}) (*models.PaymentSessionStatus, map[string]interface{}, *PaymentProcessorError)
+	CapturePayment(paymentSessionData map[string]interface{}) (map[string]interface{}, *PaymentProcessorError)
+	DeletePayment(paymentSessionData map[string]interface{}) (map[string]interface{}, *PaymentProcessorError)
+	RetrievePayment(paymentSessionData map[string]interface{}) (map[string]interface{}, *PaymentProcessorError)
+	CancelPayment(paymentSessionData map[string]interface{}) (map[string]interface{}, *PaymentProcessorError)
+	GetPaymentStatus(paymentSessionData map[string]interface{}) (*models.PaymentSessionStatus, *PaymentProcessorError)
+	UpdatePaymentData(sessionId uuid.UUID, data map[string]interface{}) (map[string]interface{}, *PaymentProcessorError)
 }
 
 func IsPaymentProcessor(obj interface{}) bool {
-	_, ok := obj.(*PaymentProcessor)
+	_, ok := obj.(*IPaymentProcessor)
 	return ok
 }
 

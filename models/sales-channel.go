@@ -12,6 +12,8 @@ type SalesChannel struct {
 	// The description of the sales channel.
 	Description string `json:"description" gorm:"default:null"`
 
+	LocationId string `json:"location_id"`
+
 	// Specify if the sales channel is enabled or disabled.
 	IsDisabled bool `json:"is_disabled" gorm:"default:null"`
 }

@@ -10,7 +10,7 @@ type MoneyAmount struct {
 	core.Model
 
 	// The amount in the smallest currecny unit (e.g. cents 100 cents to charge $1) that the Product Variant will cost.
-	Amount int `json:"amount"`
+	Amount float64 `json:"amount"`
 
 	// Currency
 	Currency *Currency `json:"currency" gorm:"foreignKey:code;references:currency_code"`

@@ -1,4 +1,4 @@
-package database
+package sql
 
 import (
 	"fmt"
@@ -9,55 +9,63 @@ import (
 	"github.com/fatih/structs"
 )
 
-type Options[M any] struct {
-	selector  *M
-	skip      *int
-	take      *int
-	relations []string
-	order     *string
+type Options struct {
+	Selects       []string
+	Skip          *int
+	Take          *int
+	Relations     []string
+	Order         *string
+	Specification []Specification
+	Not           []string
+	Null          []string
 }
 
-type Query[T any] struct {
-	selector    *T
-	skip        *int
-	take        *int
-	relations   []string
-	where       *string
-	withDeleted bool
-	order       *string
+type Query struct {
+	Selects     []string
+	Skip        *int
+	Take        *int
+	Relations   []string
+	Where       *string
+	WithDeleted bool
+	Order       *string
 }
 
-func BuildQuery[T any, M any](selector T, config Options[M]) Query[M] {
-	var query Query[M]
+func NewOptions(selects []string, skip *int, take *int, relations []string, order *string, secification []Specification) Options {
+	return Options{
+		Selects:       selects,
+		Skip:          skip,
+		Take:          take,
+		Relations:     relations,
+		Order:         order,
+		Specification: secification,
+	}
+}
+
+func NewQuery(where *string, selects []string, skip *int, take *int, relations []string, order *string, withDeleted bool) Query {
+	return Query{
+		Selects:     selects,
+		Skip:        skip,
+		Take:        take,
+		Relations:   relations,
+		Where:       where,
+		WithDeleted: withDeleted,
+		Order:       order,
+	}
+}
+
+func BuildQuery[T any](selector T, config Options) Query {
 	s := structs.New(selector)
 	whereString := Build(s.Fields())
 
-	query.where = &whereString
-	if !s.Field("DeletedAt").IsZero() {
-		query.withDeleted = true
-	}
-
-	if config.skip != nil {
-		query.skip = config.skip
-	}
-
-	if config.take != nil {
-		query.take = config.take
-	}
-
-	if config.relations != nil {
-		query.relations = config.relations
-	}
-
-	if config.selector != nil {
-		query.selector = config.selector
-	}
-
-	if config.order != nil {
-		query.order = config.order
-	}
-
-	return query
+	return NewQuery(
+		&whereString,
+		config.Selects,
+		config.Skip,
+		config.Take,
+		config.Relations,
+		config.Order,
+		!s.Field("DeletedAt").IsZero(),
+	)
 }
 
 func Build(structFields []*structs.Field) string {
@@ -103,7 +111,13 @@ func Build(structFields []*structs.Field) string {
 					if len(result) > 0 {
 						result += " AND "
 					}
-					result += fmt.Sprintf(`%+v = '%+v'`, name, field.Value())
+
+					if field.Value().(string)[0:2] == "IN" {
+						result += fmt.Sprintf(`%+v IN '%+v'`, name, field.Value())
+					} else {
+						result += fmt.Sprintf(`%+v = '%+v'`, name, field.Value())
+					}
+
 				}
 			}
 		} else if field.Kind() == reflect.Int {
@@ -157,9 +171,13 @@ func Build(structFields []*structs.Field) string {
 				if len(result) > 0 {
 					result += " AND "
 				}
-				result += fmt.Sprintf(`%+v = %+v`, name, field.Value())
+				result += fmt.Sprintf(`%+v IN %+v`, name, field.Value())
 			}
 		}
 	}
 	return result
+}
+
+func ILike(value string) string {
+	return fmt.Sprintf(`Like '%+v'`, value)
 }

@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type NoteRepo struct {
-	Repository[models.Note]
+	sql.Repository[models.Note]
 }
 
-func NoteRepository(db *gorm.DB) NoteRepo {
-	return NoteRepo{*NewRepository[models.Note](db)}
+func NoteRepository(db *gorm.DB) *NoteRepo {
+	return &NoteRepo{*sql.NewRepository[models.Note](db)}
 }

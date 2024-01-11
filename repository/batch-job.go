@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type BatchJobRepo struct {
-	Repository[models.BatchJob]
+	sql.Repository[models.BatchJob]
 }
 
-func BatchJobRepository(db *gorm.DB) BatchJobRepo {
-	return BatchJobRepo{*NewRepository[models.BatchJob](db)}
+func BatchJobRepository(db *gorm.DB) *BatchJobRepo {
+	return &BatchJobRepo{*sql.NewRepository[models.BatchJob](db)}
 }

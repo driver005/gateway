@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -12,10 +13,10 @@ type Swap struct {
 	core.Model
 
 	// The status of the Fulfillment of the Swap.
-	FulfillmentStatus string `json:"fulfillment_status"`
+	FulfillmentStatus SwapFulfillmentStatus `json:"fulfillment_status"`
 
 	// The status of the Payment of the Swap. The payment may either refer to the refund of an amount or the authorization of a new amount.
-	PaymentStatus string `json:"payment_status"`
+	PaymentStatus SwapPaymentStatus `json:"payment_status"`
 
 	// The ID of the Order where the Line Items to be returned where purchased.
 	OrderId uuid.NullUUID `json:"order_id"`
@@ -58,11 +59,54 @@ type Swap struct {
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
 
 	// The date with timezone at which the Swap was confirmed by the Customer.
-	ConfirmedAt time.Time `json:"confirmed_at" gorm:"default:null"`
+	ConfirmedAt *time.Time `json:"confirmed_at" gorm:"default:null"`
 
 	// The date with timezone at which the Swap was canceled.
-	CanceledAt time.Time `json:"canceled_at" gorm:"default:null"`
+	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
 
 	// If set to true, no notification will be sent related to this swap
 	NoNotification bool `json:"no_notification" gorm:"default:null"`
+}
+
+type SwapFulfillmentStatus string
+
+const (
+	SwapFulfillmentNotFulfilled     SwapFulfillmentStatus = "not_fulfilled"
+	SwapFulfillmentFulfilled        SwapFulfillmentStatus = "fulfilled"
+	SwapFulfillmentShipped          SwapFulfillmentStatus = "shipped"
+	SwapFulfillmentPartiallyShipped SwapFulfillmentStatus = "partially_shipped"
+	SwapFulfillmentCanceled         SwapFulfillmentStatus = "canceled"
+	SwapFulfillmentRequiresAction   SwapFulfillmentStatus = "requires_action"
+)
+
+func (pl *SwapFulfillmentStatus) Scan(value interface{}) error {
+	*pl = SwapFulfillmentStatus(value.([]byte))
+	return nil
+}
+
+func (pl SwapFulfillmentStatus) Value() (driver.Value, error) {
+	return string(pl), nil
+}
+
+type SwapPaymentStatus string
+
+const (
+	SwapPaymentNotPaid            SwapPaymentStatus = "not_paid"
+	SwapPaymentAwaiting           SwapPaymentStatus = "awaiting"
+	SwapPaymentCaptured           SwapPaymentStatus = "captured"
+	SwapPaymentConfirmed          SwapPaymentStatus = "confirmed"
+	SwapPaymentCanceled           SwapPaymentStatus = "canceled"
+	SwapPaymentDifferenceRefunded SwapPaymentStatus = "difference_refunded"
+	SwapPaymentPartiallyRefunded  SwapPaymentStatus = "partially_refunded"
+	SwapPaymentRefunded           SwapPaymentStatus = "refunded"
+	SwapPaymentRequiresAction     SwapPaymentStatus = "requires_action"
+)
+
+func (pl *SwapPaymentStatus) Scan(value interface{}) error {
+	*pl = SwapPaymentStatus(value.([]byte))
+	return nil
+}
+
+func (pl SwapPaymentStatus) Value() (driver.Value, error) {
+	return string(pl), nil
 }

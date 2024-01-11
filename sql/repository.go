@@ -1,4 +1,4 @@
-package repository
+package sql
 
 import (
 	"context"
@@ -24,6 +24,10 @@ func (r *Repository[M]) Relations(relations []string) *Repository[M] {
 	}
 
 	return r
+}
+
+func (r *Repository[M]) Db() *gorm.DB {
+	return r.db
 }
 
 func (r *Repository[M]) Specification(specification ...Specification) *Repository[M] {
@@ -56,6 +60,17 @@ func (r *Repository[M]) Insert(ctx context.Context, model *M) *utils.Applictaion
 	return r.Create(ctx, model)
 }
 
+// InsertSlice inserts values, returning the inserted data's primary key in value's id
+func (r *Repository[M]) InsertSlice(ctx context.Context, model []M) *utils.ApplictaionError {
+	for _, m := range model {
+		err := r.Insert(ctx, &m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // InsertTx inserts value, returning the inserted data's primary key in value's id
 func (r *Repository[M]) InsertTx(ctx context.Context, model *M, tx *gorm.DB) *utils.ApplictaionError {
 	return r.CreateTx(ctx, model, tx)
@@ -81,6 +96,13 @@ func (r *Repository[M]) SaveTx(ctx context.Context, model *M, tx *gorm.DB) *util
 
 // Update updates attributes using callbacks. values must be a struct or map. Reference: https://gorm.io/docs/update.html#Update-Changed-Fields
 func (r *Repository[M]) Update(ctx context.Context, model *M) *utils.ApplictaionError {
+	res := r.db.Model(&model).Updates(&model)
+
+	return r.HandleError(res)
+}
+
+// UpdateSlice updates attributes using callbacks. values must be a struct or map. Reference: https://gorm.io/docs/update.html#Update-Changed-Fields
+func (r *Repository[M]) UpdateSlice(ctx context.Context, model []M) *utils.ApplictaionError {
 	res := r.db.Model(&model).Updates(&model)
 
 	return r.HandleError(res)
@@ -150,6 +172,17 @@ func (r *Repository[M]) Count(ctx context.Context, query Query) (*int64, *utils.
 
 	r.db.WithContext(ctx)
 	res := r.ParseQuery(ctx, query).Find(model).Count(&count)
+
+	return &count, r.HandleError(res)
+}
+
+// CountBy counts by all records matching given conditions conds
+func (r *Repository[M]) CountBy(ctx context.Context, field []string, query Query) (*int64, *utils.ApplictaionError) {
+	model := new(M)
+	var count int64
+
+	r.db.WithContext(ctx)
+	res := r.ParseQuery(ctx, query).Find(model).Select(field).Count(&count)
 
 	return &count, r.HandleError(res)
 }
@@ -235,7 +268,7 @@ func (r *Repository[M]) HandleOneError(res *gorm.DB) *utils.ApplictaionError {
 }
 
 func (r *Repository[M]) HandleError(res *gorm.DB) *utils.ApplictaionError {
-	if res.Error != nil && res.Error != gorm.ErrRecordNotFound {
+	if res.Error != nil {
 		return utils.NewApplictaionError(
 			utils.DB_ERROR,
 			res.Error.Error(),
@@ -245,6 +278,15 @@ func (r *Repository[M]) HandleError(res *gorm.DB) *utils.ApplictaionError {
 	}
 
 	return nil
+}
+
+func (r *Repository[M]) HandleDBError(err error) *utils.ApplictaionError {
+	return utils.NewApplictaionError(
+		utils.DB_ERROR,
+		err.Error(),
+		"500",
+		nil,
+	)
 }
 
 // func (r *Repository[M]) FindWithLimit(ctx context.Context, limit int, offset int, specifications ...Specification) ([]M, *utils.ApplictaionError) {

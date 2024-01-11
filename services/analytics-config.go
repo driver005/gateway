@@ -4,32 +4,37 @@ import (
 	"context"
 
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
 
 type AnalyticsConfigService struct {
-	ctx  context.Context
-	repo *repository.AnalyticsConfigRepo
+	ctx context.Context
+	r   Registry
 }
 
 func NewAnalyticsConfigService(
-	ctx context.Context,
-	repo *repository.AnalyticsConfigRepo,
+	r Registry,
 ) *AnalyticsConfigService {
 	return &AnalyticsConfigService{
-		ctx,
-		repo,
+		context.Background(),
+		r,
 	}
 }
 
-func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsConfig, error) {
+func (s *AnalyticsConfigService) SetContext(context context.Context) *AnalyticsConfigService {
+	s.ctx = context
+	return s
+}
+
+func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsConfig, *utils.ApplictaionError) {
 	var model *models.AnalyticsConfig
-	if err := s.repo.FindOne(s.ctx, model, repository.BuildQuery[models.AnalyticsConfig](
+	if err := s.r.AnalyticsConfigRepository().FindOne(s.ctx, model, sql.BuildQuery[models.AnalyticsConfig](
 		models.AnalyticsConfig{
 			UserId: userId,
 		},
-		repository.Options{},
+		sql.Options{},
 	)); err != nil {
 		return nil, err
 	}
@@ -37,29 +42,29 @@ func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsCon
 	return model, nil
 }
 
-func (s *AnalyticsConfigService) Create(model *models.AnalyticsConfig) (*models.AnalyticsConfig, error) {
-	if err := s.repo.Save(s.ctx, model); err != nil {
+func (s *AnalyticsConfigService) Create(model *models.AnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
+	if err := s.r.AnalyticsConfigRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
 	return model, nil
 }
 
-func (s *AnalyticsConfigService) Update(model *models.AnalyticsConfig) (*models.AnalyticsConfig, error) {
-	if err := s.repo.Upsert(s.ctx, model); err != nil {
+func (s *AnalyticsConfigService) Update(model *models.AnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
+	if err := s.r.AnalyticsConfigRepository().Upsert(s.ctx, model); err != nil {
 		return nil, err
 	}
 
 	return model, nil
 }
 
-func (s *AnalyticsConfigService) Delete(userId uuid.UUID) error {
+func (s *AnalyticsConfigService) Delete(userId uuid.UUID) *utils.ApplictaionError {
 	data, err := s.Retrive(userId)
 	if err != nil {
 		return err
 	}
 
-	if err := s.repo.SoftRemove(s.ctx, data); err != nil {
+	if err := s.r.AnalyticsConfigRepository().SoftRemove(s.ctx, data); err != nil {
 		return err
 	}
 

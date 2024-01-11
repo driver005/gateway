@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type ClaimRepo struct {
-	Repository[models.ClaimOrder]
+	sql.Repository[models.ClaimOrder]
 }
 
-func ClaimRepository(db *gorm.DB) ClaimRepo {
-	return ClaimRepo{*NewRepository[models.ClaimOrder](db)}
+func ClaimRepository(db *gorm.DB) *ClaimRepo {
+	return &ClaimRepo{*sql.NewRepository[models.ClaimOrder](db)}
 }

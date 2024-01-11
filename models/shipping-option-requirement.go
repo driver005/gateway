@@ -29,8 +29,8 @@ type ShippingOptionRequirementType string
 
 // Defines values for ShippingOptionRequirementType.
 const (
-	MaxSubtotal ShippingOptionRequirementType = "max_subtotal"
-	MinSubtotal ShippingOptionRequirementType = "min_subtotal"
+	ShippingOptionRequirementMaxSubtotal ShippingOptionRequirementType = "max_subtotal"
+	ShippingOptionRequirementMinSubtotal ShippingOptionRequirementType = "min_subtotal"
 )
 
 func (so *ShippingOptionRequirementType) Scan(value interface{}) error {

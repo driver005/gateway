@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"math"
 	"reflect"
 	"strings"
@@ -10,7 +9,8 @@ import (
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -18,24 +18,22 @@ import (
 )
 
 type CustomerService struct {
-	ctx               context.Context
-	repo              *repository.CustomerRepo
-	addressRepository *repository.AddressRepo
-	tockenService     *TockenService
+	ctx context.Context
+	r   Registry
 }
 
 func NewCustomerService(
-	ctx context.Context,
-	repo *repository.CustomerRepo,
-	addressRepository *repository.AddressRepo,
-	tockenService *TockenService,
+	r Registry,
 ) *CustomerService {
 	return &CustomerService{
-		ctx,
-		repo,
-		addressRepository,
-		tockenService,
+		context.Background(),
+		r,
 	}
+}
+
+func (s *CustomerService) SetContext(context context.Context) *CustomerService {
+	s.ctx = context
+	return s
 }
 
 func (s *CustomerService) HashPassword(password string) (string, error) {
@@ -43,8 +41,8 @@ func (s *CustomerService) HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*string, error) {
-	customer, err := s.RetrieveById(customerId, repository.Options{
+func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*string, *utils.ApplictaionError) {
+	customer, err := s.RetrieveById(customerId, sql.Options{
 		Selects: []string{"id", "has_account", "password_hash", "email", "first_name", "last_name"},
 	})
 	if err != nil {
@@ -52,100 +50,124 @@ func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*str
 	}
 
 	if !customer.HasAccount {
-		return nil, errors.New("you must have an account to reset the password. create an account first")
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"you must have an account to reset the password. Create an account first",
+			"500",
+			nil,
+		)
 	}
 
 	expiry := math.Floor(float64(time.Now().Unix())/1000.0) + 60*15
-	tocken, err := s.tockenService.SignTokenWithSecret(
+	tocken, er := s.r.TockenService().SetContext(s.ctx).SignTokenWithSecret(
 		map[string]interface{}{
 			"customer_id": customer.Id,
 			"exp":         expiry,
 		},
 		[]byte(customer.PasswordHash),
 	)
-	if err != nil {
-		return nil, err
+	if er != nil {
+		return nil, utils.NewApplictaionError(
+			utils.CONFLICT,
+			er.Error(),
+			"500",
+			nil,
+		)
 	}
 
 	return tocken, nil
 }
 
-func (s *CustomerService) List(selector models.Customer, config repository.Options, q *string, groups []string) ([]models.Customer, error) {
-	if reflect.DeepEqual(config, repository.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
-	}
-
-	res, _, err := s.repo.ListAndCount(s.ctx, selector, config, q, groups)
+func (s *CustomerService) List(selector models.Customer, config sql.Options, q *string, groups []string) ([]models.Customer, *utils.ApplictaionError) {
+	res, _, err := s.ListAndCount(selector, config, q, groups)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *CustomerService) ListAndCount(selector models.Customer, config repository.Options, q *string, groups []string) ([]models.Customer, *int64, error) {
-	if reflect.DeepEqual(config, repository.Options{}) {
+func (s *CustomerService) ListAndCount(selector models.Customer, config sql.Options, q *string, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
 	}
 
-	return s.repo.ListAndCount(s.ctx, selector, config, q, groups)
+	return s.r.CustomerRepository().ListAndCount(s.ctx, selector, config, q, groups)
 }
 
-func (s *CustomerService) Count() (*int64, error) {
-	count, err := s.repo.Count(s.ctx, repository.Query{})
+func (s *CustomerService) Count() (*int64, *utils.ApplictaionError) {
+	count, err := s.r.CustomerRepository().Count(s.ctx, sql.Query{})
 	if err != nil {
 		return nil, err
 	}
 	return count, nil
 }
 
-func (s *CustomerService) Retrieve(selector models.Customer, config repository.Options) (*models.Customer, error) {
+func (s *CustomerService) Retrieve(selector models.Customer, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	var res *models.Customer
-	query := repository.BuildQuery[models.Customer](selector, config)
+	query := sql.BuildQuery[models.Customer](selector, config)
 
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
+	if err := s.r.CustomerRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *CustomerService) RetrieveByEmail(email string, config repository.Options) (*models.Customer, error) {
+func (s *CustomerService) RetrieveByEmail(email string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if email == "" {
-		return nil, errors.New(`"email" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"email" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	var res *models.Customer
 
-	query := repository.BuildQuery[models.Customer](models.Customer{Email: strings.ToLower(email)}, config)
+	query := sql.BuildQuery[models.Customer](models.Customer{Email: strings.ToLower(email)}, config)
 
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
+	if err := s.r.CustomerRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *CustomerService) RetrieveUnregisteredByEmail(email string, config repository.Options) (*models.Customer, error) {
+func (s *CustomerService) RetrieveUnregisteredByEmail(email string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if email == "" {
-		return nil, errors.New(`"email" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"email" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	return s.Retrieve(models.Customer{Email: strings.ToLower(email), HasAccount: false}, config)
 }
 
-func (s *CustomerService) RetrieveRegisteredByEmail(email string, config repository.Options) (*models.Customer, error) {
+func (s *CustomerService) RetrieveRegisteredByEmail(email string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if email == "" {
-		return nil, errors.New(`"email" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"email" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	return s.Retrieve(models.Customer{Email: strings.ToLower(email), HasAccount: true}, config)
 }
 
-func (s *CustomerService) ListByEmail(email string, config repository.Options) ([]models.Customer, error) {
+func (s *CustomerService) ListByEmail(email string, config sql.Options) ([]models.Customer, *utils.ApplictaionError) {
 	if email == "" {
-		return nil, errors.New(`"email" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"email" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
-	if reflect.DeepEqual(config, repository.Options{}) {
+	if reflect.DeepEqual(config, sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(2)
 	}
@@ -153,36 +175,61 @@ func (s *CustomerService) ListByEmail(email string, config repository.Options) (
 	return s.List(models.Customer{Email: strings.ToLower(email)}, config, nil, nil)
 }
 
-func (s *CustomerService) RetrieveByPhone(phone string, config repository.Options) (*models.Customer, error) {
+func (s *CustomerService) RetrieveByPhone(phone string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if phone == "" {
-		return nil, errors.New(`"phone" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"phone" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	return s.Retrieve(models.Customer{Phone: phone}, config)
 }
 
-func (s *CustomerService) RetrieveById(id uuid.UUID, config repository.Options) (*models.Customer, error) {
+func (s *CustomerService) RetrieveById(id uuid.UUID, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if id == uuid.Nil {
-		return nil, errors.New(`"id" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"id" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
 	return s.Retrieve(models.Customer{Model: core.Model{Id: id}}, config)
 }
 
-func (s *CustomerService) Create(model *models.Customer) (*models.Customer, error) {
+func (s *CustomerService) Create(model *models.Customer) (*models.Customer, *utils.ApplictaionError) {
 	if err := validator.New().Var(model.Email, "required,email"); err != nil {
-		return nil, err
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			err.Error(),
+			"500",
+			nil,
+		)
 	}
 
 	model.Email = strings.ToLower(model.Email)
 
-	existing, _ := s.ListByEmail(model.Email, repository.Options{})
+	existing, _ := s.ListByEmail(model.Email, sql.Options{})
 
 	if len(existing) != 0 {
 		for _, exit := range existing {
 			if exit.HasAccount && model.Password != "" {
-				return nil, errors.New(`a customer with the given email already has an account. Log in instead`)
+				return nil, utils.NewApplictaionError(
+					utils.INVALID_DATA,
+					`a customer with the given email already has an account. Log in instead`,
+					"500",
+					nil,
+				)
 			} else if !exit.HasAccount && model.Password == "" {
-				return nil, errors.New(`guest customer with email already exists`)
+				return nil, utils.NewApplictaionError(
+					utils.INVALID_DATA,
+					`guest customer with email already exists`,
+					"500",
+					nil,
+				)
 			}
 		}
 	}
@@ -190,55 +237,80 @@ func (s *CustomerService) Create(model *models.Customer) (*models.Customer, erro
 	if model.Password != "" {
 		hashedPassword, err := s.HashPassword(model.Password)
 		if err != nil {
-			return nil, err
+			return nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				err.Error(),
+				"500",
+				nil,
+			)
 		}
 
 		model.PasswordHash = hashedPassword
 	}
 
-	if err := s.repo.Save(s.ctx, model); err != nil {
+	if err := s.r.CustomerRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
 	return model, nil
 }
 
-func (s *CustomerService) Update(userId uuid.UUID, update *models.Customer) (*models.Customer, error) {
-	if update.Email != "" {
-		return nil, errors.New(`"You are not allowed to update email"`)
+func (s *CustomerService) Update(userId uuid.UUID, Update *models.Customer) (*models.Customer, *utils.ApplictaionError) {
+	if Update.Email != "" {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"You are not allowed to Update email"`,
+			"500",
+			nil,
+		)
 	}
 
-	if update.PasswordHash != "" {
-		return nil, errors.New("use dedicated field, `password` for password operations")
+	if Update.PasswordHash != "" {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"use dedicated field, `password` for password operations",
+			"500",
+			nil,
+		)
 	}
 
 	if userId == uuid.Nil {
-		return nil, errors.New(`"userId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"userId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
-	update.Id = userId
+	Update.Id = userId
 
-	if err := s.repo.FindOne(s.ctx, update, repository.Query{}); err != nil {
+	if err := s.r.CustomerRepository().FindOne(s.ctx, Update, sql.Query{}); err != nil {
 		return nil, err
 	}
 
-	if update.Password != "" {
-		hashedPassword, err := s.HashPassword(update.Password)
+	if Update.Password != "" {
+		hashedPassword, err := s.HashPassword(Update.Password)
 		if err != nil {
-			return nil, err
+			return nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				err.Error(),
+				"500",
+				nil,
+			)
 		}
 
-		update.PasswordHash = hashedPassword
+		Update.PasswordHash = hashedPassword
 	}
 
-	if err := s.repo.Upsert(s.ctx, update); err != nil {
+	if err := s.r.CustomerRepository().Upsert(s.ctx, Update); err != nil {
 		return nil, err
 	}
 
-	return update, nil
+	return Update, nil
 }
 
-func (s *CustomerService) UpdateBillingAddress(model *models.Customer, address models.Address, id uuid.UUID) error {
+func (s *CustomerService) UpdateBillingAddress(model *models.Customer, address models.Address, id uuid.UUID) *utils.ApplictaionError {
 	if reflect.DeepEqual(address, models.Address{}) && id == uuid.Nil {
 		model.BillingAddressId = uuid.NullUUID{}
 	}
@@ -248,8 +320,13 @@ func (s *CustomerService) UpdateBillingAddress(model *models.Customer, address m
 	if id != uuid.Nil {
 		addr.Id = id
 
-		if err := s.addressRepository.FindOne(s.ctx, addr, repository.Query{}); err != nil {
-			return errors.New("address with id ${id} was not found")
+		if err := s.r.AddressRepository().FindOne(s.ctx, addr, sql.Query{}); err != nil {
+			return utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				"address with id ${id} was not found",
+				"500",
+				nil,
+			)
 		}
 	} else {
 		addr = &address
@@ -266,11 +343,11 @@ func (s *CustomerService) UpdateBillingAddress(model *models.Customer, address m
 		if model.BillingAddressId.UUID != uuid.Nil {
 			addr.Id = model.BillingAddressId.UUID
 
-			if err := s.addressRepository.Save(s.ctx, addr); err != nil {
+			if err := s.r.AddressRepository().Save(s.ctx, addr); err != nil {
 				return err
 			}
 		} else {
-			if err := s.addressRepository.Save(s.ctx, addr); err != nil {
+			if err := s.r.AddressRepository().Save(s.ctx, addr); err != nil {
 				return err
 			}
 
@@ -281,13 +358,23 @@ func (s *CustomerService) UpdateBillingAddress(model *models.Customer, address m
 	return nil
 }
 
-func (s *CustomerService) UpdateAddress(customerId uuid.UUID, addressId uuid.UUID, model *models.Address) (*models.Address, error) {
+func (s *CustomerService) UpdateAddress(customerId uuid.UUID, addressId uuid.UUID, model *models.Address) (*models.Address, *utils.ApplictaionError) {
 	if addressId == uuid.Nil {
-		return nil, errors.New(`"userId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"userId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
 	if customerId == uuid.Nil {
-		return nil, errors.New(`"customerId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"customerId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
 	model.Id = addressId
@@ -295,58 +382,88 @@ func (s *CustomerService) UpdateAddress(customerId uuid.UUID, addressId uuid.UUI
 
 	model.CountryCode = strings.ToLower(model.CountryCode)
 
-	if err := s.addressRepository.FindOne(s.ctx, model, repository.Query{}); err != nil {
-		return nil, errors.New("could not find address for customer")
+	if err := s.r.AddressRepository().FindOne(s.ctx, model, sql.Query{}); err != nil {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"could not find address for customer",
+			"500",
+			nil,
+		)
 	}
 
-	if err := s.addressRepository.Upsert(s.ctx, model); err != nil {
+	if err := s.r.AddressRepository().Upsert(s.ctx, model); err != nil {
 		return nil, err
 	}
 
 	return model, nil
 }
 
-func (s *CustomerService) RemoveAddress(customerId uuid.UUID, addressId uuid.UUID) (err error) {
+func (s *CustomerService) RemoveAddress(customerId uuid.UUID, addressId uuid.UUID) (err *utils.ApplictaionError) {
 	if addressId == uuid.Nil {
-		return errors.New(`"userId" must be defined`)
+		return utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"userId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
 	if customerId == uuid.Nil {
-		return errors.New(`"customerId" must be defined`)
+		return utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"customerId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	var model *models.Address
 	model.Id = addressId
 	model.CustomerId.UUID = customerId
 
-	if err := s.addressRepository.FindOne(s.ctx, model, repository.Query{}); err != nil {
-		return errors.New("could not find address for customer")
+	if err := s.r.AddressRepository().FindOne(s.ctx, model, sql.Query{}); err != nil {
+		return utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"could not find address for customer",
+			"500",
+			nil,
+		)
 	}
 
-	if err := s.addressRepository.SoftRemove(s.ctx, model); err != nil {
+	if err := s.r.AddressRepository().SoftRemove(s.ctx, model); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *CustomerService) AddAddress(customerId uuid.UUID, address *models.Address) (*models.Customer, *models.Address, error) {
+func (s *CustomerService) AddAddress(customerId uuid.UUID, address *models.Address) (*models.Customer, *models.Address, *utils.ApplictaionError) {
 	if customerId == uuid.Nil {
-		return nil, nil, errors.New(`"customerId" must be defined`)
+		return nil, nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"customerId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
 	address.CountryCode = strings.ToLower(address.CountryCode)
 
-	customer, err := s.RetrieveById(customerId, repository.Options{
+	customer, err := s.RetrieveById(customerId, sql.Options{
 		Relations: []string{"shipping_addresses"},
 	})
 	if err != nil {
-		return nil, nil, errors.New("could not find address for customer")
+		return nil, nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"could not find address for customer",
+			"500",
+			nil,
+		)
 	}
 
 	if reflect.DeepEqual(customer.ShippingAddresses, address) {
 		address.CustomerId.UUID = customerId
 
-		if err := s.addressRepository.Save(s.ctx, address); err != nil {
+		if err := s.r.AddressRepository().Save(s.ctx, address); err != nil {
 			return nil, address, err
 		}
 	}
@@ -354,13 +471,13 @@ func (s *CustomerService) AddAddress(customerId uuid.UUID, address *models.Addre
 	return customer, nil, nil
 }
 
-func (s *CustomerService) Delete(customerId uuid.UUID) error {
-	data, err := s.RetrieveById(customerId, repository.Options{})
+func (s *CustomerService) Delete(customerId uuid.UUID) *utils.ApplictaionError {
+	data, err := s.RetrieveById(customerId, sql.Options{})
 	if err != nil {
 		return err
 	}
 
-	if err := s.repo.SoftRemove(s.ctx, data); err != nil {
+	if err := s.r.CustomerRepository().SoftRemove(s.ctx, data); err != nil {
 		return err
 	}
 

@@ -36,7 +36,7 @@ type ClaimItem struct {
 	Note string `json:"note" gorm:"default:null"`
 
 	// The quantity of the item that is being claimed; must be less than or equal to the amount purchased in the original order.
-	Quantity int32 `json:"quantity"`
+	Quantity int `json:"quantity"`
 
 	// User defined tags for easy filtering and grouping. Available if the relation 'tags' is expanded.
 	Tags []ClaimTag `json:"tags" gorm:"foreignKey:id"`

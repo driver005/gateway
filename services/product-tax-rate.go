@@ -3,20 +3,35 @@ package services
 import (
 	"context"
 
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 )
 
 type ProductTaxRateService struct {
-	ctx  context.Context
-	repo *repository.ProductTaxRateRepo
+	ctx context.Context
+	r   Registry
 }
 
 func NewProductTaxRateService(
-	ctx context.Context,
-	repo *repository.ProductTaxRateRepo,
+	r Registry,
 ) *ProductTaxRateService {
 	return &ProductTaxRateService{
-		ctx,
-		repo,
+		context.Background(),
+		r,
 	}
+}
+
+func (s *ProductTaxRateService) SetContext(context context.Context) *ProductTaxRateService {
+	s.ctx = context
+	return s
+}
+
+func (s *ProductTaxRateService) List(selector types.FilterableProductTaxRate, config sql.Options) ([]models.ProductTaxRate, error) {
+	var discounts []models.ProductTaxRate
+	query := sql.BuildQuery(selector, config)
+	if err := s.r.ProductTaxRateRepository().Find(s.ctx, discounts, query); err != nil {
+		return nil, err
+	}
+	return discounts, nil
 }

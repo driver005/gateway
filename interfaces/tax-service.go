@@ -3,6 +3,7 @@ package interfaces
 import (
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/types"
+	"github.com/driver005/gateway/utils"
 )
 
 type ShippingTaxCalculationLine struct {
@@ -25,5 +26,5 @@ type TaxCalculationContext struct {
 }
 
 type ITaxService interface {
-	GetTaxLines(itemLines []ItemTaxCalculationLine, shippingLines []ShippingTaxCalculationLine, context *TaxCalculationContext) ([]types.ProviderTaxLine, error)
+	GetTaxLines(itemLines []ItemTaxCalculationLine, shippingLines []ShippingTaxCalculationLine, context *TaxCalculationContext) ([]types.ProviderTaxLine, *utils.ApplictaionError)
 }

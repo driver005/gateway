@@ -23,5 +23,5 @@ type Invite struct {
 	Token string `json:"token" gorm:"default:null"`
 
 	// The date the invite expires at.
-	ExpiresAt time.Time `json:"expores_at" gorm:"default:null"`
+	ExpiresAt *time.Time `json:"expores_at" gorm:"default:null"`
 }

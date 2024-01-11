@@ -23,5 +23,5 @@ type ReturnReason struct {
 
 	ParentReturnReason *ReturnReason `json:"parent_return_reason" gorm:"foreignKey:id;references:parent_return_reason_id"`
 
-	ReturnReasonChildren *ReturnReason `json:"return_reason_children" gorm:"foreignKey:id"`
+	ReturnReasonChildren []ReturnReason `json:"return_reason_children" gorm:"foreignKey:id"`
 }

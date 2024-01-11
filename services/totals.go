@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"math"
 	"slices"
 
@@ -32,19 +31,6 @@ type GetShippingMethodTotalsOptions struct {
 	IncludeTax         bool
 	UseTaxLines        bool
 	CalculationContext interfaces.TaxCalculationContext
-}
-
-type LineItemTotals struct {
-	UnitPrice        float64
-	Quantity         int
-	Subtotal         float64
-	TaxTotal         float64
-	Total            float64
-	OriginalTotal    float64
-	OriginalTaxTotal float64
-	TaxLines         []models.LineItemTaxLine
-	DiscountTotal    float64
-	RawDiscountTotal float64
 }
 
 type LineItemTotalsOptions struct {
@@ -83,27 +69,25 @@ type CalculationContextOptions struct {
 }
 
 type TotalsService struct {
-	ctx                    context.Context
-	taxProviderService     *TaxProviderService
-	newTotalsService       *NewTotalsService
-	taxCalculationStrategy interfaces.ITaxCalculationStrategy
+	ctx context.Context
+	r   Registry
 }
 
 func NewTotalService(
-	ctx context.Context,
-	taxProviderService *TaxProviderService,
-	newTotalsService *NewTotalsService,
-	taxCalculationStrategy interfaces.ITaxCalculationStrategy,
+	r Registry,
 ) *TotalsService {
 	return &TotalsService{
-		ctx,
-		taxProviderService,
-		newTotalsService,
-		taxCalculationStrategy,
+		context.Background(),
+		r,
 	}
 }
 
-func (s *TotalsService) GetTotal(cart *models.Cart, order *models.Order, options GetTotalsOptions) (float64, error) {
+func (s *TotalsService) SetContext(context context.Context) *TotalsService {
+	s.ctx = context
+	return s
+}
+
+func (s *TotalsService) GetTotal(cart *models.Cart, order *models.Order, options GetTotalsOptions) (float64, *utils.ApplictaionError) {
 	subtotal, err := s.GetSubtotal(cart, order, types.SubtotalOptions{})
 	if err != nil {
 		return 0, err
@@ -127,7 +111,7 @@ func (s *TotalsService) GetTotal(cart *models.Cart, order *models.Order, options
 	return subtotal + taxTotal + shippingTotal - discountTotal - giftCardTotal.Total, nil
 }
 
-func (s *TotalsService) GetPaidTotal(order models.Order) float64 {
+func (s *TotalsService) GetPaidTotal(order *models.Order) float64 {
 	total := 0.0
 	for _, payment := range order.Payments {
 		total += payment.Amount
@@ -135,7 +119,7 @@ func (s *TotalsService) GetPaidTotal(order models.Order) float64 {
 	return total
 }
 
-func (s *TotalsService) GetSwapTotal(order models.Order) float64 {
+func (s *TotalsService) GetSwapTotal(order *models.Order) float64 {
 	swapTotal := 0.0
 	for _, swap := range order.Swaps {
 		swapTotal += swap.DifferenceDue
@@ -143,7 +127,7 @@ func (s *TotalsService) GetSwapTotal(order models.Order) float64 {
 	return swapTotal
 }
 
-func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMethod, cart *models.Cart, order *models.Order, opts GetShippingMethodTotalsOptions) (*ShippingMethodTotals, error) {
+func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMethod, cart *models.Cart, order *models.Order, opts GetShippingMethodTotalsOptions) (*ShippingMethodTotals, *utils.ApplictaionError) {
 	calculationContext, err := s.GetCalculationContext(cart, order, CalculationContextOptions{ExcludeShipping: true})
 	if err != nil {
 		return nil, err
@@ -170,7 +154,7 @@ func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMe
 			if order != nil {
 				lineItem = order.Items
 			}
-			shipping, _, err := s.taxProviderService.GetTaxLines(lineItem, calculationContext)
+			shipping, _, err := s.r.TaxProviderService().SetContext(s.ctx).GetTaxLines(lineItem, calculationContext)
 			if err != nil {
 				return nil, err
 			}
@@ -180,12 +164,17 @@ func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMe
 				}
 			}
 			if len(totals.TaxLines) == 0 && order != nil {
-				return nil, errors.New("Tax Lines must be joined on shipping method to calculate taxes")
+				return nil, utils.NewApplictaionError(
+					utils.CONFLICT,
+					"Tax Lines must be joined on shipping method to calculate taxes",
+					"500",
+					nil,
+				)
 			}
 		}
 		if len(totals.TaxLines) > 0 {
 			includesTax := true
-			totals.OriginalTaxTotal, err = s.taxCalculationStrategy.Calculate([]models.LineItem{}, totals.TaxLines, calculationContext)
+			totals.OriginalTaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{}, totals.TaxLines, calculationContext)
 			if err != nil {
 				return nil, err
 			}
@@ -201,7 +190,7 @@ func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMe
 	hasFreeShipping := false
 	if cart != nil {
 		for _, discount := range cart.Discounts {
-			if discount.Rule.Type == models.DiscountRuleFreeShiping {
+			if discount.Rule.Type == models.DiscountRuleFreeShipping {
 				hasFreeShipping = true
 				break
 			}
@@ -209,7 +198,7 @@ func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMe
 	}
 	if order != nil {
 		for _, discount := range order.Discounts {
-			if discount.Rule.Type == models.DiscountRuleFreeShiping {
+			if discount.Rule.Type == models.DiscountRuleFreeShipping {
 				hasFreeShipping = true
 				break
 			}
@@ -224,12 +213,12 @@ func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMe
 	return totals, nil
 }
 
-func (s *TotalsService) GetSubtotal(cart *models.Cart, order *models.Order, opts types.SubtotalOptions) (float64, error) {
+func (s *TotalsService) GetSubtotal(cart *models.Cart, order *models.Order, opts types.SubtotalOptions) (float64, *utils.ApplictaionError) {
 	subtotal := 0.0
 	if cart.Items == nil || order.Items == nil {
 		return subtotal, nil
 	}
-	getLineItemSubtotal := func(item models.LineItem) (float64, error) {
+	getLineItemSubtotal := func(item models.LineItem) (float64, *utils.ApplictaionError) {
 		totals, err := s.GetLineItemTotals(item, cart, order, &LineItemTotalsOptions{IncludeTax: true, ExcludeGiftCards: true})
 		if err != nil {
 			return 0, err
@@ -279,7 +268,7 @@ func (s *TotalsService) GetSubtotal(cart *models.Cart, order *models.Order, opts
 	return s.Rounded(subtotal), nil
 }
 
-func (s *TotalsService) GetShippingTotal(cart *models.Cart, order *models.Order) (float64, error) {
+func (s *TotalsService) GetShippingTotal(cart *models.Cart, order *models.Order) (float64, *utils.ApplictaionError) {
 	var shippingMethods []models.ShippingMethod
 	if cart != nil {
 		shippingMethods = cart.ShippingMethods
@@ -298,7 +287,7 @@ func (s *TotalsService) GetShippingTotal(cart *models.Cart, order *models.Order)
 	return total, nil
 }
 
-func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forceTaxes bool) (float64, error) {
+func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forceTaxes bool) (float64, *utils.ApplictaionError) {
 	if cart != nil && !forceTaxes && !cart.Region.AutomaticTaxes {
 		return 0, nil
 	}
@@ -357,7 +346,7 @@ func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forc
 			return s.Rounded((subtotal - discountTotal - giftCardTotal.Total + shippingTotal) * (order.TaxRate / 100)), nil
 		}
 	} else {
-		shipping, lineItem, err := s.taxProviderService.GetTaxLines(cart.Items, calculationContext)
+		shipping, lineItem, err := s.r.TaxProviderService().SetContext(s.ctx).GetTaxLines(cart.Items, calculationContext)
 		if err != nil {
 			return 0, err
 		}
@@ -369,7 +358,12 @@ func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forc
 			for _, item := range cart.Items {
 				if item.IsReturn {
 					if item.TaxLines == nil {
-						return 0, errors.New("Return Line Items must join tax lines")
+						return 0, utils.NewApplictaionError(
+							utils.CONFLICT,
+							"Return Line Items must join tax lines",
+							"500",
+							nil,
+						)
 					}
 				}
 				taxLines = append(taxLines, item.TaxLines)
@@ -384,7 +378,7 @@ func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forc
 	if order != nil {
 		lineItem = order.Items
 	}
-	toReturn, err := s.taxCalculationStrategy.Calculate(lineItem, taxLines, calculationContext)
+	toReturn, err := s.r.TaxCalculationStrategy().Calculate(lineItem, taxLines, calculationContext)
 	if err != nil {
 		return 0, err
 	}
@@ -394,13 +388,13 @@ func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forc
 	return s.Rounded(toReturn), nil
 }
 
-func (s *TotalsService) GetAllocationMap(cart *models.Cart, order *models.Order, options AllocationMapOptions) (types.LineAllocationsMap, error) {
-	var allocationMap types.LineAllocationsMap
+func (s *TotalsService) GetAllocationMap(cart *models.Cart, order *models.Order, options AllocationMapOptions) (types.LineAllocationsMap, *utils.ApplictaionError) {
+	allocationMap := make(types.LineAllocationsMap)
 	if !options.ExcludeDiscounts {
 		var discount models.Discount
 		if cart != nil {
 			for _, d := range cart.Discounts {
-				if d.Rule.Type != models.DiscountRuleFreeShiping {
+				if d.Rule.Type != models.DiscountRuleFreeShipping {
 					discount = d
 					break
 				}
@@ -409,7 +403,7 @@ func (s *TotalsService) GetAllocationMap(cart *models.Cart, order *models.Order,
 		}
 		if order != nil {
 			for _, d := range order.Discounts {
-				if d.Rule.Type != models.DiscountRuleFreeShiping {
+				if d.Rule.Type != models.DiscountRuleFreeShipping {
 					discount = d
 					break
 				}
@@ -443,7 +437,7 @@ func (s *TotalsService) GetAllocationMap(cart *models.Cart, order *models.Order,
 	return allocationMap, nil
 }
 
-func (s *TotalsService) GetRefundedTotal(order models.Order) float64 {
+func (s *TotalsService) GetRefundedTotal(order *models.Order) float64 {
 	if order.Refunds == nil {
 		return 0
 	}
@@ -454,35 +448,40 @@ func (s *TotalsService) GetRefundedTotal(order models.Order) float64 {
 	return s.Rounded(total)
 }
 
-func (s *TotalsService) GetLineItemRefund(order models.Order, lineItem models.LineItem) (float64, error) {
-	allocationMap, err := s.GetAllocationMap(nil, &order, AllocationMapOptions{})
+func (s *TotalsService) GetLineItemRefund(order *models.Order, lineItem models.LineItem) (float64, *utils.ApplictaionError) {
+	allocationMap, err := s.GetAllocationMap(nil, order, AllocationMapOptions{})
 	if err != nil {
 		return 0, err
 	}
 	includesTax := true
 	discountAmount := allocationMap[lineItem.Id].GiftCard.UnitAmount * float64(lineItem.Quantity)
-	lineSubtotal := lineItem.UnitPrice*float64(lineItem.Quantity) - discountAmount
+	var taxAmountIncludedInPrice float64
+
 	if order.TaxRate != 0.0 {
-		taxAmountIncludedInPrice := 0.0
 		if includesTax {
 			taxAmountIncludedInPrice = s.Rounded(utils.CalculatePriceTaxAmount(lineItem.UnitPrice, order.TaxRate/100, includesTax))
 		}
-		lineSubtotal = (lineItem.UnitPrice-taxAmountIncludedInPrice)*float64(lineItem.Quantity) - discountAmount
+		lineSubtotal := (lineItem.UnitPrice-taxAmountIncludedInPrice)*float64(lineItem.Quantity) - discountAmount
 		taxRate := order.TaxRate / 100
 		return s.Rounded(lineSubtotal * (1 + taxRate)), nil
 	}
 	if lineItem.TaxLines == nil {
-		return 0, errors.New("Tax calculation did not receive tax_lines")
+		return 0, utils.NewApplictaionError(
+			utils.CONFLICT,
+			"Tax calculation did not receive tax_lines",
+			"500",
+			nil,
+		)
 	}
 	taxRate := 0.0
 	for _, tl := range lineItem.TaxLines {
 		taxRate += tl.Rate / 100
 	}
-	taxAmountIncludedInPrice := 0.0
+
 	if includesTax {
 		taxAmountIncludedInPrice = s.Rounded(utils.CalculatePriceTaxAmount(lineItem.UnitPrice, taxRate, includesTax))
 	}
-	lineSubtotal = (lineItem.UnitPrice-taxAmountIncludedInPrice)*float64(lineItem.Quantity) - discountAmount
+	lineSubtotal := (lineItem.UnitPrice-taxAmountIncludedInPrice)*float64(lineItem.Quantity) - discountAmount
 	taxTotal := 0.0
 	for _, tl := range lineItem.TaxLines {
 		taxRate := tl.Rate / 100
@@ -491,7 +490,7 @@ func (s *TotalsService) GetLineItemRefund(order models.Order, lineItem models.Li
 	return s.Rounded(lineSubtotal + taxTotal), nil
 }
 
-func (s *TotalsService) GetRefundTotal(order models.Order, lineItems []models.LineItem) (float64, error) {
+func (s *TotalsService) GetRefundTotal(order *models.Order, lineItems []models.LineItem) (float64, *utils.ApplictaionError) {
 	var itemIds uuid.UUIDs
 	for _, item := range order.Items {
 		itemIds = append(itemIds, item.Id)
@@ -513,7 +512,12 @@ func (s *TotalsService) GetRefundTotal(order models.Order, lineItems []models.Li
 	refunds := []float64{}
 	for _, item := range lineItems {
 		if !slices.Contains(itemIds, item.Id) {
-			return 0, errors.New("Line item does not exist on order")
+			return 0, utils.NewApplictaionError(
+				utils.CONFLICT,
+				"Line item does not exist on order",
+				"500",
+				nil,
+			)
 		}
 		refund, err := s.GetLineItemRefund(order, item)
 		if err != nil {
@@ -606,7 +610,9 @@ func (s *TotalsService) GetLineItemAdjustmentsTotal(cart *models.Cart, order *mo
 
 func (s *TotalsService) GetLineDiscounts(cart *models.Cart, order *models.Order, discount models.Discount) []types.LineDiscountAmount {
 	merged := append([]models.LineItem{}, cart.Items...)
-	merged = append(merged, order.Items...)
+	if order.Items != nil {
+		merged = append(merged, order.Items...)
+	}
 
 	if order != nil {
 		if order.Swaps != nil {
@@ -654,8 +660,8 @@ func (s *TotalsService) GetLineDiscounts(cart *models.Cart, order *models.Order,
 	return lineDiscounts
 }
 
-func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models.Cart, order *models.Order, options *LineItemTotalsOptions) (*LineItemTotals, error) {
-	var err error
+func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models.Cart, order *models.Order, options *LineItemTotalsOptions) (*models.LineItem, *utils.ApplictaionError) {
+	var err *utils.ApplictaionError
 	calculationContext := options.CalculationContext
 	if calculationContext == nil {
 		calculationContext, err = s.GetCalculationContext(cart, order, CalculationContextOptions{
@@ -674,7 +680,7 @@ func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models
 	}
 	rawDiscountTotal := lineItemAllocation.Discount.Amount
 	discountTotal := math.Round(rawDiscountTotal)
-	lineItemTotals := &LineItemTotals{
+	lineItemTotals := &models.LineItem{
 		UnitPrice:        lineItem.UnitPrice,
 		Quantity:         lineItem.Quantity,
 		Subtotal:         subtotal,
@@ -704,17 +710,27 @@ func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models
 			var taxLines []models.LineItemTaxLine
 			if options.UseTaxLines || order != nil {
 				if lineItem.TaxLines == nil && lineItem.VariantId.UUID != uuid.Nil {
-					return nil, errors.New("Tax Lines must be joined on items to calculate taxes")
+					return nil, utils.NewApplictaionError(
+						utils.CONFLICT,
+						"Tax Lines must be joined on items to calculate taxes",
+						"500",
+						nil,
+					)
 				}
 				taxLines = lineItem.TaxLines
 			} else {
 				if lineItem.IsReturn {
 					if lineItem.TaxLines == nil && lineItem.VariantId.UUID != uuid.Nil {
-						return nil, errors.New("Return Line Items must join tax lines")
+						return nil, utils.NewApplictaionError(
+							utils.CONFLICT,
+							"Return Line Items must join tax lines",
+							"500",
+							nil,
+						)
 					}
 					taxLines = lineItem.TaxLines
 				} else {
-					_, lineitem, err := s.taxProviderService.GetTaxLines([]models.LineItem{lineItem}, calculationContext)
+					_, lineitem, err := s.r.TaxProviderService().SetContext(s.ctx).GetTaxLines([]models.LineItem{lineItem}, calculationContext)
 					if err != nil {
 						return nil, err
 					}
@@ -725,13 +741,13 @@ func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models
 		}
 	}
 	if len(lineItemTotals.TaxLines) > 0 {
-		var err error
-		lineItemTotals.TaxTotal, err = s.taxCalculationStrategy.Calculate([]models.LineItem{lineItem}, lineItemTotals.TaxLines, calculationContext)
+		var err *utils.ApplictaionError
+		lineItemTotals.TaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{lineItem}, lineItemTotals.TaxLines, calculationContext)
 		if err != nil {
 			return nil, err
 		}
 		noDiscountContext := calculationContext
-		lineItemTotals.OriginalTaxTotal, err = s.taxCalculationStrategy.Calculate([]models.LineItem{lineItem}, lineItemTotals.TaxLines, noDiscountContext)
+		lineItemTotals.OriginalTaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{lineItem}, lineItemTotals.TaxLines, noDiscountContext)
 		if err != nil {
 			return nil, err
 		}
@@ -746,7 +762,7 @@ func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models
 	return lineItemTotals, nil
 }
 
-func (s *TotalsService) GetLineItemTotal(lineItem models.LineItem, cart *models.Cart, order *models.Order, options GetLineItemTotalOptions) (float64, error) {
+func (s *TotalsService) GetLineItemTotal(lineItem models.LineItem, cart *models.Cart, order *models.Order, options GetLineItemTotalOptions) (float64, *utils.ApplictaionError) {
 	lineItemTotals, err := s.GetLineItemTotals(lineItem, cart, order, &LineItemTotalsOptions{
 		IncludeTax: options.IncludeTax,
 	})
@@ -763,7 +779,7 @@ func (s *TotalsService) GetLineItemTotal(lineItem models.LineItem, cart *models.
 	return toReturn, nil
 }
 
-func (s *TotalsService) GetGiftCardableAmount(cart *models.Cart, order *models.Order) (float64, error) {
+func (s *TotalsService) GetGiftCardableAmount(cart *models.Cart, order *models.Order) (float64, *utils.ApplictaionError) {
 	if cart.Region.GiftCardsTaxable {
 		subtotal, err := s.GetSubtotal(cart, order, types.SubtotalOptions{})
 		if err != nil {
@@ -793,7 +809,7 @@ func (s *TotalsService) GetGiftCardableAmount(cart *models.Cart, order *models.O
 	})
 }
 
-func (s *TotalsService) GetGiftCardTotal(cart *models.Cart, order *models.Order, opts map[string]interface{}) (*Total, error) {
+func (s *TotalsService) GetGiftCardTotal(cart *models.Cart, order *models.Order, opts map[string]interface{}) (*Total, *utils.ApplictaionError) {
 	var giftCardable float64
 	if val, ok := opts["gift_cardable"].(float64); ok {
 		giftCardable = val
@@ -811,15 +827,15 @@ func (s *TotalsService) GetGiftCardTotal(cart *models.Cart, order *models.Order,
 
 	var giftCardTotals *Total
 	if cart != nil {
-		var err error
-		giftCardTotals, err = s.newTotalsService.GetGiftCardTotals(giftCardable, []models.GiftCardTransaction{}, cart.Region, cart.GiftCards)
+		var err *utils.ApplictaionError
+		giftCardTotals, err = s.r.NewTotalsService().SetContext(s.ctx).GetGiftCardTotals(giftCardable, []models.GiftCardTransaction{}, cart.Region, cart.GiftCards)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if order != nil {
-		var err error
-		giftCardTotals, err = s.newTotalsService.GetGiftCardTotals(giftCardable, order.GiftCardTransactions, order.Region, order.GiftCards)
+		var err *utils.ApplictaionError
+		giftCardTotals, err = s.r.NewTotalsService().SetContext(s.ctx).GetGiftCardTotals(giftCardable, order.GiftCardTransactions, order.Region, order.GiftCards)
 		if err != nil {
 			return nil, err
 		}
@@ -828,7 +844,7 @@ func (s *TotalsService) GetGiftCardTotal(cart *models.Cart, order *models.Order,
 	return giftCardTotals, nil
 }
 
-func (s *TotalsService) GetDiscountTotal(cart *models.Cart, order *models.Order) (float64, error) {
+func (s *TotalsService) GetDiscountTotal(cart *models.Cart, order *models.Order) (float64, *utils.ApplictaionError) {
 	subtotal, err := s.GetSubtotal(cart, order, types.SubtotalOptions{})
 	if err != nil {
 		return 0, err
@@ -840,7 +856,7 @@ func (s *TotalsService) GetDiscountTotal(cart *models.Cart, order *models.Order)
 	return s.Rounded(math.Min(float64(subtotal), float64(discountTotal))), nil
 }
 
-func (s *TotalsService) GetCalculationContext(cart *models.Cart, order *models.Order, options CalculationContextOptions) (*interfaces.TaxCalculationContext, error) {
+func (s *TotalsService) GetCalculationContext(cart *models.Cart, order *models.Order, options CalculationContextOptions) (*interfaces.TaxCalculationContext, *utils.ApplictaionError) {
 	allocationMap, err := s.GetAllocationMap(cart, order, AllocationMapOptions{
 		ExcludeGiftCards: options.ExcludeGiftCards,
 		ExcludeDiscounts: options.ExcludeDiscounts,

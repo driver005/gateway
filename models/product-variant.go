@@ -12,6 +12,9 @@ type ProductVariant struct {
 	// Whether the Product Variant should be purchasable when `inventory_quantity` is 0.
 	AllowBackorder bool `json:"allow_backorder" gorm:"default:null"`
 
+	// Whether the Product Variant should be purchasable.
+	Purchasable bool `json:"purchasable" gorm:"default:null"`
+
 	// A generic field for a GTIN number that can be used to identify the Product Variant.
 	Barcode string `json:"barcode" gorm:"default:null"`
 
@@ -64,7 +67,7 @@ type ProductVariant struct {
 	Upc string `json:"upc" gorm:"default:null"`
 
 	// The ranking of this variant
-	VariantRank float64 `json:"variant_rank" gorm:"default:null"`
+	VariantRank int `json:"variant_rank" gorm:"default:null"`
 
 	// The weight of the Product Variant. May be used in shipping rate calculations.
 	Weight float64 `json:"weight" gorm:"default:null"`

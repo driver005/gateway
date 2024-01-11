@@ -2,75 +2,75 @@ package services
 
 import (
 	"context"
-	"errors"
 	"reflect"
 	"slices"
 	"strings"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
 )
 
 type ClaimItemService struct {
-	ctx                context.Context
-	repo               *repository.ClaimItemRepo
-	claimTagRepository *repository.ClaimTagRepo
-	claimImageRepo     *repository.ClaimImageRepo
-	lineItemService    *LineItemService
+	ctx context.Context
+	r   Registry
 }
 
 func NewClaimItemService(
-	ctx context.Context,
-	repo *repository.ClaimItemRepo,
-	claimTagRepository *repository.ClaimTagRepo,
-	claimImageRepo *repository.ClaimImageRepo,
-	lineItemService *LineItemService,
+	r Registry,
 ) *ClaimItemService {
 	return &ClaimItemService{
-		ctx,
-		repo,
-		claimTagRepository,
-		claimImageRepo,
-		lineItemService,
+		context.Background(),
+		r,
 	}
 }
 
-func (s *ClaimItemService) Retrieve(claimItemId uuid.UUID, config repository.Options) (*models.ClaimItem, error) {
+func (s *ClaimItemService) SetContext(context context.Context) *ClaimItemService {
+	s.ctx = context
+	return s
+}
+
+func (s *ClaimItemService) Retrieve(claimItemId uuid.UUID, config sql.Options) (*models.ClaimItem, *utils.ApplictaionError) {
 	if claimItemId == uuid.Nil {
-		return nil, errors.New(`"claimItemId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"claimItemId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	var res *models.ClaimItem
 
-	query := repository.BuildQuery[models.ClaimItem](models.ClaimItem{Model: core.Model{Id: claimItemId}}, config)
+	query := sql.BuildQuery[models.ClaimItem](models.ClaimItem{Model: core.Model{Id: claimItemId}}, config)
 
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
+	if err := s.r.ClaimItemRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *ClaimItemService) List(selector models.ClaimItem, config repository.Options) ([]models.ClaimItem, error) {
+func (s *ClaimItemService) List(selector models.ClaimItem, config sql.Options) ([]models.ClaimItem, *utils.ApplictaionError) {
 	var res []models.ClaimItem
 
-	if reflect.DeepEqual(config, repository.Options{}) {
+	if reflect.DeepEqual(config, sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
 	}
 
-	query := repository.BuildQuery[models.ClaimItem](selector, config)
+	query := sql.BuildQuery[models.ClaimItem](selector, config)
 
-	if err := s.repo.Find(s.ctx, res, query); err != nil {
+	if err := s.r.ClaimItemRepository().Find(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *ClaimItemService) Update(id uuid.UUID, model *models.ClaimItem) (*models.ClaimItem, error) {
-	item, err := s.Retrieve(id, repository.Options{
+func (s *ClaimItemService) Update(id uuid.UUID, model *models.ClaimItem) (*models.ClaimItem, *utils.ApplictaionError) {
+	item, err := s.Retrieve(id, sql.Options{
 		Relations: []string{"images", "tags"},
 	})
 	if err != nil {
@@ -98,8 +98,8 @@ func (s *ClaimItemService) Update(id uuid.UUID, model *models.ClaimItem) (*model
 				var claimTag *models.ClaimTag
 
 				claimTag.Value = strings.ToLower(strings.TrimSpace(tag.Value))
-				if err := s.claimTagRepository.FindOne(s.ctx, claimTag, repository.Query{}); err != nil {
-					if err := s.claimTagRepository.Create(s.ctx, claimTag); err != nil {
+				if err := s.r.ClaimTagRepository().FindOne(s.ctx, claimTag, sql.Query{}); err != nil {
+					if err := s.r.ClaimTagRepository().Create(s.ctx, claimTag); err != nil {
 						return nil, err
 					}
 
@@ -118,7 +118,7 @@ func (s *ClaimItemService) Update(id uuid.UUID, model *models.ClaimItem) (*model
 		}
 		for _, img := range item.Images {
 			if !slices.Contains(ids, img.Id) {
-				if err := s.claimImageRepo.Remove(s.ctx, &img); err != nil {
+				if err := s.r.ClaimImageRepository().Remove(s.ctx, &img); err != nil {
 					return nil, err
 				}
 			}
@@ -132,7 +132,7 @@ func (s *ClaimItemService) Update(id uuid.UUID, model *models.ClaimItem) (*model
 
 				claimImage.Url = img.Url
 
-				if err := s.claimImageRepo.Create(s.ctx, claimImage); err != nil {
+				if err := s.r.ClaimImageRepository().Create(s.ctx, claimImage); err != nil {
 					return nil, err
 				}
 
@@ -141,29 +141,44 @@ func (s *ClaimItemService) Update(id uuid.UUID, model *models.ClaimItem) (*model
 		}
 	}
 
-	if err := s.repo.Save(s.ctx, item); err != nil {
+	if err := s.r.ClaimItemRepository().Save(s.ctx, item); err != nil {
 		return nil, err
 	}
 
 	return item, nil
 }
 
-func (s *ClaimItemService) Create(model *models.ClaimItem) (*models.ClaimItem, error) {
+func (s *ClaimItemService) Create(model *models.ClaimItem) (*models.ClaimItem, *utils.ApplictaionError) {
 	if model.Reason != "missing_item" && model.Reason != "wrong_item" && model.Reason != "production_failure" && model.Reason != "other" {
-		return nil, errors.New(`claim item reason must be one of "missing_item", "wrong_item", "production_failure" or "other".`)
+		return nil, utils.NewApplictaionError(
+			utils.CONFLICT,
+			`claim item reason must be one ,of "missing_item", "wrong_item", "production_failure" or "other".`,
+			"500",
+			nil,
+		)
 	}
 
-	lineItem, err := s.lineItemService.Retrieve(model.ItemId.UUID, repository.Options{})
+	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(model.ItemId.UUID, sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
 	if lineItem.VariantId.UUID == uuid.Nil {
-		return nil, errors.New("Cannot claim a custom line item")
+		return nil, utils.NewApplictaionError(
+			utils.CONFLICT,
+			"Cannot claim a custom line ite,m",
+			"500",
+			nil,
+		)
 	}
 
 	if lineItem.FulfilledQuantity < model.Quantity {
-		return nil, errors.New("Cannot claim more of an item than has been fulfilled.")
+		return nil, utils.NewApplictaionError(
+			utils.CONFLICT,
+			"Cannot claim more of an item t,han has been fulfilled.",
+			"500",
+			nil,
+		)
 	}
 
 	var tagsToAdd []models.ClaimTag
@@ -172,8 +187,8 @@ func (s *ClaimItemService) Create(model *models.ClaimItem) (*models.ClaimItem, e
 			var claimTag *models.ClaimTag
 
 			claimTag.Value = strings.ToLower(strings.TrimSpace(tag.Value))
-			if err := s.claimTagRepository.FindOne(s.ctx, claimTag, repository.Query{}); err != nil {
-				if err := s.claimTagRepository.Create(s.ctx, claimTag); err != nil {
+			if err := s.r.ClaimTagRepository().FindOne(s.ctx, claimTag, sql.Query{}); err != nil {
+				if err := s.r.ClaimTagRepository().Create(s.ctx, claimTag); err != nil {
 					return nil, err
 				}
 				tagsToAdd = append(tagsToAdd, *claimTag)
@@ -190,7 +205,7 @@ func (s *ClaimItemService) Create(model *models.ClaimItem) (*models.ClaimItem, e
 
 			claimImage.Url = img.Url
 
-			if err := s.claimImageRepo.Create(s.ctx, claimImage); err != nil {
+			if err := s.r.ClaimImageRepository().Create(s.ctx, claimImage); err != nil {
 				return nil, err
 			}
 
@@ -201,7 +216,7 @@ func (s *ClaimItemService) Create(model *models.ClaimItem) (*models.ClaimItem, e
 	model.Tags = tagsToAdd
 	model.Images = imagesToAdd
 
-	if err := s.repo.Save(s.ctx, model); err != nil {
+	if err := s.r.ClaimItemRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 

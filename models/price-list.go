@@ -12,13 +12,13 @@ type PriceList struct {
 	core.Model
 
 	// The Customer Groups that the Price List applies to. Available if the relation `customer_groups` is expanded.
-	CustomerGroups *CustomerGroup `json:"customer_groups" gorm:"foreignKey:id"`
+	CustomerGroups []CustomerGroup `json:"customer_groups" gorm:"foreignKey:id"`
 
 	// The price list's description
 	Description string `json:"description"`
 
 	// The date with timezone that the Price List stops being valid.
-	EndsAt time.Time `json:"ends_at" gorm:"default:null"`
+	EndsAt *time.Time `json:"ends_at" gorm:"default:null"`
 
 	// [EXPERIMENTAL] Does the price list prices include tax
 	IncludesTax bool `json:"includes_tax" gorm:"default:null"`
@@ -30,7 +30,7 @@ type PriceList struct {
 	Prices []MoneyAmount `json:"prices" gorm:"foreignKey:id"`
 
 	// The date with timezone that the Price List starts being valid.
-	StartsAt time.Time `json:"starts_at" gorm:"default:null"`
+	StartsAt *time.Time `json:"starts_at" gorm:"default:null"`
 
 	// The status of the Price List
 	Status PriceListStatus `json:"status" gorm:"default:null"`

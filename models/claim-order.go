@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -14,9 +15,9 @@ type ClaimOrder struct {
 	Type ClaimStatus `json:"type"`
 
 	// The status of the claim's payment
-	PaymentStatus string `json:"payment_status" gorm:"default:null"`
+	PaymentStatus ClaimPaymentStatus `json:"payment_status" gorm:"default:null"`
 
-	FulfillmentStatus string `json:"fulfillment_status" gorm:"default:null"`
+	FulfillmentStatus ClaimFulfillmentStatus `json:"fulfillment_status" gorm:"default:null"`
 
 	// The items that have been claimed
 	ClaimItems []ClaimItem `json:"claim_items" gorm:"foreignKey:id"`
@@ -45,14 +46,72 @@ type ClaimOrder struct {
 	Fulfillments []Fulfillment `json:"fulfillments" gorm:"foreignKey:id"`
 
 	// The amount that will be refunded in conjunction with the claim
-	RefundAmount int32 `json:"refund_amount" gorm:"default:null"`
+	RefundAmount float64 `json:"refund_amount" gorm:"default:null"`
 
 	// The date with timezone at which the claim was canceled.
-	CanceledAt time.Time `json:"canceled_at" gorm:"default:null"`
+	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
 
 	// Flag for describing whether or not notifications related to this should be send.
 	NoNotification bool `json:"no_notification" gorm:"default:null"`
 
 	// Randomly generated key used to continue the completion of the cart associated with the claim in case of failure.
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
+}
+
+// The status of the Price List
+type ClaimStatus string
+
+// Defines values for ClaimStatus.
+const (
+	ClaimStatusReplace ClaimStatus = "replace"
+	ClaimStatusRefund  ClaimStatus = "refund"
+)
+
+func (pl *ClaimStatus) Scan(value interface{}) error {
+	*pl = ClaimStatus(value.([]byte))
+	return nil
+}
+
+func (pl ClaimStatus) Value() (driver.Value, error) {
+	return string(pl), nil
+}
+
+type ClaimPaymentStatus string
+
+const (
+	ClaimPaymentStatusNa          ClaimPaymentStatus = "na"
+	ClaimPaymentStatusNotRefunded ClaimPaymentStatus = "not_refunded"
+	ClaimPaymentStatusRefunded    ClaimPaymentStatus = "refunded"
+)
+
+func (pl *ClaimPaymentStatus) Scan(value interface{}) error {
+	*pl = ClaimPaymentStatus(value.([]byte))
+	return nil
+}
+
+func (pl ClaimPaymentStatus) Value() (driver.Value, error) {
+	return string(pl), nil
+}
+
+type ClaimFulfillmentStatus string
+
+const (
+	ClaimFulfillmentStatusNotFulfilled       ClaimFulfillmentStatus = "not_fulfilled"
+	ClaimFulfillmentStatusPartiallyFulfilled ClaimFulfillmentStatus = "partially_fulfilled"
+	ClaimFulfillmentStatusFulfilled          ClaimFulfillmentStatus = "fulfilled"
+	ClaimFulfillmentStatusPartiallyShipped   ClaimFulfillmentStatus = "partially_shipped"
+	ClaimFulfillmentStatusShipped            ClaimFulfillmentStatus = "shipped"
+	ClaimFulfillmentStatusPartiallyReturned  ClaimFulfillmentStatus = "partially_returned"
+	ClaimFulfillmentStatusReturned           ClaimFulfillmentStatus = "returned"
+	ClaimFulfillmentStatusCanceled           ClaimFulfillmentStatus = "canceled"
+	ClaimFulfillmentStatusRequiresAction     ClaimFulfillmentStatus = "requires_action"
+)
+
+func (pl *ClaimFulfillmentStatus) Scan(value interface{}) error {
+	*pl = ClaimFulfillmentStatus(value.([]byte))
+	return nil
+}
+
+func (pl ClaimFulfillmentStatus) Value() (driver.Value, error) {
+	return string(pl), nil
 }

@@ -9,9 +9,9 @@ import (
 type DiscountRuleType string
 
 const (
-	DiscountRuleFixed       DiscountRuleType = "fixed"
-	DiscountRulePersentage  DiscountRuleType = "percentage"
-	DiscountRuleFreeShiping DiscountRuleType = "free_shipping"
+	DiscountRuleFixed        DiscountRuleType = "fixed"
+	DiscountRulePersentage   DiscountRuleType = "percentage"
+	DiscountRuleFreeShipping DiscountRuleType = "free_shipping"
 )
 
 func (pl *DiscountRuleType) Scan(value interface{}) error {
@@ -41,7 +41,7 @@ type DiscountRule struct {
 	Description string `json:"description" gorm:"default:null"`
 
 	// The value that the discount represents; this will depend on the type of the discount
-	Value int32 `json:"value"`
+	Value float64 `json:"value"`
 
 	// The scope that the discount should apply to.
 	Allocation AllocationType `json:"allocation" gorm:"default:null"`

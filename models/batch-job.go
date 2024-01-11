@@ -40,22 +40,22 @@ type BatchJob struct {
 	Result BatchJobResult `json:"result" gorm:"default:null"`
 
 	// The date from which the job has been pre processed.
-	PreProcessedAt time.Time `json:"pre_processed_at" gorm:"default:null"`
+	PreProcessedAt *time.Time `json:"pre_processed_at" gorm:"default:null"`
 
 	// The date the job is processing at.
-	ProcessingAt time.Time `json:"processing_at" gorm:"default:null"`
+	ProcessingAt *time.Time `json:"processing_at" gorm:"default:null"`
 
 	// The date when the confirmation has been done.
-	ConfirmedAt time.Time `json:"confirmed_at" gorm:"default:null"`
+	ConfirmedAt *time.Time `json:"confirmed_at" gorm:"default:null"`
 
 	// The date of the completion.
-	CompletedAt time.Time `json:"completed_at" gorm:"default:null"`
+	CompletedAt *time.Time `json:"completed_at" gorm:"default:null"`
 
 	// The date of the concellation.
-	CanceledAt time.Time `json:"canceled_at" gorm:"default:null"`
+	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
 
 	// The date when the job failed.
-	FailedAt time.Time `json:"failed_at" gorm:"default:null"`
+	FailedAt *time.Time `json:"failed_at" gorm:"default:null"`
 }
 
 type BatchJobResultErrorsCode struct {

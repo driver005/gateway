@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -12,16 +13,16 @@ type Order struct {
 	core.Model
 
 	// The order's status
-	Status string `json:"status" gorm:"default:null"`
+	Status OrderStatus `json:"status" gorm:"default:null"`
 
 	// The order's fulfillment status
-	FulfillmentStatus string `json:"fulfillment_status" gorm:"default:null"`
+	FulfillmentStatus FulfillmentStatus `json:"fulfillment_status" gorm:"default:null"`
 
 	// The order's payment status
-	PaymentStatus string `json:"payment_status" gorm:"default:null"`
+	PaymentStatus PaymentStatus `json:"payment_status" gorm:"default:null"`
 
 	// The order's display ID
-	DisplayId int32 `json:"display_id" gorm:"default:null"`
+	DisplayId string `json:"display_id" gorm:"default:null"`
 
 	// The ID of the cart associated with the order
 	CartId uuid.NullUUID `json:"cart_id" gorm:"default:null"`
@@ -98,14 +99,17 @@ type Order struct {
 	// The line items that belong to the order. Available if the relation `items` is expanded.
 	Items []LineItem `json:"items" gorm:"foreignKey:id"`
 
-	// [EXPERIMENTAL] Order edits done on the order. Available if the relation `edits` is expanded.
+	// The returnable items that belong to the order. Available if the relation `returnable_items` is expanded.
+	ReturnableItems []LineItem `json:"returnable_items" gorm:"foreignKey:id"`
+
+	// Order edits done on the order. Available if the relation `edits` is expanded.
 	Edits []OrderEdit `json:"edits" gorm:"foreignKey:id"`
 
 	// The gift card transactions used in the order. Available if the relation `gift_card_transactions` is expanded.
 	GiftCardTransactions []GiftCardTransaction `json:"gift_card_transactions" gorm:"foreignKey:id"`
 
 	// The date the order was canceled on.
-	CanceledAt time.Time `json:"canceled_at" gorm:"default:null"`
+	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
 
 	// Flag for describing whether or not notifications related to this should be send.
 	NoNotification bool `json:"no_notification" gorm:"default:null"`
@@ -123,32 +127,61 @@ type Order struct {
 	SalesChannel *SalesChannel `json:"sales_channel" gorm:"foreignKey:id;references:sales_channel_id"`
 
 	// The total of shipping
-	ShippingTotal int32 `json:"shipping_total" gorm:"default:null"`
-
-	// The total of discount
-	DiscountTotal int32 `json:"discount_total" gorm:"default:null"`
-
-	// The total of tax
-	TaxTotal int32 `json:"tax_total" gorm:"default:null"`
-
-	// The total amount refunded if the order is returned.
-	RefundedTotal int32 `json:"refunded_total" gorm:"default:null"`
-
-	// The total amount of the order
-	Total int32 `json:"total" gorm:"default:null"`
-
-	// The subtotal of the order
-	Subtotal int32 `json:"subtotal" gorm:"default:null"`
-
-	// The total amount paid
-	PaidTotal int32 `json:"paid_total" gorm:"default:null"`
-
-	// The amount that can be refunded
-	RefundableAmount int32 `json:"refundable_amount" gorm:"default:null"`
+	ShippingTotal float64 `json:"shipping_total" gorm:"default:null"`
 
 	// The total of gift cards
-	GiftCardTotal int32 `json:"gift_card_total" gorm:"default:null"`
+	ShippingTaxTotal float64 `json:"shipping_tax_total" gorm:"default:null"`
+
+	// The total of discount
+	DiscountTotal float64 `json:"discount_total" gorm:"default:null"`
+
+	// The total of the discount
+	RawDiscountTotal float64 `json:"raw_discount_total" gorm:"default:null"`
+
+	// The total of gift cards
+	ItemTaxTotal float64 `json:"item_tax_total" gorm:"default:null"`
+
+	// The total of tax
+	TaxTotal float64 `json:"tax_total" gorm:"default:null"`
+
+	// The total amount refunded if the order is returned.
+	RefundedTotal float64 `json:"refunded_total" gorm:"default:null"`
+
+	// The total amount of the order
+	Total float64 `json:"total" gorm:"default:null"`
+
+	// The subtotal of the order
+	Subtotal float64 `json:"subtotal" gorm:"default:null"`
+
+	// The total amount paid
+	PaidTotal float64 `json:"paid_total" gorm:"default:null"`
+
+	// The amount that can be refunded
+	RefundableAmount float64 `json:"refundable_amount" gorm:"default:null"`
+
+	// The total of gift cards
+	GiftCardTotal float64 `json:"gift_card_total" gorm:"default:null"`
 
 	// The total of gift cards with taxes
-	GiftCardTaxTotal int32 `json:"gift_card_tax_total" gorm:"default:null"`
+	GiftCardTaxTotal float64 `json:"gift_card_tax_total" gorm:"default:null"`
+}
+
+type OrderStatus string
+
+const (
+	OrderStatusPending        OrderStatus = "pending"
+	OrderStatusCompleted      OrderStatus = "completed"
+	OrderStatusArchived       OrderStatus = "archived"
+	OrderStatusCanceled       OrderStatus = "canceled"
+	OrderStatusRefunded       OrderStatus = "refunded"
+	OrderStatusRequiresAction OrderStatus = "requires_action"
+)
+
+func (pl *OrderStatus) Scan(value interface{}) error {
+	*pl = OrderStatus(value.([]byte))
+	return nil
+}
+
+func (pl OrderStatus) Value() (driver.Value, error) {
+	return string(pl), nil
 }

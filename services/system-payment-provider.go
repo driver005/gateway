@@ -8,10 +8,15 @@ type SystemProviderService struct {
 	ctx context.Context
 }
 
-func NewSystemProviderService(ctx context.Context) *SystemProviderService {
+func NewSystemProviderService() *SystemProviderService {
 	return &SystemProviderService{
-		ctx,
+		context.Background(),
 	}
+}
+
+func (s *SystemProviderService) SetContext(context context.Context) *SystemProviderService {
+	s.ctx = context
+	return s
 }
 
 func (s *SystemProviderService) CreatePayment() map[string]interface{} {

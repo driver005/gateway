@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -12,7 +13,7 @@ type Return struct {
 	core.Model
 
 	// Status of the Return.
-	Status string `json:"status" gorm:"default:null"`
+	Status ReturnStatus `json:"status" gorm:"default:null"`
 
 	// The Return Items that will be shipped back to the warehouse. Available if the relation `items` is expanded.
 	Items []ReturnItem `json:"items" gorm:"foreignKey:return_id"`
@@ -36,20 +37,42 @@ type Return struct {
 	ClaimOrder *ClaimOrder `json:"claim_order" gorm:"foreignKey:id;references:claim_order_id"`
 
 	// The Shipping Method that will be used to send the Return back. Can be null if the Customer facilitates the return shipment themselves. Available if the relation `shipping_method` is expanded.
-	ShippingMethod []ShippingMethod `json:"shipping_method" gorm:"foreignKey:id"`
+	ShippingMethod *ShippingMethod `json:"shipping_method" gorm:"foreignKey:id"`
 
 	// Data about the return shipment as provided by the Fulfilment Provider that handles the return shipment.
-	ShippingData JSONB `json:"shipping_data" gorm:"default:null"`
+	ShippingData core.JSONB `json:"shipping_data" gorm:"default:null"`
 
 	// The amount that should be refunded as a result of the return.
-	RefundAmount int32 `json:"refund_amount"`
+	RefundAmount float64 `json:"refund_amount"`
 
 	// When set to true, no notification will be sent related to this return.
 	NoNotification bool `json:"no_notification" gorm:"default:null"`
+
+	LocationId string `json:"location_id"`
 
 	// Randomly generated key used to continue the completion of the return in case of failure.
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
 
 	// The date with timezone at which the return was received.
-	ReceivedAt time.Time `json:"received_at" gorm:"default:null"`
+	ReceivedAt *time.Time `json:"received_at" gorm:"default:null"`
+}
+
+// ReturnStatus represents the status of a return
+type ReturnStatus string
+
+// Enum values for ReturnStatus
+const (
+	ReturnRequested      ReturnStatus = "requested"
+	ReturnReceived       ReturnStatus = "received"
+	ReturnRequiresAction ReturnStatus = "requires_action"
+	ReturnCanceled       ReturnStatus = "canceled"
+)
+
+func (pl *ReturnStatus) Scan(value interface{}) error {
+	*pl = ReturnStatus(value.([]byte))
+	return nil
+}
+
+func (pl ReturnStatus) Value() (driver.Value, error) {
+	return string(pl), nil
 }

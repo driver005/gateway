@@ -28,7 +28,7 @@ type ProductCategory struct {
 	IsActive bool `json:"is_active"`
 
 	// An integer that depicts the rank of category in a tree node
-	Rank int32 `json:"rank,omitempty"`
+	Rank int64 `json:"rank,omitempty"`
 
 	// The details of the category's children.
 	CategoryChildren []ProductCategory `json:"category_children"`

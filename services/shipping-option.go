@@ -8,7 +8,7 @@ import (
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
@@ -16,25 +16,24 @@ import (
 )
 
 type ShippingOptionService struct {
-	ctx                   context.Context
-	repo                  *repository.ShippingOptionRepo
-	methodRepository      *repository.ShippingMethodRepo
-	requirementRepository *repository.ShippingOptionRequirementRepo
+	ctx context.Context
+	r   Registry
 }
 
 func NewShippingOptionService(
-	ctx context.Context,
-	repo *repository.ShippingOptionRepo,
-	methodRepository *repository.ShippingMethodRepo,
-	requirementRepository *repository.ShippingOptionRequirementRepo,
+	r Registry,
 ) *ShippingOptionService {
 	return &ShippingOptionService{
-		ctx,
-		repo,
-		methodRepository,
-		requirementRepository,
+		context.Background(),
+		r,
 	}
 }
+
+func (s *ShippingOptionService) SetContext(context context.Context) *ShippingOptionService {
+	s.ctx = context
+	return s
+}
+
 func (s *ShippingOptionService) ValidateRequirement(requirement *models.ShippingOptionRequirement, optionId uuid.UUID) (*models.ShippingOptionRequirement, *utils.ApplictaionError) {
 	if requirement.Type == "" {
 		return nil, utils.NewApplictaionError(
@@ -53,10 +52,10 @@ func (s *ShippingOptionService) ValidateRequirement(requirement *models.Shipping
 		)
 	}
 
-	existingReq := &models.ShippingOptionRequirement{}
+	var existingReq *models.ShippingOptionRequirement
 	if requirement.Id != uuid.Nil {
-		query := repository.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: requirement.Id}}, repository.Options{})
-		err := s.requirementRepository.FindOne(s.ctx, existingReq, query)
+		query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: requirement.Id}}, sql.Options{})
+		err := s.r.ShippingOptionRequirementRepository().FindOne(s.ctx, existingReq, query)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
@@ -89,39 +88,39 @@ func (s *ShippingOptionService) ValidateRequirement(requirement *models.Shipping
 			ShippingOptionId: uuid.NullUUID{UUID: optionId},
 		}
 	}
-	if err := s.requirementRepository.Save(s.ctx, req); err != nil {
+	if err := s.r.ShippingOptionRequirementRepository().Save(s.ctx, req); err != nil {
 		return nil, err
 	}
 
 	return requirement, nil
 }
 
-func (s *ShippingOptionService) List(selector models.ShippingOption, config repository.Options) ([]models.ShippingOption, *utils.ApplictaionError) {
+func (s *ShippingOptionService) List(selector models.ShippingOption, config sql.Options) ([]models.ShippingOption, *utils.ApplictaionError) {
 	var res []models.ShippingOption
-	query := repository.BuildQuery(selector, config)
-	if err := s.repo.Find(s.ctx, res, query); err != nil {
+	query := sql.BuildQuery(selector, config)
+	if err := s.r.ShippingOptionRepository().Find(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *ShippingOptionService) ListAndCount(selector models.ShippingOption, config repository.Options) ([]models.ShippingOption, *int64, *utils.ApplictaionError) {
+func (s *ShippingOptionService) ListAndCount(selector models.ShippingOption, config sql.Options) ([]models.ShippingOption, *int64, *utils.ApplictaionError) {
 	var res []models.ShippingOption
 
-	if reflect.DeepEqual(config, repository.Options{}) {
+	if reflect.DeepEqual(config, sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 	}
 
-	query := repository.BuildQuery(selector, config)
-	count, err := s.repo.FindAndCount(s.ctx, res, query)
+	query := sql.BuildQuery(selector, config)
+	count, err := s.r.ShippingOptionRepository().FindAndCount(s.ctx, res, query)
 	if err != nil {
 		return nil, nil, err
 	}
 	return res, count, nil
 }
 
-func (s *ShippingOptionService) Retrieve(optionId uuid.UUID, options repository.Options) (*models.ShippingOption, *utils.ApplictaionError) {
+func (s *ShippingOptionService) Retrieve(optionId uuid.UUID, config sql.Options) (*models.ShippingOption, *utils.ApplictaionError) {
 	if optionId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
@@ -131,8 +130,8 @@ func (s *ShippingOptionService) Retrieve(optionId uuid.UUID, options repository.
 		)
 	}
 	var res *models.ShippingOption
-	query := repository.BuildQuery(models.ShippingOption{Model: core.Model{Id: optionId}}, options)
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
+	query := sql.BuildQuery(models.ShippingOption{Model: core.Model{Id: optionId}}, config)
+	if err := s.r.ShippingOptionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			fmt.Sprintf("Shipping Option with %s was not found", optionId),
@@ -144,10 +143,10 @@ func (s *ShippingOptionService) Retrieve(optionId uuid.UUID, options repository.
 	return res, nil
 }
 
-func (s *ShippingOptionService) UpdateShippingMethod(id uuid.UUID, update *models.ShippingMethod) (*models.ShippingMethod, *utils.ApplictaionError) {
-	update.Id = id
+func (s *ShippingOptionService) UpdateShippingMethod(id uuid.UUID, Update *models.ShippingMethod) (*models.ShippingMethod, *utils.ApplictaionError) {
+	Update.Id = id
 
-	if err := s.methodRepository.FindOne(s.ctx, update, repository.Query{}); err != nil {
+	if err := s.r.ShippingMethodRepository().FindOne(s.ctx, Update, sql.Query{}); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.DB_ERROR,
 			err.Error(),
@@ -156,7 +155,7 @@ func (s *ShippingOptionService) UpdateShippingMethod(id uuid.UUID, update *model
 		)
 	}
 
-	if err := s.methodRepository.Upsert(s.ctx, update); err != nil {
+	if err := s.r.ShippingMethodRepository().Upsert(s.ctx, Update); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.DB_ERROR,
 			err.Error(),
@@ -165,11 +164,11 @@ func (s *ShippingOptionService) UpdateShippingMethod(id uuid.UUID, update *model
 		)
 	}
 
-	return update, nil
+	return Update, nil
 }
 
 func (s *ShippingOptionService) DeleteShippingMethods(shippingMethods []models.ShippingMethod) *utils.ApplictaionError {
-	err := s.methodRepository.RemoveSlice(s.ctx, shippingMethods)
+	err := s.r.ShippingMethodRepository().RemoveSlice(s.ctx, shippingMethods)
 	if err != nil {
 		return err
 	}
@@ -177,7 +176,7 @@ func (s *ShippingOptionService) DeleteShippingMethods(shippingMethods []models.S
 }
 
 func (s *ShippingOptionService) CreateShippingMethod(optionId uuid.UUID, data map[string]interface{}, config *models.ShippingMethod) (*models.ShippingMethod, *utils.ApplictaionError) {
-	option, err := s.Retrieve(optionId, repository.Options{
+	option, err := s.Retrieve(optionId, sql.Options{
 		Relations: []string{"requirements"},
 	})
 	if err != nil {
@@ -191,7 +190,7 @@ func (s *ShippingOptionService) CreateShippingMethod(optionId uuid.UUID, data ma
 			return nil, err
 		}
 	}
-	validatedData, err := s.providerService_.validateFulfillmentData(option, data, config.Cart)
+	validatedData, err := s.r.FulfillmentProviderService().SetContext(s.ctx).ValidateFulfillmentData(option, data, config.Cart)
 	if err != nil {
 		return nil, err
 	}
@@ -233,15 +232,15 @@ func (s *ShippingOptionService) CreateShippingMethod(optionId uuid.UUID, data ma
 		toCreate.ClaimOrderId = config.ClaimOrderId
 	}
 
-	if err = s.methodRepository.Save(s.ctx, toCreate); err != nil {
+	if err = s.r.ShippingMethodRepository().Save(s.ctx, toCreate); err != nil {
 		return nil, err
 	}
 
 	var method *models.ShippingMethod
-	query := repository.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: toCreate.Id}}, repository.Options{
+	query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: toCreate.Id}}, sql.Options{
 		Relations: []string{"shipping_option"},
 	})
-	if err := s.methodRepository.FindOne(s.ctx, method, query); err != nil {
+	if err := s.r.ShippingMethodRepository().FindOne(s.ctx, method, query); err != nil {
 		return nil, err
 	}
 
@@ -296,7 +295,7 @@ func (s *ShippingOptionService) ValidateCartOption(option *models.ShippingOption
 func (s *ShippingOptionService) ValidateAndMutatePrice(option *models.ShippingOption, priceInput types.ValidatePriceTypeAndAmountInput) (*models.ShippingOption, *utils.ApplictaionError) {
 	option.Amount = priceInput.Amount
 	if priceInput.PriceType != nil {
-		priceType, err := s.validatePriceType_(priceInput.PriceType, option)
+		priceType, err := s.validatePriceType(*priceInput.PriceType, option)
 		if err != nil {
 			return nil, err
 		}
@@ -314,6 +313,36 @@ func (s *ShippingOptionService) ValidateAndMutatePrice(option *models.ShippingOp
 		)
 	}
 	return option, nil
+}
+
+// Validates a shipping option price
+func (s *ShippingOptionService) validatePriceType(priceType models.ShippingOptionPriceType, option *models.ShippingOption) (models.ShippingOptionPriceType, *utils.ApplictaionError) {
+	if priceType == "" || (priceType != models.ShippingOptionPriceFlatRate && priceType != models.ShippingOptionPriceCalculated) {
+		return "", utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"The price must be of type flat_rate or calculated",
+			"500",
+			nil,
+		)
+	}
+	if priceType == models.ShippingOptionPriceCalculated {
+		canCalculate, err := s.r.FulfillmentProviderService().SetContext(s.ctx).CanCalculate(types.FulfillmentOptions{
+			ProviderId: option.Provider.Id,
+			Options:    option.Data,
+		})
+		if err != nil {
+			return "", err
+		}
+		if !canCalculate {
+			return "", utils.NewApplictaionError(
+				utils.CONFLICT,
+				"The fulfillment provider cannot calculate prices for this option",
+				"500",
+				nil,
+			)
+		}
+	}
+	return priceType, nil
 }
 
 func (s *ShippingOptionService) Create(data *models.ShippingOption) (*models.ShippingOption, *utils.ApplictaionError) {
@@ -335,21 +364,24 @@ func (s *ShippingOptionService) Create(data *models.ShippingOption) (*models.Shi
 		IsReturn:    data.IsReturn,
 	}
 
-	if err = s.repo.Save(s.ctx, option); err != nil {
+	if err = s.r.ShippingOptionRepository().Save(s.ctx, option); err != nil {
 		return nil, err
 	}
 	return option, nil
 }
 
-func (s *ShippingOptionService) Update(optionId uuid.UUID, update *models.ShippingOption) (*models.ShippingOption, *utils.ApplictaionError) {
-	option, err := s.Retrieve(optionId, repository.Options{
+func (s *ShippingOptionService) Update(optionId uuid.UUID, Update *models.ShippingOption) (*models.ShippingOption, *utils.ApplictaionError) {
+	option, err := s.Retrieve(optionId, sql.Options{
 		Relations: []string{"requirements"},
 	})
-
-	if update.Metadata != nil {
-		option.Metadata = update.Metadata
+	if err != nil {
+		return nil, err
 	}
-	if update.RegionId.UUID != uuid.Nil || update.ProviderId.UUID != uuid.Nil || update.Data != nil {
+
+	if Update.Metadata != nil {
+		option.Metadata = Update.Metadata
+	}
+	if Update.RegionId.UUID != uuid.Nil || Update.ProviderId.UUID != uuid.Nil || Update.Data != nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Region and Provider cannot be updated after creation",
@@ -357,7 +389,7 @@ func (s *ShippingOptionService) Update(optionId uuid.UUID, update *models.Shippi
 			nil,
 		)
 	}
-	if update.IsReturn {
+	if Update.IsReturn {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"is_return cannot be changed after creation",
@@ -365,25 +397,29 @@ func (s *ShippingOptionService) Update(optionId uuid.UUID, update *models.Shippi
 			nil,
 		)
 	}
-	if update.Requirements != nil {
+	if Update.Requirements != nil {
 		acc := []models.ShippingOptionRequirement{}
-		for _, r := range update.Requirements {
+		for _, r := range Update.Requirements {
 			validated, err := s.ValidateRequirement(&r, optionId)
 			if err != nil {
 				return nil, err
 			}
-			if containsRequirement(acc, validated.Type) {
+			if slices.ContainsFunc(option.Requirements, func(m models.ShippingOptionRequirement) bool {
+				return m.Type == validated.Type
+			}) {
 				return nil, utils.NewApplictaionError(
 					utils.INVALID_DATA,
-					fmt.Sprintf("Only one requirement of each type is allowed"),
+					"Only one requirement of each type is allowed",
 					"500",
 					nil,
 				)
 			}
-			if containsRequirementWithAmount(acc, validated.Type, validated.Amount) {
+			if slices.ContainsFunc(option.Requirements, func(m models.ShippingOptionRequirement) bool {
+				return m.Type == models.ShippingOptionRequirementMaxSubtotal && validated.Amount > m.Amount || m.Type == models.ShippingOptionRequirementMinSubtotal && validated.Amount < m.Amount
+			}) {
 				return nil, utils.NewApplictaionError(
 					utils.INVALID_DATA,
-					fmt.Sprintf("Max. subtotal must be greater than Min. subtotal"),
+					"Max. subtotal must be greater than Min. subtotal",
 					"500",
 					nil,
 				)
@@ -393,34 +429,34 @@ func (s *ShippingOptionService) Update(optionId uuid.UUID, update *models.Shippi
 		option.Requirements = acc
 	}
 	optionWithValidatedPrice, err := s.ValidateAndMutatePrice(option, types.ValidatePriceTypeAndAmountInput{
-		PriceType: &update.PriceType,
-		Amount:    update.Amount,
+		PriceType: &Update.PriceType,
+		Amount:    Update.Amount,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	optionWithValidatedPrice.Name = update.Name
-	optionWithValidatedPrice.AdminOnly = update.AdminOnly
-	optionWithValidatedPrice.ProfileId = update.ProfileId
+	optionWithValidatedPrice.Name = Update.Name
+	optionWithValidatedPrice.AdminOnly = Update.AdminOnly
+	optionWithValidatedPrice.ProfileId = Update.ProfileId
 
 	feature := true
 	if feature {
-		optionWithValidatedPrice.IncludesTax = update.IncludesTax
+		optionWithValidatedPrice.IncludesTax = Update.IncludesTax
 	}
-	if err = s.repo.Save(s.ctx, optionWithValidatedPrice); err != nil {
+	if err = s.r.ShippingOptionRepository().Save(s.ctx, optionWithValidatedPrice); err != nil {
 		return nil, err
 	}
 	return optionWithValidatedPrice, nil
 }
 
 func (s *ShippingOptionService) Delete(optionId uuid.UUID) (*models.ShippingOption, *utils.ApplictaionError) {
-	data, err := s.Retrieve(optionId, repository.Options{})
+	data, err := s.Retrieve(optionId, sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.repo.SoftRemove(s.ctx, data); err != nil {
+	if err := s.r.ShippingOptionRepository().SoftRemove(s.ctx, data); err != nil {
 		return nil, err
 	}
 
@@ -428,7 +464,7 @@ func (s *ShippingOptionService) Delete(optionId uuid.UUID) (*models.ShippingOpti
 }
 
 func (s *ShippingOptionService) AddRequirement(optionId uuid.UUID, requirement *models.ShippingOptionRequirement) (*models.ShippingOption, *utils.ApplictaionError) {
-	option, err := s.Retrieve(optionId, repository.Options{
+	option, err := s.Retrieve(optionId, sql.Options{
 		Relations: []string{"requirements"},
 	})
 	if err != nil {
@@ -438,7 +474,9 @@ func (s *ShippingOptionService) AddRequirement(optionId uuid.UUID, requirement *
 	if err != nil {
 		return nil, err
 	}
-	if slices.Contains(option.Requirements, validatedReq.Type) {
+	if slices.ContainsFunc(option.Requirements, func(m models.ShippingOptionRequirement) bool {
+		return m.Type == validatedReq.Type
+	}) {
 		return nil, utils.NewApplictaionError(
 			utils.DUPLICATE_ERROR,
 			fmt.Sprintf("A requirement with type: %s already exists", validatedReq.Type),
@@ -447,7 +485,7 @@ func (s *ShippingOptionService) AddRequirement(optionId uuid.UUID, requirement *
 		)
 	}
 	option.Requirements = append(option.Requirements, *validatedReq)
-	if err = s.repo.Save(s.ctx, option); err != nil {
+	if err = s.r.ShippingOptionRepository().Save(s.ctx, option); err != nil {
 		return nil, err
 	}
 	return option, nil
@@ -455,12 +493,12 @@ func (s *ShippingOptionService) AddRequirement(optionId uuid.UUID, requirement *
 
 func (s *ShippingOptionService) RemoveRequirement(requirementId uuid.UUID) (*models.ShippingOptionRequirement, *utils.ApplictaionError) {
 	var requirement *models.ShippingOptionRequirement
-	query := repository.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: requirementId}}, repository.Options{})
-	if err := s.requirementRepository.FindOne(s.ctx, requirement, query); err != nil {
+	query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: requirementId}}, sql.Options{})
+	if err := s.r.ShippingOptionRequirementRepository().FindOne(s.ctx, requirement, query); err != nil {
 		return nil, err
 	}
 
-	if err := s.requirementRepository.SoftRemove(s.ctx, requirement); err != nil {
+	if err := s.r.ShippingOptionRequirementRepository().SoftRemove(s.ctx, requirement); err != nil {
 		return nil, err
 	}
 	return requirement, nil
@@ -470,13 +508,9 @@ func (s *ShippingOptionService) UpdateShippingProfile(optionIds uuid.UUIDs, prof
 	var res *models.ShippingOption
 	var model []models.ShippingOption
 
-	res.ProfileId = res.ProfileId
+	res.ProfileId = uuid.NullUUID{UUID: profileId}
 
-	if err := s.repo.Specification(repository.In[uuid.UUID]("id", optionIds)).Upsert(s.ctx, res); err != nil {
-		return nil, err
-	}
-
-	if err := s.repo.Specification(repository.In[uuid.UUID]("id", optionIds)).Find(s.ctx, model, repository.Query{}); err != nil {
+	if err := s.r.ShippingOptionRepository().Specification(sql.In[uuid.UUID]("id", optionIds)).Upsert(s.ctx, res); err != nil {
 		return nil, err
 	}
 
@@ -485,7 +519,7 @@ func (s *ShippingOptionService) UpdateShippingProfile(optionIds uuid.UUIDs, prof
 
 func (s *ShippingOptionService) GetPrice(option *models.ShippingOption, data core.JSONB, cart *models.Cart) (float64, *utils.ApplictaionError) {
 	if option.PriceType == "calculated" {
-		return s.providerService_.CalculatePrice(option, data, cart)
+		return s.r.FulfillmentProviderService().SetContext(s.ctx).CalculatePrice(option, data, cart)
 	}
 	return option.Amount, nil
 }

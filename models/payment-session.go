@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql/driver"
+	"time"
 
 	"github.com/driver005/gateway/core"
 	"github.com/google/uuid"
@@ -23,11 +24,17 @@ type PaymentSession struct {
 	// A flag to indicate if the Payment Session has been selected as the method that will be used to complete the purchase.
 	IsSelected bool `json:"is_selected" gorm:"default:null"`
 
+	IsInitiated bool `json:"is_initiated" gorm:"default:null"`
+
 	// Indicates the status of the Payment Session. Will default to `pending`, and will eventually become `authorized`. Payment Sessions may have the status of `requires_more` to indicate that further actions are to be completed by the Customer.
 	Status PaymentSessionStatus `json:"status"`
 
 	// The data required for the Payment Provider to identify, modify and process the Payment Session. Typically this will be an object that holds an id to the external payment session, but can be an empty object if the Payment Provider doesn't hold any state.
 	Data JSONB `json:"data" gorm:"default:null"`
+
+	Amount float64 `json:"amount" gorm:"default:null"`
+
+	PaymentAuthorizedAt *time.Time `json:"payment_authorized_at" gorm:"default:null"`
 
 	// Randomly generated key used to continue the completion of a cart in case of failure.
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
@@ -41,6 +48,7 @@ const (
 	PaymentSessionStatusRequiresMore PaymentSessionStatus = "requires_more"
 	PaymentSessionStatusError        PaymentSessionStatus = "error"
 	PaymentSessionStatusCanceled     PaymentSessionStatus = "canceled"
+	PaymentSessionStatusSuccess      PaymentSessionStatus = "success"
 )
 
 func (pl *PaymentSessionStatus) Scan(value interface{}) error {

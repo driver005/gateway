@@ -2,95 +2,165 @@ package registry
 
 import (
 	"context"
-
-	"github.com/driver005/gateway/logger"
 )
 
-type OptionsModifier func(*options)
+func New(ctx context.Context) *Base {
+	registry := NewRegistry()
 
-type options struct {
-	forcedValues map[string]interface{}
-	preload      bool
-	validate     bool
-	migrate      bool
-	opts         []OptionsModifier
-	config       map[string]interface{} //*config.DefaultProvider
-	// The first default refers to determining the NID at startup; the second default referes to the fact that the Contextualizer may dynamically change the NID.
-	skipNetworkInit bool
+	if err := registry.Init(ctx); err != nil {
+		registry.Logger().Fatal(err)
+	}
+
+	if registry.Config().Applictaion.Preload {
+		CallRegistry(registry)
+	}
+
+	return registry
 }
 
-func NewOptions() *options {
-	return &options{
-		validate: true,
-		preload:  true,
-		migrate:  true,
-		opts:     []OptionsModifier{},
-	}
-}
+func CallRegistry(r *Base) {
+	r.Context()
 
-func WithConfig(config map[string]interface{}) func(o *options) {
-	return func(o *options) {
-		o.config = config
-	}
-}
+	r.Middleware()
 
-func WithOptions(opts ...OptionsModifier) OptionsModifier {
-	return func(o *options) {
-		o.opts = append(o.opts, opts...)
-	}
-}
+	//Repository
+	r.AddressRepository()
+	r.AnalyticsConfigRepository()
+	r.BatchJobRepository()
+	r.CartRepository()
+	r.ClaimImageRepository()
+	r.ClaimItemRepository()
+	r.ClaimTagRepository()
+	r.ClaimRepository()
+	r.CountryRepository()
+	r.CurrencyRepository()
+	r.CustomShippingOptionRepository()
+	r.CustomerGroupRepository()
+	r.CustomerRepository()
+	r.DiscountConditionRepository()
+	r.DiscountRuleRepository()
+	r.DiscountRepository()
+	r.DraftOrderRepository()
+	r.FulfillmentProviderRepository()
+	r.FulfillmentRepository()
+	r.GiftCardTransactionRepository()
+	r.GiftCardRepository()
+	r.IdempotencyKeyRepository()
+	r.ImageRepository()
+	r.InviteRepository()
+	r.LineItemAdjustmentRepository()
+	r.LineItemTaxLineRepository()
+	r.LineItemRepository()
+	r.MoneyAmountRepository()
+	r.NoteRepository()
+	r.NotificationProviderRepository()
+	r.NotificationRepository()
+	r.OAuthRepository()
+	r.OrderEditRepository()
+	r.OrderItemChangeRepository()
+	r.OrderRepository()
+	r.PaymentCollectionRepository()
+	r.PaymentProviderRepository()
+	r.PaymentSessionRepository()
+	r.PaymentRepository()
+	r.PriceListRepository()
+	r.ProductCategoryRepository()
+	r.ProductCollectionRepository()
+	r.ProductOptionValueRepository()
+	r.ProductOptionRepository()
+	r.ProductTagRepository()
+	r.ProductTaxRateRepository()
+	r.ProductTypeRepository()
+	r.ProductVariantInventoryItemRepository()
+	r.ProductVariantRepository()
+	r.ProductRepository()
+	r.PublishableApiKeySalesChannelRepository()
+	r.PublishableApiKeyRepository()
+	r.RefundRepository()
+	r.RegionRepository()
+	r.ReturnItemRepository()
+	r.ReturnReasonRepository()
+	r.ReturnRepository()
+	r.SalesChannelLocationRepository()
+	r.SalesChannelRepository()
+	r.ShippingMethodTaxLineRepository()
+	r.ShippingMethodRepository()
+	r.ShippingOptionRequirementRepository()
+	r.ShippingOptionRepository()
+	r.ShippingProfileRepository()
+	r.ShippingTaxRateRepository()
+	r.StagedJobRepository()
+	r.StoreRepository()
+	r.SwapRepository()
+	r.TaxProviderRepository()
+	r.TaxRateRepository()
+	r.TrackingLinkRepository()
+	r.UserRepository()
 
-// DisableValidation validating the config.
-//
-// This does not affect schema validation!
-func DisableValidation() OptionsModifier {
-	return func(o *options) {
-		o.validate = false
-	}
-}
-
-// DisablePreloading will not preload the config.
-func DisablePreloading() OptionsModifier {
-	return func(o *options) {
-		o.preload = false
-	}
-}
-
-// DisablePreloading will not preload the config.
-func DisableMigration() OptionsModifier {
-	return func(o *options) {
-		o.migrate = false
-	}
-}
-
-func SkipNetworkInit() OptionsModifier {
-	return func(o *options) {
-		o.skipNetworkInit = true
-	}
-}
-
-func New(ctx context.Context, opts []OptionsModifier) Registry {
-	o := NewOptions()
-	for _, f := range opts {
-		f(o)
-	}
-
-	// l = logger.New("Ory Hydra", config.Version)
-
-	l := logger.New("ORY Hydra", "2.1")
-
-	r, err := NewRegistryFromDSN(ctx, l)
-	if err != nil {
-		l.WithError(err).Fatal("Unable to create service registry.")
-	}
-
-	if err = r.Init(ctx); err != nil {
-		l.WithError(err).Fatal("Unable to initialize service registry.")
-	}
-
-	if o.preload {
-		CallRegistry(ctx, r)
-	}
-
-	return r
+	//Services
+	r.AnalyticsConfigService()
+	r.AuthService()
+	r.BatchJobService()
+	r.CartService()
+	r.ClaimItemService()
+	r.ClaimService()
+	r.CsvParserService()
+	r.CurrencyService()
+	r.CustomShippingOptionService()
+	r.CustomerGroupService()
+	r.CustomerService()
+	r.DiscountConditionService()
+	r.DiscountService()
+	r.DraftOrderService()
+	r.EventBus()
+	r.DefaultFileService()
+	r.FulfillmentProviderService()
+	r.FulfillmentService()
+	r.GiftCardService()
+	r.IdempotencyKeyService()
+	r.InviteService()
+	r.LineItemAdjustmentService()
+	r.LineItemService()
+	r.NewTotalsService()
+	r.NoteService()
+	r.NotificationService()
+	r.OAuthService()
+	r.OrderItemChangeService()
+	r.OrderEditService()
+	r.OrderService()
+	r.PaymentCollectionService()
+	r.PaymentProviderService()
+	r.PaymentService()
+	r.PriceListService()
+	r.PricingService()
+	r.ProductCategoryService()
+	r.ProductCollectionService()
+	r.ProductTagService()
+	r.ProductTaxRateService()
+	r.ProductTypeService()
+	r.ProductVariantInventoryService()
+	r.ProductVariantService()
+	r.ProductService()
+	r.PublishableApiKeyService()
+	r.RegionService()
+	r.ReturnReasonService()
+	r.ReturnService()
+	r.SalesChannelInventoryService()
+	r.SalesChannelLocationService()
+	r.SalesChannelService()
+	r.DefaultSearchService()
+	r.ShippingOptionService()
+	r.ShippingProfileService()
+	r.ShippingTaxRateService()
+	r.StagedJobService()
+	r.StoreService()
+	r.StrategyResolverService()
+	r.SwapService()
+	r.SystemProviderService()
+	r.SystemTaxService()
+	r.TaxProviderService()
+	r.TaxRateService()
+	r.TockenService()
+	r.TotalsService()
+	r.UserService()
 }

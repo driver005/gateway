@@ -15,7 +15,7 @@ type GiftCard struct {
 	Code string `json:"code"`
 
 	// The value that the Gift Card represents.
-	Value int32 `json:"value"`
+	Value float64 `json:"value"`
 
 	// The remaining value on the Gift Card.
 	Balance float64 `json:"balance"`
@@ -38,5 +38,5 @@ type GiftCard struct {
 	TaxRate float64 `json:"tax_rate"`
 
 	// The time at which the Gift Card can no longer be used.
-	EndsAt time.Time `json:"ends_at" gorm:"default:null"`
+	EndsAt *time.Time `json:"ends_at" gorm:"default:null"`
 }

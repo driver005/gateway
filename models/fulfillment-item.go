@@ -17,5 +17,5 @@ type FulfillmentItem struct {
 	Item *LineItem `json:"item" gorm:"foreignKey:id;references:item_id"`
 
 	// The quantity of the Line Item that is included in the Fulfillment.
-	Quantity int32 `json:"quantity"`
+	Quantity int `json:"quantity"`
 }

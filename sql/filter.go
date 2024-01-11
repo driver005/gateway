@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -155,10 +155,10 @@ func expressionByField(
 //		// `param` defines custom column name for the query param
 //		FullName string `filter:"searchable"`
 //	}
-func FilterByQuery(context *fiber.Ctx, config int) func(db *gorm.DB) *gorm.DB {
+func FilterByQuery(context fiber.Ctx, config int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		var params queryParams
-		if err := context.QueryParser(&params); err != nil {
+		if err := context.Bind().Query(&params); err != nil {
 			return db
 		}
 

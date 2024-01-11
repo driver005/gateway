@@ -4,7 +4,7 @@ import (
 	"context"
 	"embed"
 
-	"github.com/driver005/gateway/logger"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"github.com/pkg/errors"
@@ -22,7 +22,7 @@ var (
 type (
 	Manager struct {
 		db *gorm.DB
-		l  *logger.Logger
+		l  *zap.SugaredLogger
 	}
 	// Dependencies interface {
 	// 	Tracer(ctx context.Context) trace.Tracer
@@ -30,7 +30,7 @@ type (
 	transactionContextType string
 )
 
-func NewManager(db *gorm.DB, l *logger.Logger) (*Manager, error) {
+func NewManager(db *gorm.DB, l *zap.SugaredLogger) (*Manager, error) {
 	return &Manager{
 		db: db,
 		l:  l,

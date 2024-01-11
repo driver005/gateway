@@ -3,172 +3,129 @@ package services
 import (
 	"context"
 
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/core"
+	"github.com/driver005/gateway/interfaces"
+	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
+	"github.com/driver005/gateway/utils"
+	"github.com/google/uuid"
+	"github.com/sarulabs/di"
 )
 
 type FulfillmentProviderService struct {
-	ctx  context.Context
-	repo *repository.FulfillmentProviderRepo
+	ctx       context.Context
+	container di.Container
+	r         Registry
 }
 
 func NewFulfillmentProviderService(
-	ctx context.Context,
-	repo *repository.FulfillmentProviderRepo,
+	container di.Container,
+	r Registry,
 ) *FulfillmentProviderService {
 	return &FulfillmentProviderService{
-		ctx,
-		repo,
+		context.Background(),
+		container,
+		r,
 	}
 }
 
-func (s *FulfillmentProviderService) RegisterInstalledProviders(providers []string) error {
-	return s.atomicPhase(func(manager *typeorm.EntityManager) error {
-		fulfillmentProviderRepo := manager.WithRepository(s.fulfillmentProviderRepository)
-		err := fulfillmentProviderRepo.Update(map[string]interface{}{}, map[string]interface{}{"is_installed": false})
-		if err != nil {
+func (s *FulfillmentProviderService) SetContext(context context.Context) *FulfillmentProviderService {
+	s.ctx = context
+	return s
+}
+
+func (s *FulfillmentProviderService) RetrieveProvider(providerID uuid.UUID) interfaces.IFulfillmentService {
+	var provider interfaces.IFulfillmentService
+	objectInterface, err := s.container.SafeGet(providerID.String())
+	if err != nil {
+		panic("Could not find a fulfillment provider with id: " + providerID.String())
+	}
+	provider, _ = objectInterface.(interfaces.IFulfillmentService)
+
+	return provider
+}
+
+func (s *FulfillmentProviderService) RegisterInstalledProviders(providers uuid.UUIDs) *utils.ApplictaionError {
+	if err := s.r.FulfillmentProviderRepository().Update(s.ctx, &models.FulfillmentProvider{IsInstalled: false}); err != nil {
+		return err
+	}
+
+	for _, p := range providers {
+		var model *models.FulfillmentProvider
+		model.IsInstalled = true
+		model.Id = p
+
+		if err := s.r.FulfillmentProviderRepository().Save(s.ctx, model); err != nil {
 			return err
 		}
-		for _, p := range providers {
-			n := fulfillmentProviderRepo.Create(map[string]interface{}{"id": p, "is_installed": true})
-			err := fulfillmentProviderRepo.Save(n)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+	}
+
+	return nil
+
 }
 
-func (s *FulfillmentProviderService) List() ([]FulfillmentProvider, error) {
-	fpRepo := s.activeManager.WithRepository(s.fulfillmentProviderRepository)
-	return fpRepo.Find(map[string]interface{}{})
+func (s *FulfillmentProviderService) List() ([]models.FulfillmentProvider, *utils.ApplictaionError) {
+	var res []models.FulfillmentProvider
+	if err := s.r.FulfillmentProviderRepository().Find(s.ctx, res, sql.Query{}); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
-func (s *FulfillmentProviderService) ListFulfillmentOptions(providerIDs []string) ([]FulfillmentOptions, error) {
-	var fulfillmentOptions []FulfillmentOptions
+func (s *FulfillmentProviderService) ListFulfillmentOptions(providerIDs uuid.UUIDs) ([]types.FulfillmentOptions, *utils.ApplictaionError) {
+	var fulfillmentOptions []types.FulfillmentOptions
 	for _, p := range providerIDs {
 		provider := s.RetrieveProvider(p)
 		options, err := provider.GetFulfillmentOptions()
 		if err != nil {
 			return nil, err
 		}
-		fulfillmentOptions = append(fulfillmentOptions, FulfillmentOptions{
-			ProviderID: p,
+		fulfillmentOptions = append(fulfillmentOptions, types.FulfillmentOptions{
+			ProviderId: p,
 			Options:    options,
 		})
 	}
 	return fulfillmentOptions, nil
 }
 
-func (s *FulfillmentProviderService) RetrieveProvider(providerID string) BaseFulfillmentService {
-	provider, ok := s.container[providerID]
-	if !ok {
-		panic("Could not find a fulfillment provider with id: " + providerID)
-	}
-	return provider
+func (s *FulfillmentProviderService) CreateFulfillment(method *models.ShippingMethod, items []models.LineItem, order *types.CreateFulfillmentOrder, fulfillment *models.Fulfillment) (core.JSONB, *utils.ApplictaionError) {
+	provider := s.RetrieveProvider(method.ShippingOption.ProviderId.UUID)
+	return provider.CreateFulfillment(method, items, order, fulfillment), nil
 }
 
-func (s *FulfillmentProviderService) CreateFulfillment(method ShippingMethod, items []LineItem, order CreateFulfillmentOrder, fulfillment Fulfillment) (map[string]interface{}, error) {
-	provider := s.RetrieveProvider(method.ShippingOption.ProviderID)
-	return provider.CreateFulfillment(method.Data, items, order, fulfillment).(map[string]interface{}), nil
+func (s *FulfillmentProviderService) CanCalculate(option types.FulfillmentOptions) (bool, *utils.ApplictaionError) {
+	provider := s.RetrieveProvider(option.ProviderId)
+	return provider.CanCalculate(option.Options), nil
 }
 
-func (s *FulfillmentProviderService) CanCalculate(option CalculateOptionPriceInput) (bool, error) {
-	provider := s.RetrieveProvider(option.ProviderID)
-	return provider.CanCalculate(option.Data).(bool), nil
+func (s *FulfillmentProviderService) ValidateFulfillmentData(option *models.ShippingOption, data map[string]interface{}, cart *models.Cart) (map[string]interface{}, *utils.ApplictaionError) {
+	provider := s.RetrieveProvider(option.ProviderId.UUID)
+	return provider.ValidateFulfillmentData(option, data, cart), nil
 }
 
-func (s *FulfillmentProviderService) ValidateFulfillmentData(option ShippingOption, data map[string]interface{}, cart Cart) (map[string]interface{}, error) {
-	provider := s.RetrieveProvider(option.ProviderID)
-	return provider.ValidateFulfillmentData(option.Data, data, cart).(map[string]interface{}), nil
+func (s *FulfillmentProviderService) CancelFulfillment(fulfillment *models.Fulfillment) (*models.Fulfillment, *utils.ApplictaionError) {
+	provider := s.RetrieveProvider(fulfillment.ProviderId.UUID)
+	return provider.CancelFulfillment(fulfillment), nil
 }
 
-func (s *FulfillmentProviderService) CancelFulfillment(fulfillment Fulfillment) (Fulfillment, error) {
-	provider := s.RetrieveProvider(fulfillment.ProviderID)
-	return provider.CancelFulfillment(fulfillment.Data).(Fulfillment), nil
+func (s *FulfillmentProviderService) CalculatePrice(option *models.ShippingOption, data map[string]interface{}, cart *models.Cart) (float64, *utils.ApplictaionError) {
+	provider := s.RetrieveProvider(option.ProviderId.UUID)
+	return provider.CalculatePrice(option, data, cart), nil
 }
 
-func (s *FulfillmentProviderService) CalculatePrice(option ShippingOption, data map[string]interface{}, cart Order) (float64, error) {
-	provider := s.RetrieveProvider(option.ProviderID)
-	return provider.CalculatePrice(option.Data, data, cart).(float64), nil
+func (s *FulfillmentProviderService) ValidateOption(option models.ShippingOption) (bool, *utils.ApplictaionError) {
+	provider := s.RetrieveProvider(option.ProviderId.UUID)
+	return provider.ValidateOption(option), nil
 }
 
-func (s *FulfillmentProviderService) ValidateOption(option ShippingOption) (bool, error) {
-	provider := s.RetrieveProvider(option.ProviderID)
-	return provider.ValidateOption(option.Data).(bool), nil
-}
-
-func (s *FulfillmentProviderService) CreateReturn(returnOrder CreateReturnType) (map[string]interface{}, error) {
+func (s *FulfillmentProviderService) CreateReturn(returnOrder *models.Return) (core.JSONB, *utils.ApplictaionError) {
 	option := returnOrder.ShippingMethod.ShippingOption
-	provider := s.RetrieveProvider(option.ProviderID)
-	return provider.CreateReturn(returnOrder).(map[string]interface{}), nil
+	provider := s.RetrieveProvider(option.ProviderId.UUID)
+	return provider.CreateReturn(returnOrder), nil
 }
 
-func (s *FulfillmentProviderService) RetrieveDocuments(providerID string, fulfillmentData map[string]interface{}, documentType string) (interface{}, error) {
-	provider := s.RetrieveProvider(providerID)
+func (s *FulfillmentProviderService) RetrieveDocuments(providerId uuid.UUID, fulfillmentData map[string]interface{}, documentType string) (map[string]interface{}, *utils.ApplictaionError) {
+	provider := s.RetrieveProvider(providerId)
 	return provider.RetrieveDocuments(fulfillmentData, documentType), nil
-}
-
-func main() {
-	// Create a container
-	container := &FulfillmentProviderContainer{
-		fulfillmentProviderRepository: &FulfillmentProviderRepository{},
-		manager:                       &typeorm.EntityManager{},
-	}
-
-	// Create a service
-	service := NewFulfillmentProviderService(container)
-
-	// Use the service
-	providers := []string{"provider1", "provider2"}
-	err := service.RegisterInstalledProviders(providers)
-	if err != nil {
-		panic(err)
-	}
-
-	fulfillmentOptions, err := service.ListFulfillmentOptions([]string{"provider1", "provider2"})
-	if err != nil {
-		panic(err)
-	}
-
-	provider := service.RetrieveProvider("provider1")
-	fulfillment, err := provider.CreateFulfillment(ShippingMethod{}, []LineItem{}, CreateFulfillmentOrder{}, Fulfillment{})
-	if err != nil {
-		panic(err)
-	}
-
-	canCalculate, err := provider.CanCalculate(CalculateOptionPriceInput{})
-	if err != nil {
-		panic(err)
-	}
-
-	validatedData, err := provider.ValidateFulfillmentData(ShippingOption{}, map[string]interface{}{}, Cart{})
-	if err != nil {
-		panic(err)
-	}
-
-	cancelledFulfillment, err := provider.CancelFulfillment(Fulfillment{})
-	if err != nil {
-		panic(err)
-	}
-
-	price, err := provider.CalculatePrice(ShippingOption{}, map[string]interface{}{}, Order{})
-	if err != nil {
-		panic(err)
-	}
-
-	validOption, err := provider.ValidateOption(ShippingOption{})
-	if err != nil {
-		panic(err)
-	}
-
-	returnOrder, err := provider.CreateReturn(CreateReturnType{})
-	if err != nil {
-		panic(err)
-	}
-
-	documents, err := service.RetrieveDocuments("provider1", map[string]interface{}{}, "invoice")
-	if err != nil {
-		panic(err)
-	}
 }

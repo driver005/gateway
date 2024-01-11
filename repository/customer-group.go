@@ -5,6 +5,7 @@ import (
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -12,16 +13,16 @@ import (
 
 // TODO: ADD
 type CustomerGroupRepo struct {
-	Repository[models.CustomerGroup]
+	sql.Repository[models.CustomerGroup]
 }
 
-func CustomerGroupRepository(db *gorm.DB) CustomerGroupRepo {
-	return CustomerGroupRepo{*NewRepository[models.CustomerGroup](db)}
+func CustomerGroupRepository(db *gorm.DB) *CustomerGroupRepo {
+	return &CustomerGroupRepo{*sql.NewRepository[models.CustomerGroup](db)}
 }
 
-func (r *CustomerGroupRepo) AddCustomers(ctx context.Context, groupId uuid.UUID, customerIds []uuid.UUID) (*models.CustomerGroup, error) {
+func (r *CustomerGroupRepo) AddCustomers(ctx context.Context, groupId uuid.UUID, customerIds []uuid.UUID) (*models.CustomerGroup, *utils.ApplictaionError) {
 	var customerGroup *models.CustomerGroup
-	if err := r.FindOne(ctx, customerGroup, Query{}); err != nil {
+	if err := r.FindOne(ctx, customerGroup, sql.Query{}); err != nil {
 		return nil, err
 	}
 
@@ -36,9 +37,9 @@ func (r *CustomerGroupRepo) AddCustomers(ctx context.Context, groupId uuid.UUID,
 	return customerGroup, nil
 }
 
-func (r *CustomerGroupRepo) RemoveCustomers(ctx context.Context, groupId uuid.UUID, customerIds []uuid.UUID) (*models.CustomerGroup, error) {
+func (r *CustomerGroupRepo) RemoveCustomers(ctx context.Context, groupId uuid.UUID, customerIds []uuid.UUID) (*models.CustomerGroup, *utils.ApplictaionError) {
 	var customerGroup *models.CustomerGroup
-	if err := r.FindOne(ctx, customerGroup, Query{}); err != nil {
+	if err := r.FindOne(ctx, customerGroup, sql.Query{}); err != nil {
 		return nil, err
 	}
 

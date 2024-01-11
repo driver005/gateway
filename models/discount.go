@@ -31,13 +31,13 @@ type Discount struct {
 	ParentDiscount *Discount `json:"parent_discount" gorm:"foreignKey:id;references:parent_discount_id"`
 
 	// The time at which the discount can be used.
-	StartsAt time.Time `json:"starts_at" gorm:"default:null"`
+	StartsAt *time.Time `json:"starts_at" gorm:"default:null"`
 
 	// The time at which the discount can no longer be used.
-	EndsAt time.Time `json:"ends_at" gorm:"default:null"`
+	EndsAt *time.Time `json:"ends_at" gorm:"default:null"`
 
 	// Duration the discount runs between
-	ValidDuration string `json:"valid_duration" gorm:"default:null"`
+	ValidDuration *time.Time `json:"valid_duration" gorm:"default:null"`
 
 	// The Regions in which the Discount can be used. Available if the relation `regions` is expanded.
 	Regions []Region `json:"regions" gorm:"foreignKey:id"`

@@ -19,5 +19,5 @@ type ProductVariantInventoryItem struct {
 	Variant *ProductVariant `json:"variant,omitempty"  gorm:"foreignKey:id;references:variant_id"`
 
 	// The quantity of an inventory item required for the variant.
-	RequiredQuantity int32 `json:"required_quantity"`
+	RequiredQuantity int `json:"required_quantity"`
 }

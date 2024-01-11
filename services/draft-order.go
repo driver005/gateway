@@ -2,13 +2,12 @@ package services
 
 import (
 	"context"
-	"errors"
 	"reflect"
 	"time"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
@@ -16,113 +15,98 @@ import (
 )
 
 type DraftOrderService struct {
-	ctx                         context.Context
-	repo                        *repository.DraftOrderRepo
-	paymentRepository           *repository.PaymentRepo
-	orderRepository             *repository.OrderRepo
-	eventBusService             *EventBus
-	cartService                 *CartService
-	lineItemService             *LineItemService
-	productVariantService       *ProductVariantService
-	shippingOptionService       *ShippingOptionService
-	customShippingOptionService *CustomShippingOptionService
+	ctx context.Context
+	r   Registry
 }
 
 func NewDraftOrderService(
-	ctx context.Context,
-	repo *repository.DraftOrderRepo,
-	paymentRepository *repository.PaymentRepo,
-	orderRepository *repository.OrderRepo,
-	eventBusService *EventBus,
-	cartService *CartService,
-	lineItemService *LineItemService,
-	productVariantService *ProductVariantService,
-	shippingOptionService *ShippingOptionService,
-	customShippingOptionService *CustomShippingOptionService,
+	r Registry,
 ) *DraftOrderService {
 	return &DraftOrderService{
-		ctx:                         ctx,
-		repo:                        repo,
-		paymentRepository:           paymentRepository,
-		orderRepository:             orderRepository,
-		eventBusService:             eventBusService,
-		cartService:                 cartService,
-		lineItemService:             lineItemService,
-		productVariantService:       productVariantService,
-		shippingOptionService:       shippingOptionService,
-		customShippingOptionService: customShippingOptionService,
+		context.Background(),
+		r,
 	}
 }
 
-func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config repository.Options) (*models.DraftOrder, error) {
+func (s *DraftOrderService) SetContext(context context.Context) *DraftOrderService {
+	s.ctx = context
+	return s
+}
+
+func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config sql.Options) (*models.DraftOrder, *utils.ApplictaionError) {
 	if draftOrderId == uuid.Nil {
-		return nil, errors.New(`"draftOrderId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"draftOrderId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
 	var draftOrder *models.DraftOrder
 
-	query := repository.BuildQuery(models.DraftOrder{Model: core.Model{Id: draftOrderId}}, config)
-	if err := s.repo.FindOne(s.ctx, draftOrder, query); err != nil {
+	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: draftOrderId}}, config)
+	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
 
 	return draftOrder, nil
 }
 
-func (s *DraftOrderService) RetrieveByCartId(cartId uuid.UUID, config repository.Options) (*models.DraftOrder, error) {
+func (s *DraftOrderService) RetrieveByCartId(cartId uuid.UUID, config sql.Options) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder
 
-	query := repository.BuildQuery(models.DraftOrder{CartId: uuid.NullUUID{UUID: cartId}}, config)
-	if err := s.repo.FindOne(s.ctx, draftOrder, query); err != nil {
+	query := sql.BuildQuery(models.DraftOrder{CartId: uuid.NullUUID{UUID: cartId}}, config)
+	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
 
 	return draftOrder, nil
 }
 
-func (s *DraftOrderService) Delete(draftOrderId uuid.UUID) error {
-	data, err := s.Retrieve(draftOrderId, repository.Options{})
+func (s *DraftOrderService) Delete(draftOrderId uuid.UUID) *utils.ApplictaionError {
+	data, err := s.Retrieve(draftOrderId, sql.Options{})
 	if err != nil {
 		return err
 	}
 
-	if err := s.repo.SoftRemove(s.ctx, data); err != nil {
+	if err := s.r.DraftOrderRepository().SoftRemove(s.ctx, data); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *DraftOrderService) ListAndCount(selector *models.DraftOrder, config repository.Options) ([]models.DraftOrder, *int64, error) {
+func (s *DraftOrderService) ListAndCount(selector *models.DraftOrder, config sql.Options) ([]models.DraftOrder, *int64, *utils.ApplictaionError) {
 	var res []models.DraftOrder
 
-	if reflect.DeepEqual(config, repository.Options{}) {
+	if reflect.DeepEqual(config, sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(20)
 	}
 
-	query := repository.BuildQuery(selector, config)
-	count, err := s.repo.FindAndCount(s.ctx, res, query)
+	query := sql.BuildQuery(selector, config)
+	count, err := s.r.DraftOrderRepository().FindAndCount(s.ctx, res, query)
 	if err != nil {
 		return nil, nil, err
 	}
 	return res, count, nil
 }
 
-func (s *DraftOrderService) List(selector *models.DraftOrder, config repository.Options) ([]models.DraftOrder, error) {
+func (s *DraftOrderService) List(selector *models.DraftOrder, config sql.Options) ([]models.DraftOrder, *utils.ApplictaionError) {
 	var res []models.DraftOrder
-	query := repository.BuildQuery(selector, config)
-	if err := s.repo.Find(s.ctx, res, query); err != nil {
+	query := sql.BuildQuery(selector, config)
+	if err := s.r.DraftOrderRepository().Find(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOrder, error) {
+func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOrder, *utils.ApplictaionError) {
 	if data.RegionId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
-			"region_id is required to create a draft order",
+			"region_id is required to Create a draft order",
 			"500",
 			nil,
 		)
@@ -132,21 +116,18 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 	items := data.Items
 	idempotency_key := data.IdempotencyKey
 	discounts := data.Discounts
-	rawCart := data.RawCart
 
-	createdCart, err := cartServiceTx.create(models.Cart{
-		Type: CartType.DRAFT_ORDER,
-	})
+	createdCart, err := s.r.CartService().SetContext(s.ctx).Create(&models.Cart{Type: models.CartClaim})
 	if err != nil {
 		return nil, err
 	}
 
 	var draftOrder *models.DraftOrder
-	draftOrder.CartId = createdCart.Id
+	draftOrder.CartId = uuid.NullUUID{UUID: createdCart.Id}
 	draftOrder.NoNotificationOrder = no_notification_order
 	draftOrder.IdempotencyKey = idempotency_key
 
-	if err := s.repo.Save(s.ctx, draftOrder); err != nil {
+	if err := s.r.DraftOrderRepository().Save(s.ctx, draftOrder); err != nil {
 		return nil, err
 	}
 
@@ -155,133 +136,137 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 	// 	ID: result.ID,
 	// })
 
-	itemsToGenerate := []GenerateInputData{}
-	itemsToCreate := []LineItem{}
+	itemsToGenerate := []types.GenerateInputData{}
+	itemsToCreate := []models.LineItem{}
 	for _, item := range items {
-		if item.VariantID != nil {
-			itemsToGenerate = append(itemsToGenerate, GenerateInputData{
-				VariantID: item.VariantID,
+		if item.VariantId.UUID != uuid.Nil {
+			itemsToGenerate = append(itemsToGenerate, types.GenerateInputData{
+				VariantId: item.VariantId.UUID,
 				Quantity:  item.Quantity,
 				Metadata:  item.Metadata,
 				UnitPrice: item.UnitPrice,
 			})
 			continue
 		}
-		var price int
-		if item.UnitPrice == nil || *item.UnitPrice < 0 {
+		var price float64
+		if item.UnitPrice < 0 {
 			price = 0
 		} else {
-			price = *item.UnitPrice
+			price = item.UnitPrice
 		}
-		itemsToCreate = append(itemsToCreate, LineItem{
-			CartID:         createdCart.ID,
+		itemsToCreate = append(itemsToCreate, models.LineItem{
+			Model: core.Model{
+				Metadata: item.Metadata,
+			},
+			CartId:         uuid.NullUUID{UUID: createdCart.Id},
 			HasShipping:    true,
 			Title:          item.Title,
 			AllowDiscounts: false,
 			UnitPrice:      price,
 			Quantity:       item.Quantity,
-			Metadata:       item.Metadata,
 		})
 	}
-	promises := []Promise{}
+
 	if len(itemsToGenerate) > 0 {
-		generatedLines, err := lineItemServiceTx.generate(itemsToGenerate, GenerateOptions{
-			RegionID: data.RegionID,
-		})
+		generatedLines, err := s.r.LineItemService().SetContext(s.ctx).Generate(uuid.Nil, itemsToGenerate, data.RegionId, 0, types.GenerateLineItemContext{})
 		if err != nil {
 			return nil, err
 		}
-		toCreate := []LineItem{}
+		toCreate := []models.LineItem{}
 		for _, line := range generatedLines {
-			toCreate = append(toCreate, LineItem{
-				// ...line,
-				CartID: createdCart.ID,
-			})
+			line.CartId = uuid.NullUUID{UUID: createdCart.Id}
+			toCreate = append(toCreate, line)
 		}
-		promises = append(promises, lineItemServiceTx.create(toCreate))
+		s.r.LineItemService().SetContext(s.ctx).Create(toCreate)
 	}
 	if len(itemsToCreate) > 0 {
-		promises = append(promises, lineItemServiceTx.create(itemsToCreate))
+		s.r.LineItemService().SetContext(s.ctx).Create(itemsToCreate)
 	}
-	shippingMethodToCreate := []ShippingMethod{}
+	shippingMethodToCreate := []models.CustomShippingOption{}
 	for _, method := range shipping_methods {
-		if method.Price != nil {
-			shippingMethodToCreate = append(shippingMethodToCreate, ShippingMethod{
-				ShippingOptionID: method.OptionID,
-				CartID:           createdCart.ID,
-				Price:            *method.Price,
-			})
-			continue
-		}
+		shippingMethodToCreate = append(shippingMethodToCreate, models.CustomShippingOption{
+			ShippingOptionId: method.ShippingOptionId,
+			CartId:           uuid.NullUUID{UUID: createdCart.Id},
+			Price:            method.Price,
+		})
 	}
 	if len(shippingMethodToCreate) > 0 {
-		err := this.customShippingOptionService_.withTransaction(transactionManager).create(shippingMethodToCreate)
+		_, err := s.r.CustomShippingOptionService().SetContext(s.ctx).Create(shippingMethodToCreate)
 		if err != nil {
 			return nil, err
 		}
 	}
-	createdCart, err = cartServiceTx.retrieveWithTotals(createdCart.ID, RetrieveOptions{
+	createdCart, err = s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(createdCart.Id, sql.Options{
 		Relations: []string{
 			"shipping_methods",
 			"shipping_methods.shipping_option",
 			"items.variant.product.profiles",
 			"payment_sessions",
 		},
-	})
+	}, TotalsConfig{})
 	if err != nil {
 		return nil, err
 	}
 	for _, method := range shipping_methods {
-		promises = append(promises, cartServiceTx.addShippingMethod(createdCart, method.OptionID, method.Data))
+		_, err := s.r.CartService().SetContext(s.ctx).AddShippingMethod(uuid.Nil, createdCart, method.ShippingOptionId.UUID, method.Data)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if len(discounts) > 0 {
-		err := cartServiceTx.update(createdCart.ID, UpdateOptions{
+		_, err := s.r.CartService().SetContext(s.ctx).Update(createdCart.Id, nil, &models.Cart{
 			Discounts: discounts,
 		})
 		if err != nil {
 			return nil, err
 		}
 	}
-	return result, nil
+	return draftOrder, nil
 }
 
-func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UUID) (*models.DraftOrder, error) {
+func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UUID) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder
 
-	query := repository.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, repository.Options{})
-	if err := s.repo.FindOne(s.ctx, draftOrder, query); err != nil {
+	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, sql.Options{})
+	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
 
+	now := time.Now()
 	draftOrder.Status = "completed"
-	draftOrder.CompletedAt = time.Now()
+	draftOrder.CompletedAt = &now
 	draftOrder.OrderId = uuid.NullUUID{UUID: orderId}
 
-	if err := s.repo.Update(s.ctx, draftOrder); err != nil {
+	if err := s.r.DraftOrderRepository().Update(s.ctx, draftOrder); err != nil {
 		return nil, err
 	}
 
 	return draftOrder, nil
 }
 
-func (s *DraftOrderService) Update(id uuid.UUID, data *models.DraftOrder) (*models.DraftOrder, error) {
+func (s *DraftOrderService) Update(id uuid.UUID, data *models.DraftOrder) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder
 
-	query := repository.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, repository.Options{})
-	if err := s.repo.FindOne(s.ctx, draftOrder, query); err != nil {
+	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, sql.Options{})
+	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
 
 	if draftOrder.Status == "completed" {
-		return nil, errors.New(`Can't update a draft order which is complete`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`Can't Update a draft order which is complete`,
+			"500",
+			nil,
+		)
 	}
 
 	if data.NoNotificationOrder {
 		draftOrder.NoNotificationOrder = data.NoNotificationOrder
 	}
 
-	if err := s.repo.Update(s.ctx, draftOrder); err != nil {
+	if err := s.r.DraftOrderRepository().Update(s.ctx, draftOrder); err != nil {
 		return nil, err
 	}
 

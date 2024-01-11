@@ -14,7 +14,7 @@ type IdempotencyKey struct {
 	IdempotencyKey string `json:"idempotency_key"`
 
 	// Date which the idempotency key was locked.
-	LockedAt time.Time `json:"locked_at" gorm:"default:null"`
+	LockedAt *time.Time `json:"locked_at" gorm:"default:null"`
 
 	// The method of the request
 	RequestMethod string `json:"request_method" gorm:"default:null"`

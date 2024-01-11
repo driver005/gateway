@@ -1,8 +1,17 @@
 package types
 
-import "github.com/driver005/gateway/models"
+import (
+	"github.com/google/uuid"
+)
 
-func IsOrder(object interface{}) bool {
-	order, ok := object.(models.Order)
-	return ok && order.Object == "order"
+type OrdersReturnItem struct {
+	ItemId   uuid.UUID `json:"item_id"`
+	Quantity int       `json:"quantity"`
+	ReasonId uuid.UUID `json:"reason_id,omitempty"`
+	Note     string    `json:"note,omitempty"`
+}
+
+type TotalsContext struct {
+	ForceTaxes      bool `json:"force_taxes,omitempty"`
+	ReturnableItems bool `json:"returnable_items,omitempty"`
 }

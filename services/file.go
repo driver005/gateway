@@ -12,34 +12,37 @@ type DefaultFileService struct {
 	ctx context.Context
 }
 
-func NewDefaultFileService(
-	ctx context.Context,
-) *DefaultFileService {
+func NewDefaultFileService() *DefaultFileService {
 	return &DefaultFileService{
-		ctx,
+		context.Background(),
 	}
 }
 
-func (s *DefaultFileService) upload(fileData io.Reader) (*interfaces.FileServiceUploadResult, error) {
-	return nil, errors.New("Please add a file service plugin in order to manipulate files in Medusa")
+func (s *DefaultFileService) SetContext(context context.Context) *DefaultFileService {
+	s.ctx = context
+	return s
 }
 
-func (s *DefaultFileService) uploadProtected(fileData io.Reader) (*interfaces.FileServiceUploadResult, error) {
-	return nil, errors.New("Please add a file service plugin in order to manipulate files in Medusa")
+func (s *DefaultFileService) Upload(fileData io.Reader) (*interfaces.FileServiceUploadResult, error) {
+	return nil, errors.New("please add a file service plugin in order to manipulate files in Medusa")
 }
 
-func (s *DefaultFileService) delete(fileData map[string]interface{}) error {
-	return errors.New("Please add a file service plugin in order to manipulate files in Medusa")
+func (s *DefaultFileService) UploadProtected(fileData io.Reader) (*interfaces.FileServiceUploadResult, error) {
+	return nil, errors.New("please add a file service plugin in order to manipulate files in Medusa")
 }
 
-func (s *DefaultFileService) getUploadStreamDescriptor(fileData interfaces.UploadStreamDescriptorType) (*interfaces.FileServiceGetUploadStreamResult, error) {
-	return nil, errors.New("Please add a file service plugin in order to manipulate files in Medusa")
+func (s *DefaultFileService) Delete(fileData map[string]interface{}) error {
+	return errors.New("please add a file service plugin in order to manipulate files in Medusa")
 }
 
-func (s *DefaultFileService) getDownloadStream(fileData interfaces.GetUploadedFileType) (io.Reader, error) {
-	return nil, errors.New("Please add a file service plugin in order to manipulate files in Medusa")
+func (s *DefaultFileService) GetUploadStreamDescriptor(fileData interfaces.UploadStreamDescriptorType) (*interfaces.FileServiceGetUploadStreamResult, error) {
+	return nil, errors.New("please add a file service plugin in order to manipulate files in Medusa")
 }
 
-func (s *DefaultFileService) getPresignedDownloadUrl(fileData interfaces.GetUploadedFileType) (string, error) {
-	return "", errors.New("Please add a file service plugin in order to manipulate files in Medusa")
+func (s *DefaultFileService) GetDownloadStream(fileData interfaces.GetUploadedFileType) (io.Reader, error) {
+	return nil, errors.New("please add a file service plugin in order to manipulate files in Medusa")
+}
+
+func (s *DefaultFileService) GetPresignedDownloadUrl(fileData interfaces.GetUploadedFileType) (string, error) {
+	return "", errors.New("please add a file service plugin in order to manipulate files in Medusa")
 }

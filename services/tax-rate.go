@@ -2,79 +2,89 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
+	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
 
 type TaxRateService struct {
-	ctx                   context.Context
-	repo                  *repository.TaxRateRepo
-	productService        ProductService
-	productTypeService    ProductTypeService
-	shippingOptionService ShippingOptionService
+	ctx context.Context
+	r   Registry
 }
 
 func NewTaxRateService(
-	ctx context.Context,
-	repo *repository.TaxRateRepo,
-	productService ProductService,
-	productTypeService ProductTypeService,
-	shippingOptionService ShippingOptionService,
+	r Registry,
 ) *TaxRateService {
 	return &TaxRateService{
-		ctx,
-		repo,
-		productService,
-		productTypeService,
-		shippingOptionService,
+		context.Background(),
+		r,
 	}
 }
 
-func (s *TaxRateService) List(selector types.FilterableTaxRate, config repository.Options) ([]models.TaxRate, error) {
-	query := repository.BuildQuery[types.FilterableTaxRate](selector, config)
-	return s.repo.FindWithResolution(query)
+func (s *TaxRateService) SetContext(context context.Context) *TaxRateService {
+	s.ctx = context
+	return s
 }
 
-func (s *TaxRateService) ListAndCount(selector types.FilterableTaxRate, config repository.Options) ([]models.TaxRate, int64, error) {
-	query := repository.BuildQuery[types.FilterableTaxRate](selector, config)
-	taxRates, count, err := s.repo.FindAndCountWithResolution(query)
+func (s *TaxRateService) List(selector types.FilterableTaxRate, config sql.Options) ([]models.TaxRate, *utils.ApplictaionError) {
+	query := sql.BuildQuery[types.FilterableTaxRate](selector, config)
+	return s.r.TaxRateRepository().FindWithResolution(query)
+}
+
+func (s *TaxRateService) ListAndCount(selector types.FilterableTaxRate, config sql.Options) ([]models.TaxRate, int64, *utils.ApplictaionError) {
+	query := sql.BuildQuery[types.FilterableTaxRate](selector, config)
+	taxRates, count, err := s.r.TaxRateRepository().FindAndCountWithResolution(query)
 	return taxRates, *count, err
 }
 
-func (s *TaxRateService) Retrieve(taxRateId uuid.UUID, config repository.Options) (*models.TaxRate, error) {
+func (s *TaxRateService) Retrieve(taxRateId uuid.UUID, config sql.Options) (*models.TaxRate, *utils.ApplictaionError) {
 	if taxRateId == uuid.Nil {
-		return nil, errors.New(`"taxRateId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"taxRateId" must be defined`,
+			"500",
+			nil,
+		)
 	}
-	query := repository.BuildQuery[types.FilterableTaxRate](types.FilterableTaxRate{FilterModel: core.FilterModel{Id: uuid.UUIDs{taxRateId}}}, config)
-	taxRate, err := s.repo.FindOneWithResolution(query)
+	query := sql.BuildQuery[types.FilterableTaxRate](types.FilterableTaxRate{FilterModel: core.FilterModel{Id: uuid.UUIDs{taxRateId}}}, config)
+	taxRate, err := s.r.TaxRateRepository().FindOneWithResolution(query)
 	if err != nil {
 		return nil, err
 	}
 	if taxRate == nil {
-		return nil, errors.New(`TaxRate with ` + taxRateId.String() + ` was not found`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`TaxRate with `+taxRateId.String()+` was not found`,
+			"500",
+			nil,
+		)
 	}
 	return taxRate, nil
 }
 
-func (s *TaxRateService) Create(model *models.TaxRate) (*models.TaxRate, error) {
+func (s *TaxRateService) Create(model *models.TaxRate) (*models.TaxRate, *utils.ApplictaionError) {
 	if model.RegionId.UUID == uuid.Nil {
-		return nil, errors.New("TaxRates must belong to a Region")
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"TaxRates must belong to a Region",
+			"500",
+			nil,
+		)
 	}
 
-	if err := s.repo.Save(s.ctx, model); err != nil {
+	if err := s.r.TaxRateRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
 	return model, nil
 }
 
-func (s *TaxRateService) Update(id uuid.UUID, data types.UpdateTaxRateInput) (*models.TaxRate, error) {
-	taxRate, err := s.Retrieve(id, repository.Options{})
+func (s *TaxRateService) Update(id uuid.UUID, data types.UpdateTaxRateInput) (*models.TaxRate, *utils.ApplictaionError) {
+	taxRate, err := s.Retrieve(id, sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -84,58 +94,63 @@ func (s *TaxRateService) Update(id uuid.UUID, data types.UpdateTaxRateInput) (*m
 	taxRate.Rate = data.Rate
 	taxRate.RegionId = uuid.NullUUID{UUID: data.RegionId}
 
-	if err := s.repo.Save(s.ctx, taxRate); err != nil {
+	if err := s.r.TaxRateRepository().Save(s.ctx, taxRate); err != nil {
 		return nil, err
 	}
 
 	return taxRate, nil
 }
 
-func (s *TaxRateService) Delete(id uuid.UUID) error {
-	return s.repo.Delete(s.ctx, &models.TaxRate{Model: core.Model{Id: id}})
+func (s *TaxRateService) Delete(id uuid.UUID) *utils.ApplictaionError {
+	return s.r.TaxRateRepository().Delete(s.ctx, &models.TaxRate{Model: core.Model{Id: id}})
 }
 
-func (s *TaxRateService) RemoveFromProduct(id uuid.UUID, productIds uuid.UUIDs) error {
-	return s.repo.RemoveFromProduct(id, productIds)
+func (s *TaxRateService) RemoveFromProduct(id uuid.UUID, productIds uuid.UUIDs) *utils.ApplictaionError {
+	return s.r.TaxRateRepository().RemoveFromProduct(id, productIds)
 }
 
-func (s *TaxRateService) RemoveFromProductType(id uuid.UUID, typeIds uuid.UUIDs) error {
-	return s.repo.RemoveFromProductType(id, typeIds)
+func (s *TaxRateService) RemoveFromProductType(id uuid.UUID, typeIds uuid.UUIDs) *utils.ApplictaionError {
+	return s.r.TaxRateRepository().RemoveFromProductType(id, typeIds)
 }
 
-func (s *TaxRateService) RemoveFromShippingOption(id uuid.UUID, optionIds uuid.UUIDs) error {
-	return s.repo.RemoveFromShippingOption(id, optionIds)
+func (s *TaxRateService) RemoveFromShippingOption(id uuid.UUID, optionIds uuid.UUIDs) *utils.ApplictaionError {
+	return s.r.TaxRateRepository().RemoveFromShippingOption(id, optionIds)
 }
 
-func (s *TaxRateService) AddToProduct(id uuid.UUID, productIds uuid.UUIDs, replace bool) ([]models.ProductTaxRate, error) {
-	return s.repo.AddToProduct(id, productIds, replace)
+func (s *TaxRateService) AddToProduct(id uuid.UUID, productIds uuid.UUIDs, replace bool) ([]models.ProductTaxRate, *utils.ApplictaionError) {
+	return s.r.TaxRateRepository().AddToProduct(id, productIds, replace)
 }
 
-func (s *TaxRateService) AddToProductType(id uuid.UUID, productTypeIds uuid.UUIDs, replace bool) ([]models.ProductTypeTaxRate, error) {
-	return s.repo.AddToProductType(id, productTypeIds, replace)
+func (s *TaxRateService) AddToProductType(id uuid.UUID, productTypeIds uuid.UUIDs, replace bool) ([]models.ProductTypeTaxRate, *utils.ApplictaionError) {
+	return s.r.TaxRateRepository().AddToProductType(id, productTypeIds, replace)
 }
 
-func (s *TaxRateService) AddToShippingOption(id uuid.UUID, optionIds uuid.UUIDs, replace bool) ([]models.ShippingTaxRate, error) {
-	taxRate, err := s.Retrieve(id, repository.Options{Selects: []string{"id", "region_id"}})
+func (s *TaxRateService) AddToShippingOption(id uuid.UUID, optionIds uuid.UUIDs, replace bool) ([]models.ShippingTaxRate, *utils.ApplictaionError) {
+	taxRate, err := s.Retrieve(id, sql.Options{Selects: []string{"id", "region_id"}})
 	if err != nil {
 		return nil, err
 	}
-	options, err := s.shippingOptionService.List(models.ShippingOption{Model: core.Model{Id: id}}, repository.Options{Selects: []string{"id", "region_id"}})
+	options, err := s.r.ShippingOptionService().SetContext(s.ctx).List(models.ShippingOption{Model: core.Model{Id: id}}, sql.Options{Selects: []string{"id", "region_id"}})
 	if err != nil {
 		return nil, err
 	}
 	for _, o := range options {
 		if o.RegionId != taxRate.RegionId {
-			return nil, errors.New(`Shipping Option and Tax Rate must belong to the same Region to be associated. Shipping Option with id: ` + o.Id.String() + ` belongs to Region with id: ` + o.RegionId.UUID.String() + ` and Tax Rate with id: ` + taxRate.Id.String() + ` belongs to Region with id: ` + taxRate.RegionId.UUID.String())
+			return nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				`Shipping Option and Tax Rate must belong to the same Region to be associated. Shipping Option with id: `+o.Id.String()+` belongs to Region with id: `+o.RegionId.UUID.String()+` and Tax Rate with id: `+taxRate.Id.String()+` belongs to Region with id: `+taxRate.RegionId.UUID.String(),
+				"500",
+				nil,
+			)
 		}
 	}
-	return s.repo.AddToShippingOption(id, optionIds, replace)
+	return s.r.TaxRateRepository().AddToShippingOption(id, optionIds, replace)
 }
 
-func (s *TaxRateService) ListByProduct(productId uuid.UUID, config types.TaxRateListByConfig) ([]models.TaxRate, error) {
-	return s.repo.ListByProduct(productId, config)
+func (s *TaxRateService) ListByProduct(productId uuid.UUID, config types.TaxRateListByConfig) ([]models.TaxRate, *utils.ApplictaionError) {
+	return s.r.TaxRateRepository().ListByProduct(productId, config)
 }
 
-func (s *TaxRateService) ListByShippingOption(shippingOptionId uuid.UUID) ([]models.TaxRate, error) {
-	return s.repo.ListByShippingOption(shippingOptionId)
+func (s *TaxRateService) ListByShippingOption(shippingOptionId uuid.UUID) ([]models.TaxRate, *utils.ApplictaionError) {
+	return s.r.TaxRateRepository().ListByShippingOption(shippingOptionId)
 }

@@ -3,18 +3,22 @@ package interfaces
 import (
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/types"
-	"github.com/gofrs/uuid"
+	"github.com/driver005/gateway/utils"
+	"github.com/google/uuid"
 )
 
-type PriceSelectionContext struct {
-	CartID                string
-	CustomerID            string
-	RegionID              string
+type PricingContext struct {
+	CartId                uuid.UUID
+	CustomerId            uuid.UUID
+	CustomerGroupId       uuid.UUIDs
+	RegionId              uuid.UUID
 	Quantity              int
 	CurrencyCode          string
 	IncludeDiscountPrices bool
 	TaxRates              []types.TaxServiceRate
 	IgnoreCache           bool
+	AutomaticTaxes        bool
+	TaxRate               float64
 }
 
 type DefaultPriceType string
@@ -30,19 +34,25 @@ const (
 )
 
 type PriceSelectionResult struct {
-	OriginalPrice              *float64
-	OriginalPriceIncludesTax   *bool
-	CalculatedPrice            *float64
-	CalculatedPriceIncludesTax *bool
-	CalculatedPriceType        *PriceType
+	OriginalPrice              float64
+	OriginalPriceIncludesTax   bool
+	CalculatedPrice            float64
+	CalculatedPriceIncludesTax bool
+	CalculatedPriceType        string
 	Prices                     []models.MoneyAmount
 }
 
-type IPriceSelectionStrategy interface {
-	CalculateVariantPrice(data []struct {
-		VariantID uuid.UUID
-		Quantity  *int
-	}, context PriceSelectionContext) (map[string]PriceSelectionResult, error)
+type Pricing struct {
+	VariantId uuid.UUID
+	Quantity  int
+}
 
-	OnVariantsPricesUpdate(variantIDs []string) error
+type ProductPricing struct {
+	ProductId uuid.UUID
+	Variants  []models.ProductVariant
+}
+type IPriceSelectionStrategy interface {
+	CalculateVariantPrice(data []Pricing, context *PricingContext) (map[uuid.UUID]PriceSelectionResult, *utils.ApplictaionError)
+
+	OnVariantsPricesUpdate(variantIds uuid.UUIDs) *utils.ApplictaionError
 }

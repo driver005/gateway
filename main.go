@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 
-	"github.com/driver005/gateway/config"
 	"github.com/driver005/gateway/registry"
-	// "github.com/gofiber/fiber/v2"
-	// "github.com/gofiber/fiber/v2/middleware/cors"
-	// "github.com/gofiber/fiber/v2/middleware/logger"
+	// "github.com/gofiber/fiber/v3"
+	// "github.com/gofiber/fiber/v3/middleware/cors"
+	// "github.com/gofiber/fiber/v3/middleware/logger"
 )
 
 //Swagger: swag init -g main.go  --parseDependency --parseInternal --parseDepth 1  --output docs/
@@ -30,12 +29,7 @@ var ctx = context.Background()
 // @BasePath /api
 // @schemes http
 func main() {
-	o := make([]registry.OptionsModifier, 0)
-	o = append(o, registry.DisableMigration())
-
-	r := registry.New(ctx, o)
-
-	config.Init()
+	r := registry.New(ctx)
 
 	r.Setup()
 }

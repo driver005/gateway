@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -34,6 +35,9 @@ type Fulfillment struct {
 
 	Provider *FulfillmentProvider `json:"provider" gorm:"foreignKey:id;references:provider_id"`
 
+	// The id of the Fulfillment Provider responsible for handling the fulfillment
+	LocationId string `json:"location_id"`
+
 	// The Fulfillment Items in the Fulfillment - these hold information about how many of each Line Item has been fulfilled. Available if the relation `items` is expanded.
 	Items []FulfillmentItem `json:"items" gorm:"foreignKey:fulfillment_id"`
 
@@ -46,17 +50,40 @@ type Fulfillment struct {
 	TrackingNumbers string `json:"tracking_numbers" gorm:"default:null"`
 
 	// This contains all the data necessary for the Fulfillment provider to handle the fulfillment.
-	Data JSONB `json:"data" gorm:"default:null"`
+	Data core.JSONB `json:"data" gorm:"default:null"`
 
 	// The date with timezone at which the Fulfillment was shipped.
-	ShippedAt time.Time `json:"shipped_at" gorm:"default:null"`
+	ShippedAt *time.Time `json:"shipped_at" gorm:"default:null"`
 
 	// Flag for describing whether or not notifications related to this should be send.
 	NoNotification bool `json:"no_notification" gorm:"default:null"`
 
 	// The date with timezone at which the Fulfillment was canceled.
-	CanceledAt time.Time `json:"canceled_at" gorm:"default:null"`
+	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
 
 	// Randomly generated key used to continue the completion of the fulfillment in case of failure.
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
+}
+
+type FulfillmentStatus string
+
+const (
+	FulfillmentStatusNotFulfilled       FulfillmentStatus = "not_fulfilled"
+	FulfillmentStatusPartiallyFulfilled FulfillmentStatus = "partially_fulfilled"
+	FulfillmentStatusFulfilled          FulfillmentStatus = "fulfilled"
+	FulfillmentStatusPartiallyShipped   FulfillmentStatus = "partially_shipped"
+	FulfillmentStatusShipped            FulfillmentStatus = "shipped"
+	FulfillmentStatusPartiallyReturned  FulfillmentStatus = "partially_returned"
+	FulfillmentStatusReturned           FulfillmentStatus = "returned"
+	FulfillmentStatusCanceled           FulfillmentStatus = "canceled"
+	FulfillmentStatusRequiresAction     FulfillmentStatus = "requires_action"
+)
+
+func (pl *FulfillmentStatus) Scan(value interface{}) error {
+	*pl = FulfillmentStatus(value.([]byte))
+	return nil
+}
+
+func (pl FulfillmentStatus) Value() (driver.Value, error) {
+	return string(pl), nil
 }

@@ -8,10 +8,13 @@ type StrategyResolverService struct {
 	ctx context.Context
 }
 
-func NewStrategyResolverService(ctx context.Context) *StrategyResolverService {
+func NewStrategyResolverService() *StrategyResolverService {
 	return &StrategyResolverService{
-		ctx,
+		context.Background(),
 	}
 }
 
-func (s StrategyResolverService) ResolveBatchJobByType(batchtype string)
+func (s *StrategyResolverService) SetContext(context context.Context) *StrategyResolverService {
+	s.ctx = context
+	return s
+}

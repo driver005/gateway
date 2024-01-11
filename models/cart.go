@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -59,19 +60,19 @@ type Cart struct {
 	ShippingMethods []ShippingMethod `json:"shipping_methods" gorm:"foreignKey:id"`
 
 	// The cart's type.
-	Type string `json:"type" gorm:"default:null"`
+	Type CartType `json:"type" gorm:"default:null"`
 
 	// The date with timezone at which the cart was completed.
-	CompletedAt time.Time `json:"completed_at" gorm:"default:null"`
+	CompletedAt *time.Time `json:"completed_at" gorm:"default:null"`
 
 	// The date with timezone at which the payment was authorized.
-	PaymentAuthorizedAt time.Time `json:"payment_authorized_at" gorm:"default:null"`
+	PaymentAuthorizedAt *time.Time `json:"payment_authorized_at" gorm:"default:null"`
 
 	// Randomly generated key used to continue the completion of a cart in case of failure.
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
 
 	// The context of the cart which can include info like IP or user agent.
-	Context JSONB `json:"context" gorm:"default:null"`
+	Context core.JSONB `json:"context" gorm:"default:null"`
 
 	// The sales channel ID the cart is associated with.
 	SalesChannelId uuid.NullUUID `json:"sales_channel_id" gorm:"default:null"`
@@ -82,8 +83,17 @@ type Cart struct {
 	// The total of shipping
 	ShippingTotal float64 `json:"shipping_total" gorm:"default:null"`
 
+	// The total of gift cards
+	ShippingTaxTotal float64 `json:"shipping_tax_total" gorm:"default:null"`
+
 	// The total of discount
 	DiscountTotal float64 `json:"discount_total" gorm:"default:null"`
+
+	// The total of the discount
+	RawDiscountTotal float64 `json:"raw_discount_total" gorm:"default:null"`
+
+	// The total of gift cards
+	ItemTaxTotal float64 `json:"item_tax_total" gorm:"default:null"`
 
 	// The total of tax
 	TaxTotal float64 `json:"tax_total" gorm:"default:null"`
@@ -105,4 +115,25 @@ type Cart struct {
 
 	// The total of gift cards with taxes
 	GiftCardTaxTotal float64 `json:"gift_card_tax_total" gorm:"default:null"`
+}
+
+// The status of the Price List
+type CartType string
+
+// Defines values for CartType.
+const (
+	CartDefault     = "default"
+	CartSwap        = "swap"
+	CartDraftOrder  = "draft_order"
+	CartPaymentLink = "payment_link"
+	CartClaim       = "claim"
+)
+
+func (pl *CartType) Scan(value interface{}) error {
+	*pl = CartType(value.([]byte))
+	return nil
+}
+
+func (pl CartType) Value() (driver.Value, error) {
+	return string(pl), nil
 }

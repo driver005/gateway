@@ -31,10 +31,10 @@ type DraftOrder struct {
 	Order *Order `json:"order" gorm:"foreignKey:id;references:order_id"`
 
 	// The date the draft order was canceled at.
-	CanceledAt time.Time `json:"canceled_at" gorm:"default:null"`
+	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
 
 	// The date the draft order was completed at.
-	CompletedAt time.Time `json:"completed_at" gorm:"default:null"`
+	CompletedAt *time.Time `json:"completed_at" gorm:"default:null"`
 
 	// Whether to send the customer notifications regarding order updates.
 	NoNotificationOrder bool `json:"no_notification_order" gorm:"default:null"`

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -21,20 +23,25 @@ const (
 type DiscountConditionResourceType interface{}
 
 type DiscountConditionRepo struct {
-	Repository[models.DiscountCondition]
+	sql.Repository[models.DiscountCondition]
 }
 
-func DiscountConditionRepository(db *gorm.DB) DiscountConditionRepo {
-	return DiscountConditionRepo{*NewRepository[models.DiscountCondition](db)}
+func DiscountConditionRepository(db *gorm.DB) *DiscountConditionRepo {
+	return &DiscountConditionRepo{*sql.NewRepository[models.DiscountCondition](db)}
 }
 
-func (r *DiscountConditionRepo) FindOneWithDiscount(conditionId uuid.UUID, discountId uuid.UUID) (*models.DiscountCondition, error) {
+func (r *DiscountConditionRepo) FindOneWithDiscount(conditionId uuid.UUID, discountId uuid.UUID) (*models.DiscountCondition, *utils.ApplictaionError) {
 	condition := &models.DiscountCondition{}
-	err := r.db.Model(&models.DiscountCondition{}).
+	err := r.Db().Model(&models.DiscountCondition{}).
 		Joins("LEFT JOIN condition on condition.discount_rule_id = discount.rule_id and discount.id = ? and condition.id = ?", discountId, conditionId).
 		First(condition).Error
 	if err != nil {
-		return nil, err
+		return nil, utils.NewApplictaionError(
+			utils.DB_ERROR,
+			err.Error(),
+			"500",
+			nil,
+		)
 	}
 	return condition, nil
 }
@@ -82,7 +89,7 @@ func (r *DiscountConditionRepo) GetJoinTableResourceIdentifiers(types models.Dis
 }
 
 // TODO: ADD
-func (r *DiscountConditionRepo) RemoveConditionResources(ctx context.Context, id uuid.UUID, resource *models.DiscountCondition) error {
+func (r *DiscountConditionRepo) RemoveConditionResources(ctx context.Context, id uuid.UUID, resource *models.DiscountCondition) *utils.ApplictaionError {
 	conditionTable, _, joinTableForeignKey, _, _, _ := r.GetJoinTableResourceIdentifiers(resource.Type)
 	if conditionTable == nil || joinTableForeignKey == nil {
 		return nil
@@ -99,14 +106,14 @@ func (r *DiscountConditionRepo) RemoveConditionResources(ctx context.Context, id
 	return nil
 }
 
-func (r *DiscountConditionRepo) AddConditionResources(ctx context.Context, conditionId uuid.UUID, resource *models.DiscountCondition, overrideExisting bool) ([]models.DiscountCondition, error) {
+func (r *DiscountConditionRepo) AddConditionResources(ctx context.Context, conditionId uuid.UUID, resource *models.DiscountCondition, overrideExisting bool) ([]models.DiscountCondition, *utils.ApplictaionError) {
 	// toInsert := make([]map[string]string, len(resourceIds))
 	conditionTable, _, joinTableForeignKey, _, _, _ := r.GetJoinTableResourceIdentifiers(resource.Type)
 	if conditionTable == nil || joinTableForeignKey == nil {
 		return nil, nil
 	}
 
-	// _, err := r.db.Model(&models.DiscountCondition{}).
+	// _, err := r.Db().Model(&models.DiscountCondition{}).
 	// 	Insert().
 	// 	OrIgnore(true).
 	// 	Into(conditionTable).
@@ -116,7 +123,7 @@ func (r *DiscountConditionRepo) AddConditionResources(ctx context.Context, condi
 	// 	return nil, err
 	// }
 	// if overrideExisting {
-	// 	_, err := r.db.Model(&models.DiscountCondition{}).
+	// 	_, err := r.Db().Model(&models.DiscountCondition{}).
 	// 		Delete().
 	// 		From(conditionTable).
 	// 		Where(map[string]interface{}{
@@ -138,7 +145,7 @@ func (r *DiscountConditionRepo) AddConditionResources(ctx context.Context, condi
 	return nil, nil
 }
 
-func (r *DiscountConditionRepo) QueryConditionTable(types models.DiscountConditionType, conditionId uuid.UUID, resourceId uuid.UUID) (*int64, error) {
+func (r *DiscountConditionRepo) QueryConditionTable(types models.DiscountConditionType, conditionId uuid.UUID, resourceId uuid.UUID) (*int64, *utils.ApplictaionError) {
 	conditionTable, joinTable, joinTableForeignKey, resourceKey, joinTableKey, _ := r.GetJoinTableResourceIdentifiers(types)
 	medusaV2Flag := false
 
@@ -168,26 +175,36 @@ func (r *DiscountConditionRepo) QueryConditionTable(types models.DiscountConditi
 		// 	GetCount()
 	}
 	var count *int64
-	err := r.db.Model(conditionTable).
+	err := r.Db().Model(conditionTable).
 		Joins(joinTable, "resource", "dc.?? = resource.?? and resource.?? = ?", joinTableForeignKey, resourceKey, joinTableKey, resourceId).
 		Where("dc.condition_id = ?", conditionId).
 		Count(count).Error
 
 	if err != nil {
-		return nil, err
+		return nil, utils.NewApplictaionError(
+			utils.DB_ERROR,
+			err.Error(),
+			"500",
+			nil,
+		)
 	}
 
 	return count, nil
 }
 
-func (r *DiscountConditionRepo) IsValidForProduct(discountRuleId uuid.UUID, productId uuid.UUID) (bool, error) {
+func (r *DiscountConditionRepo) IsValidForProduct(discountRuleId uuid.UUID, productId uuid.UUID) (bool, *utils.ApplictaionError) {
 	var discountConditions []models.DiscountCondition
-	err := r.db.Model(&models.DiscountCondition{}).
+	err := r.Db().Model(&models.DiscountCondition{}).
 		Select([]string{"discon.id", "discon.type", "discon.operator"}).
 		Where("discon.discount_rule_id = ?", discountRuleId).
 		Find(&discountConditions).Error
 	if err != nil {
-		return false, err
+		return false, utils.NewApplictaionError(
+			utils.DB_ERROR,
+			err.Error(),
+			"500",
+			nil,
+		)
 	}
 	if len(discountConditions) == 0 {
 		return true, nil
@@ -210,15 +227,20 @@ func (r *DiscountConditionRepo) IsValidForProduct(discountRuleId uuid.UUID, prod
 	return true, nil
 }
 
-func (r *DiscountConditionRepo) CanApplyForCustomer(discountRuleId uuid.UUID, customerId uuid.UUID) (bool, error) {
+func (r *DiscountConditionRepo) CanApplyForCustomer(discountRuleId uuid.UUID, customerId uuid.UUID) (bool, *utils.ApplictaionError) {
 	var discountConditions []models.DiscountCondition
-	err := r.db.Model(&models.DiscountCondition{}).
+	err := r.Db().Model(&models.DiscountCondition{}).
 		Select([]string{"discon.id", "discon.type", "discon.operator"}).
 		Where("discon.discount_rule_id = ?", discountRuleId).
 		Where("discon.type = ?", "CUSTOMER_GROUPS").
 		Find(&discountConditions).Error
 	if err != nil {
-		return false, err
+		return false, utils.NewApplictaionError(
+			utils.DB_ERROR,
+			err.Error(),
+			"500",
+			nil,
+		)
 	}
 	if len(discountConditions) == 0 {
 		return true, nil

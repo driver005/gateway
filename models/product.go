@@ -55,14 +55,18 @@ type Product struct {
 	// The country in which the Product Variant was produced. May be used by Fulfillment Providers to pass customs information to shipping carriers.
 	OriginCountry string `json:"origin_country" gorm:"default:null"`
 
+	Categories []ProductCategory `json:"categories" gorm:"foreignKey:id"`
+
 	// Shipping Profiles have a set of defined Shipping Options that can be used to fulfill a given set of Products.
 	Profile *ShippingProfile `json:"profile" gorm:"foreignKey:id;references:profile_id"`
 
 	// The ID of the Shipping Profile that the Product belongs to. Shipping Profiles have a set of defined Shipping Options that can be used to Fulfill a given set of Products.
 	ProfileId uuid.NullUUID `json:"profile_id"`
 
+	Profiles []ShippingProfile `json:"profiles" gorm:"foreignKey:id"`
+
 	// The sales channels the product is associated with. Available if the relation `sales_channels` is expanded.
-	SalesChannels *SalesChannel `json:"sales_channels" gorm:"foreignKey:id"`
+	SalesChannels []SalesChannel `json:"sales_channels" gorm:"foreignKey:id"`
 
 	// The status of the product
 	Status ProductStatus `json:"status" gorm:"default:draft"`

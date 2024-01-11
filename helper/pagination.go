@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lib/pq"
 	"github.com/valyala/fasthttp"
 )
@@ -81,7 +81,7 @@ func header(u *fasthttp.URI, rel string, limit, offset int) string {
 // The header will contain links any combination of the first, last, next, or previous (prev) pages in a paginated list (given a limit and an offset, and optionally a total).
 // If total is not set, then no "last" page will be calculated.
 // If no limit is provided, then it will default to 1.
-func Header(c *fiber.Ctx, u *fasthttp.URI, pageSize int64, limit, offset int) {
+func Header(c fiber.Ctx, u *fasthttp.URI, pageSize int64, limit, offset int) {
 	total := int(pageSize)
 	if offset < 0 {
 		offset = 0

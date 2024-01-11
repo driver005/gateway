@@ -1,24 +1,30 @@
 package services
 
 import (
-	"github.com/driver005/gateway/repository"
+	"context"
+
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	userService     UserService
-	customerService CustomerService
+	ctx context.Context
+	r   Registry
 }
 
 func NewAuthService(
-	userService UserService,
-	customerService CustomerService,
+	r Registry,
 ) *AuthService {
 	return &AuthService{
-		userService,
-		customerService,
+		context.Background(),
+		r,
 	}
+}
+
+func (s *AuthService) SetContext(context context.Context) *AuthService {
+	s.ctx = context
+	return s
 }
 
 func (s *AuthService) ComparePassword(password string, hash string) bool {
@@ -27,7 +33,7 @@ func (s *AuthService) ComparePassword(password string, hash string) bool {
 }
 
 func (s *AuthService) AuthenticateAPIToken(token string) types.AuthenticateResult {
-	user, err := s.userService.RetrieveByApiToken(token, nil)
+	user, err := s.r.UserService().SetContext(s.ctx).RetrieveByApiToken(token, nil)
 	if err != nil {
 		return types.AuthenticateResult{
 			Error:   "Invalid API Token",
@@ -42,7 +48,7 @@ func (s *AuthService) AuthenticateAPIToken(token string) types.AuthenticateResul
 }
 
 func (s *AuthService) Authenticate(email string, password string) types.AuthenticateResult {
-	passwordHash, err := s.userService.RetrieveByEmail(email, repository.Options{
+	passwordHash, err := s.r.UserService().SetContext(s.ctx).RetrieveByEmail(email, sql.Options{
 		Selects: []string{"password_hash"},
 	})
 	if err != nil {
@@ -54,7 +60,7 @@ func (s *AuthService) Authenticate(email string, password string) types.Authenti
 
 	passwordsMatch := s.ComparePassword(password, passwordHash.PasswordHash)
 	if passwordsMatch {
-		model, err := s.userService.RetrieveByEmail(email, repository.Options{})
+		model, err := s.r.UserService().SetContext(s.ctx).RetrieveByEmail(email, sql.Options{})
 		if err != nil {
 			return types.AuthenticateResult{
 				Error:   "Invalid email or password",
@@ -75,7 +81,7 @@ func (s *AuthService) Authenticate(email string, password string) types.Authenti
 }
 
 func (s *AuthService) AuthenticateCustomer(email string, password string) types.AuthenticateResult {
-	passwordHash, err := s.customerService.RetrieveRegisteredByEmail(email, repository.Options{
+	passwordHash, err := s.r.CustomerService().SetContext(s.ctx).RetrieveRegisteredByEmail(email, sql.Options{
 		Selects: []string{"password_hash"},
 	})
 	if err != nil {
@@ -88,7 +94,7 @@ func (s *AuthService) AuthenticateCustomer(email string, password string) types.
 	if passwordHash.PasswordHash != "" {
 		passwordsMatch := s.ComparePassword(password, passwordHash.PasswordHash)
 		if passwordsMatch {
-			model, err := s.customerService.RetrieveRegisteredByEmail(email, repository.Options{})
+			model, err := s.r.CustomerService().SetContext(s.ctx).RetrieveRegisteredByEmail(email, sql.Options{})
 			if err != nil {
 				return types.AuthenticateResult{
 					Error:   "Invalid email or password",

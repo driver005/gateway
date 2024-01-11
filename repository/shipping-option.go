@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type ShippingOptionRepo struct {
-	Repository[models.ShippingOption]
+	sql.Repository[models.ShippingOption]
 }
 
-func ShippingOptionRepository(db *gorm.DB) ShippingOptionRepo {
-	return ShippingOptionRepo{*NewRepository[models.ShippingOption](db)}
+func ShippingOptionRepository(db *gorm.DB) *ShippingOptionRepo {
+	return &ShippingOptionRepo{*sql.NewRepository[models.ShippingOption](db)}
 }

@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type ProductTaxRateRepo struct {
-	Repository[models.ProductTaxRate]
+	sql.Repository[models.ProductTaxRate]
 }
 
-func ProductTaxRateRepository(db *gorm.DB) ProductTaxRateRepo {
-	return ProductTaxRateRepo{*NewRepository[models.ProductTaxRate](db)}
+func ProductTaxRateRepository(db *gorm.DB) *ProductTaxRateRepo {
+	return &ProductTaxRateRepo{*sql.NewRepository[models.ProductTaxRate](db)}
 }

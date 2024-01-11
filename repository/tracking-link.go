@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type TrackingLinkRepo struct {
-	Repository[models.TrackingLink]
+	sql.Repository[models.TrackingLink]
 }
 
-func TrackingLinkRepository(db *gorm.DB) TrackingLinkRepo {
-	return TrackingLinkRepo{*NewRepository[models.TrackingLink](db)}
+func TrackingLinkRepository(db *gorm.DB) *TrackingLinkRepo {
+	return &TrackingLinkRepo{*sql.NewRepository[models.TrackingLink](db)}
 }

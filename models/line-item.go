@@ -39,6 +39,14 @@ type LineItem struct {
 	// Available if the relation `adjustments` is expanded.
 	Adjustments []LineItemAdjustment `json:"adjustments" gorm:"foreignKey:id"`
 
+	OriginalItemId uuid.NullUUID `json:"original_item_id" gorm:"default:null"`
+
+	// The ID of the Order that the Line Item belongs to.
+	OrderEditId uuid.NullUUID `json:"order_edit_id" gorm:"default:null"`
+
+	// An order object. Available if the relation `order` is expanded.
+	OrderEdit *OrderEdit `json:"order_edit" gorm:"foreignKey:id;references:order_edit_id"`
+
 	// The title of the Line Item, this should be easily identifiable by the Customer.
 	Title string `json:"title"`
 
@@ -66,6 +74,8 @@ type LineItem struct {
 	// The price of one unit of the content in the Line Item. This should be in the currency defined by the Cart/Order/Swap/Claim that the Line Item belongs to.
 	UnitPrice float64 `json:"unit_price"`
 
+	ProductId uuid.NullUUID `json:"product_id" gorm:"default:null"`
+
 	// The id of the Product Variant contained in the Line Item.
 	VariantId uuid.NullUUID `json:"variant_id" gorm:"default:null"`
 
@@ -76,38 +86,41 @@ type LineItem struct {
 	Quantity int `json:"quantity"`
 
 	// The quantity of the Line Item that has been fulfilled.
-	FulfilledQuantity int32 `json:"fulfilled_quantity" gorm:"default:null"`
+	FulfilledQuantity int `json:"fulfilled_quantity" gorm:"default:null"`
 
 	// The quantity of the Line Item that has been returned.
-	ReturnedQuantity int32 `json:"returned_quantity" gorm:"default:null"`
+	ReturnedQuantity int `json:"returned_quantity" gorm:"default:null"`
 
 	// The quantity of the Line Item that has been shipped.
-	ShippedQuantity int32 `json:"shipped_quantity" gorm:"default:null"`
+	ShippedQuantity int `json:"shipped_quantity" gorm:"default:null"`
 
 	// The amount that can be refunded from the given Line Item. Takes taxes and discounts into consideration.
-	Refundable int32 `json:"refundable" gorm:"default:null"`
+	Refundable float64 `json:"refundable" gorm:"default:null"`
 
 	// The subtotal of the line item
-	Subtotal int32 `json:"subtotal" gorm:"default:null"`
+	Subtotal float64 `json:"subtotal" gorm:"default:null"`
 
 	// The total of tax of the line item
-	TaxTotal int32 `json:"tax_total" gorm:"default:null"`
+	TaxTotal float64 `json:"tax_total" gorm:"default:null"`
 
 	// The total amount of the line item
-	Total int32 `json:"total" gorm:"default:null"`
+	Total float64 `json:"total" gorm:"default:null"`
 
 	// The original total amount of the line item
-	OriginalTotal int32 `json:"original_total" gorm:"default:null"`
+	OriginalTotal float64 `json:"original_total" gorm:"default:null"`
 
 	// The original tax total amount of the line item
-	OriginalTaxTotal int32 `json:"original_tax_total" gorm:"default:null"`
+	OriginalTaxTotal float64 `json:"original_tax_total" gorm:"default:null"`
 
 	// The total of discount of the line item
-	DiscountTotal int32 `json:"discount_total" gorm:"default:null"`
+	DiscountTotal float64 `json:"discount_total" gorm:"default:null"`
 
 	// The total of the gift card of the line item
-	GiftCardTotal int32 `json:"gift_card_total" gorm:"default:null"`
+	GiftCardTotal float64 `json:"gift_card_total" gorm:"default:null"`
 
-	// [EXPERIMENTAL] Indicates if the line item unit_price include tax
+	// The total of the discount of the line item
+	RawDiscountTotal float64 `json:"raw_discount_total" gorm:"default:null"`
+
+	// Indicates if the line item unit_price include tax
 	IncludesTax bool `json:"includes_tax" gorm:"default:null"`
 }

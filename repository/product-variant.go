@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type ProductVariantRepo struct {
-	Repository[models.ProductVariant]
+	sql.Repository[models.ProductVariant]
 }
 
-func ProductVariantRepository(db *gorm.DB) ProductVariantRepo {
-	return ProductVariantRepo{*NewRepository[models.ProductVariant](db)}
+func ProductVariantRepository(db *gorm.DB) *ProductVariantRepo {
+	return &ProductVariantRepo{*sql.NewRepository[models.ProductVariant](db)}
 }

@@ -2,46 +2,38 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
+	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/sarulabs/di"
 )
 
 type TaxProviderService struct {
-	ctx            context.Context
-	container      di.Container
-	repo           *repository.TaxProviderRepo
-	taxLineRepo    *repository.LineItemTaxLineRepo
-	smTaxLineRepo  *repository.ShippingMethodTaxLineRepo
-	cacheService   interfaces.ICacheService
-	taxRateService *TaxRateService
+	ctx       context.Context
+	container di.Container
+	r         Registry
 }
 
 func NewTaxProviderService(
-	ctx context.Context,
 	container di.Container,
-	repo *repository.TaxProviderRepo,
-	taxLineRepo *repository.LineItemTaxLineRepo,
-	smTaxLineRepo *repository.ShippingMethodTaxLineRepo,
-	cacheService interfaces.ICacheService,
-	taxRateService *TaxRateService,
+	r Registry,
 ) *TaxProviderService {
 	return &TaxProviderService{
-		ctx,
+		context.Background(),
 		container,
-		repo,
-		taxLineRepo,
-		smTaxLineRepo,
-		cacheService,
-		taxRateService,
+		r,
 	}
+}
+
+func (s *TaxProviderService) SetContext(context context.Context) *TaxProviderService {
+	s.ctx = context
+	return s
 }
 
 func (s *TaxProviderService) RetrieveProvider(region models.Region) interfaces.ITaxService {
@@ -57,30 +49,30 @@ func (s *TaxProviderService) RetrieveProvider(region models.Region) interfaces.I
 	return provider
 }
 
-func (s *TaxProviderService) ClearLineItemsTaxLines(itemIds uuid.UUIDs) error {
-	if err := s.taxLineRepo.Specification(repository.In[uuid.UUID]("item_id", itemIds)).Delete(s.ctx, &models.LineItemTaxLine{}); err != nil {
+func (s *TaxProviderService) ClearLineItemsTaxLines(itemIds uuid.UUIDs) *utils.ApplictaionError {
+	if err := s.r.LineItemTaxLineRepository().Specification(sql.In[uuid.UUID]("item_id", itemIds)).Delete(s.ctx, &models.LineItemTaxLine{}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *TaxProviderService) ClearTaxLines(cartId uuid.UUID) error {
-	if err := s.taxLineRepo.DeleteForCart(s.ctx, cartId); err != nil {
+func (s *TaxProviderService) ClearTaxLines(cartId uuid.UUID) *utils.ApplictaionError {
+	if err := s.r.LineItemTaxLineRepository().DeleteForCart(s.ctx, cartId); err != nil {
 		return err
 	}
 
-	if err := s.smTaxLineRepo.DeleteForCart(s.ctx, cartId); err != nil {
+	if err := s.r.ShippingMethodTaxLineRepository().DeleteForCart(s.ctx, cartId); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *TaxProviderService) CreateTaxLines(cart *models.Cart, lineItems []models.LineItem, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, []models.LineItemTaxLine, error) {
+func (s *TaxProviderService) CreateTaxLines(cart *models.Cart, lineItems []models.LineItem, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, []models.LineItemTaxLine, *utils.ApplictaionError) {
 	var taxline []models.LineItemTaxLine
 	var smTaxLine []models.ShippingMethodTaxLine
-	var err error
+	var err *utils.ApplictaionError
 
 	if cart != nil {
 		smTaxLine, taxline, err = s.GetTaxLines(cart.Items, calculationContext)
@@ -91,31 +83,31 @@ func (s *TaxProviderService) CreateTaxLines(cart *models.Cart, lineItems []model
 		return nil, nil, err
 	}
 
-	if err := s.taxLineRepo.SaveSlice(s.ctx, taxline); err != nil {
+	if err := s.r.LineItemTaxLineRepository().SaveSlice(s.ctx, taxline); err != nil {
 		return nil, nil, err
 	}
 
-	if err := s.smTaxLineRepo.SaveSlice(s.ctx, smTaxLine); err != nil {
+	if err := s.r.ShippingMethodTaxLineRepository().SaveSlice(s.ctx, smTaxLine); err != nil {
 		return nil, nil, err
 	}
 
 	return smTaxLine, taxline, err
 }
 
-func (s *TaxProviderService) CreateShippingTaxLines(shippingMethod *models.ShippingMethod, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, error) {
+func (s *TaxProviderService) CreateShippingTaxLines(shippingMethod *models.ShippingMethod, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, *utils.ApplictaionError) {
 	taxline, err := s.GetShippingTaxLines(shippingMethod, calculationContext)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.smTaxLineRepo.SaveSlice(s.ctx, taxline); err != nil {
+	if err := s.r.ShippingMethodTaxLineRepository().SaveSlice(s.ctx, taxline); err != nil {
 		return nil, err
 	}
 
 	return taxline, nil
 }
 
-func (s *TaxProviderService) GetShippingTaxLines(shippingMethod *models.ShippingMethod, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, error) {
+func (s *TaxProviderService) GetShippingTaxLines(shippingMethod *models.ShippingMethod, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, *utils.ApplictaionError) {
 	rates, err := s.GetRegionRatesForShipping(shippingMethod.Id, &calculationContext.Region)
 	if err != nil {
 		return nil, err
@@ -157,18 +149,13 @@ func (s *TaxProviderService) GetShippingTaxLines(shippingMethod *models.Shipping
 	return result, nil
 }
 
-func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, []models.LineItemTaxLine, error) {
-	var productIds []uuid.UUID
-	var productIdsMap map[uuid.UUID]bool
+func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculationContext *interfaces.TaxCalculationContext) ([]models.ShippingMethodTaxLine, []models.LineItemTaxLine, *utils.ApplictaionError) {
+	var productIds uuid.UUIDs
 
 	for _, item := range lineItems {
 		if item.Variant != nil && item.Variant.Id != uuid.Nil {
-			productIdsMap[item.Variant.Id] = true
+			productIds = append(productIds, item.Variant.Id)
 		}
-	}
-
-	for id := range productIdsMap {
-		productIds = append(productIds, id)
 	}
 
 	productRatesMap, err := s.GetRegionRatesForProduct(productIds, &calculationContext.Region)
@@ -229,7 +216,12 @@ func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculatio
 				Code:             pl.Code,
 			})
 		} else if pl.ItemID == uuid.Nil {
-			return nil, nil, errors.New("Tax Provider returned invalid tax lines")
+			return nil, nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				"Tax Provider returned invalid tax lines",
+				"500",
+				nil,
+			)
 		} else {
 			liTaxLines = append(liTaxLines, models.LineItemTaxLine{
 				Model: core.Model{
@@ -246,9 +238,9 @@ func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculatio
 	return smTaxLines, liTaxLines, nil
 }
 
-func (s *TaxProviderService) GetTaxLinesMap(items []models.LineItem, calculationContext *interfaces.TaxCalculationContext) (types.TaxLinesMaps, error) {
-	var lineItemsTaxLinesMap map[uuid.UUID][]models.LineItemTaxLine
-	var shippingMethodsTaxLinesMap map[uuid.UUID][]models.ShippingMethodTaxLine
+func (s *TaxProviderService) GetTaxLinesMap(items []models.LineItem, calculationContext *interfaces.TaxCalculationContext) (types.TaxLinesMaps, *utils.ApplictaionError) {
+	lineItemsTaxLinesMap := make(map[uuid.UUID][]models.LineItemTaxLine)
+	shippingMethodsTaxLinesMap := make(map[uuid.UUID][]models.ShippingMethodTaxLine)
 
 	shippingMethodTaxLines, taxLines, err := s.GetTaxLines(items, calculationContext)
 	if err != nil {
@@ -277,11 +269,16 @@ func (s *TaxProviderService) GetTaxLinesMap(items []models.LineItem, calculation
 	}, nil
 }
 
-func (s *TaxProviderService) GetRegionRatesForShipping(optionId uuid.UUID, region *models.Region) ([]types.TaxServiceRate, error) {
+func (s *TaxProviderService) GetRegionRatesForShipping(optionId uuid.UUID, region *models.Region) ([]types.TaxServiceRate, *utils.ApplictaionError) {
 	cachKey := s.GetCacheKey(optionId, region.Id)
-	cacheHit, err := s.cacheService.Get(cachKey)
-	if err != nil {
-		return nil, err
+	cacheHit, er := s.r.CacheService().Get(cachKey)
+	if er != nil {
+		return nil, utils.NewApplictaionError(
+			utils.UNEXPECTED_STATE,
+			er.Error(),
+			"500",
+			nil,
+		)
 	}
 
 	if cacheHit != nil {
@@ -289,7 +286,7 @@ func (s *TaxProviderService) GetRegionRatesForShipping(optionId uuid.UUID, regio
 	}
 
 	var toReturn []types.TaxServiceRate
-	optionRates, err := s.taxRateService.ListByShippingOption(optionId)
+	optionRates, err := s.r.TaxRateService().SetContext(s.ctx).ListByShippingOption(optionId)
 	if err != nil {
 		return nil, err
 	}
@@ -312,23 +309,28 @@ func (s *TaxProviderService) GetRegionRatesForShipping(optionId uuid.UUID, regio
 		}
 	}
 
-	s.cacheService.Set(cachKey, toReturn, nil)
+	s.r.CacheService().Set(cachKey, toReturn, nil)
 	return toReturn, nil
 }
 
-func (s *TaxProviderService) GetRegionRatesForProduct(productIds uuid.UUIDs, region *models.Region) (map[uuid.UUID][]types.TaxServiceRate, error) {
+func (s *TaxProviderService) GetRegionRatesForProduct(productIds uuid.UUIDs, region *models.Region) (map[uuid.UUID][]types.TaxServiceRate, *utils.ApplictaionError) {
 	var nonCachedProductIds uuid.UUIDs
-	var cacheKeysMap map[uuid.UUID]string
-	var productRatesMapResult map[uuid.UUID][]types.TaxServiceRate
+	cacheKeysMap := make(map[uuid.UUID]string)
+	productRatesMapResult := make(map[uuid.UUID][]types.TaxServiceRate)
 
 	for _, p := range productIds {
 		cacheKeysMap[p] = s.GetCacheKey(p, region.Id)
 	}
 
 	for key, value := range cacheKeysMap {
-		cacheHit, err := s.cacheService.Get(value)
+		cacheHit, err := s.r.CacheService().Get(value)
 		if err != nil {
-			return nil, err
+			return nil, utils.NewApplictaionError(
+				utils.UNEXPECTED_STATE,
+				err.Error(),
+				"500",
+				nil,
+			)
 		}
 
 		if cacheHit == nil {
@@ -344,7 +346,7 @@ func (s *TaxProviderService) GetRegionRatesForProduct(productIds uuid.UUIDs, reg
 
 	for _, value := range nonCachedProductIds {
 		var toReturn []types.TaxServiceRate
-		rates, err := s.taxRateService.ListByProduct(value, types.TaxRateListByConfig{RegionId: region.Id})
+		rates, err := s.r.TaxRateService().SetContext(s.ctx).ListByProduct(value, types.TaxRateListByConfig{RegionId: region.Id})
 		if err != nil {
 			return nil, err
 		}
@@ -367,7 +369,7 @@ func (s *TaxProviderService) GetRegionRatesForProduct(productIds uuid.UUIDs, reg
 			}
 		}
 
-		s.cacheService.Set(cacheKeysMap[value], toReturn, nil)
+		s.r.CacheService().Set(cacheKeysMap[value], toReturn, nil)
 		productRatesMapResult[value] = toReturn
 	}
 
@@ -378,19 +380,17 @@ func (s *TaxProviderService) GetCacheKey(id uuid.UUID, regionId uuid.UUID) strin
 	return fmt.Sprintf("txrtcache:%s:%s", id.String(), regionId.String())
 }
 
-func (s *TaxProviderService) RegisterInstalledProviders(providers []string) error {
-	if err := s.repo.Update(s.ctx, &models.TaxProvider{IsInstalled: false}); err != nil {
+func (s *TaxProviderService) RegisterInstalledProviders(providers uuid.UUIDs) *utils.ApplictaionError {
+	if err := s.r.TaxProviderRepository().Update(s.ctx, &models.TaxProvider{IsInstalled: false}); err != nil {
 		return err
 	}
 
 	for _, p := range providers {
 		var model *models.TaxProvider
 		model.IsInstalled = true
-		if err := model.ParseUUID(p); err != nil {
-			return err
-		}
+		model.Id = p
 
-		if err := s.repo.Save(s.ctx, model); err != nil {
+		if err := s.r.TaxProviderRepository().Save(s.ctx, model); err != nil {
 			return err
 		}
 	}

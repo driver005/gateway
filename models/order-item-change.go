@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+
 	"github.com/driver005/gateway/core"
 	"github.com/google/uuid"
 )
@@ -10,7 +12,7 @@ type OrderItemChange struct {
 	core.Model
 
 	// The order's status
-	Type string `json:"type"`
+	Type OrderEditItemChangeType `json:"type"`
 
 	// The ID of the order edit
 	OrderEditId uuid.NullUUID `json:"order_edit_id"`
@@ -26,4 +28,21 @@ type OrderItemChange struct {
 	LineItemId uuid.NullUUID `json:"line_item_id" gorm:"default:null"`
 
 	LineItem *LineItem `json:"line_item" gorm:"foreignKey:id;references:line_item_id"`
+}
+
+type OrderEditItemChangeType string
+
+const (
+	OrderEditStatusItemAdd    OrderEditItemChangeType = "item_add"
+	OrderEditStatusItemRemove OrderEditItemChangeType = "item_remove"
+	OrderEditStatusItemUpdate OrderEditItemChangeType = "item_update"
+)
+
+func (pl *OrderEditItemChangeType) Scan(value interface{}) error {
+	*pl = OrderEditItemChangeType(value.([]byte))
+	return nil
+}
+
+func (pl OrderEditItemChangeType) Value() (driver.Value, error) {
+	return string(pl), nil
 }

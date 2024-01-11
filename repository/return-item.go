@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type ReturnItemRepo struct {
-	Repository[models.ReturnItem]
+	sql.Repository[models.ReturnItem]
 }
 
-func ReturnItemRepository(db *gorm.DB) ReturnItemRepo {
-	return ReturnItemRepo{*NewRepository[models.ReturnItem](db)}
+func ReturnItemRepository(db *gorm.DB) *ReturnItemRepo {
+	return &ReturnItemRepo{*sql.NewRepository[models.ReturnItem](db)}
 }

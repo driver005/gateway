@@ -22,3 +22,9 @@ func (a *JSONB) Scan(value interface{}) error {
 	}
 	return json.Unmarshal(b, &a)
 }
+
+func (a *JSONB) Add(key string, value interface{}) JSONB {
+	data := *a
+	data[key] = value
+	return data
+}

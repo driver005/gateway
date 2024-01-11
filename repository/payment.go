@@ -2,13 +2,14 @@ package repository
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"gorm.io/gorm"
 )
 
 type PaymentRepo struct {
-	Repository[models.Payment]
+	sql.Repository[models.Payment]
 }
 
-func PaymentRepository(db *gorm.DB) PaymentRepo {
-	return PaymentRepo{*NewRepository[models.Payment](db)}
+func PaymentRepository(db *gorm.DB) *PaymentRepo {
+	return &PaymentRepo{*sql.NewRepository[models.Payment](db)}
 }

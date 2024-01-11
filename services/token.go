@@ -7,22 +7,27 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-var secretKey = []byte("TODO: Change me")
-
 type TockenService struct {
-	ctx context.Context
+	ctx       context.Context
+	secretKey []byte
 }
 
-func NewTockenService(ctx context.Context) *TockenService {
+func NewTockenService(secretKey []byte) *TockenService {
 	return &TockenService{
-		ctx,
+		context.Background(),
+		secretKey,
 	}
+}
+
+func (s *TockenService) SetContext(context context.Context) *TockenService {
+	s.ctx = context
+	return s
 }
 
 func (s *TockenService) VerifyToken(tocken string) (*jwt.Token, jwt.MapClaims, error) {
 	var claims jwt.MapClaims
 	token, err := jwt.ParseWithClaims(tocken, claims, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return s.secretKey, nil
 	})
 
 	if err != nil {
@@ -57,7 +62,7 @@ func (s *TockenService) SignToken(data map[string]interface{}) (*string, error) 
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(secretKey)
+	tokenString, err := token.SignedString(s.secretKey)
 	if err != nil {
 		return nil, err
 	}

@@ -10,5 +10,8 @@ type StagedJob struct {
 	EventName string `json:"event_name"`
 
 	// Data necessary for the job
-	Data JSONB `json:"data" gorm:"default:null"`
+	Data core.JSONB `json:"data" gorm:"default:null"`
+
+	// Options necessary for the job
+	Options core.JSONB `json:"options" gorm:"default:null"`
 }

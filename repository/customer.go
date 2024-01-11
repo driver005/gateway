@@ -4,22 +4,24 @@ import (
 	"context"
 
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"gorm.io/gorm"
 )
 
 type CustomerRepo struct {
-	Repository[models.Customer]
+	sql.Repository[models.Customer]
 }
 
-func CustomerRepository(db *gorm.DB) CustomerRepo {
-	return CustomerRepo{*NewRepository[models.Customer](db)}
+func CustomerRepository(db *gorm.DB) *CustomerRepo {
+	return &CustomerRepo{*sql.NewRepository[models.Customer](db)}
 }
 
-func (r *CustomerRepo) ListAndCount(ctx context.Context, selector models.Customer, config Options, q *string, groups []string) ([]models.Customer, *int64, error) {
+func (r *CustomerRepo) ListAndCount(ctx context.Context, selector models.Customer, config sql.Options, q *string, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
 	var res []models.Customer
 
 	if q != nil {
-		v := ILike(*q)
+		v := sql.ILike(*q)
 		selector.Email = v
 		selector.FirstName = v
 		selector.LastName = v
@@ -27,13 +29,18 @@ func (r *CustomerRepo) ListAndCount(ctx context.Context, selector models.Custome
 	for _, g := range groups {
 		var group models.CustomerGroup
 		if err := group.ParseUUID(g); err != nil {
-			return nil, nil, err
+			return nil, nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				err.Error(),
+				"500",
+				nil,
+			)
 		}
 
 		selector.Groups = append(selector.Groups, group)
 	}
 
-	query := BuildQuery[models.Customer](selector, config)
+	query := sql.BuildQuery[models.Customer](selector, config)
 
 	count, err := r.FindAndCount(ctx, res, query)
 	if err != nil {

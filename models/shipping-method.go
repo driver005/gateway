@@ -50,9 +50,24 @@ type ShippingMethod struct {
 	// The amount to charge for the Shipping Method. The currency of the price is defined by the Region that the Order that the Shipping Method belongs to is a part of.
 	Price float64 `json:"price"`
 
-	// Additional data that the Fulfillment Provider needs to fulfill the shipment. This is used in combination with the Shipping Options data, and may contain information such as a drop point id.
-	Data JSONB `json:"data" gorm:"default:null"`
+	// The subtotal of the shippingMethod
+	Subtotal float64 `json:"subtotal" gorm:"default:null"`
 
-	// [EXPERIMENTAL] Indicates if the shipping method price include tax
+	// The total of tax of the shippingMethod
+	TaxTotal float64 `json:"tax_total" gorm:"default:null"`
+
+	// The total amount of the shippingMethod
+	Total float64 `json:"total" gorm:"default:null"`
+
+	// The original total amount of the line item
+	OriginalTotal float64 `json:"original_total" gorm:"default:null"`
+
+	// The original tax total amount of the line item
+	OriginalTaxTotal float64 `json:"original_tax_total" gorm:"default:null"`
+
+	// Additional data that the Fulfillment Provider needs to fulfill the shipment. This is used in combination with the Shipping Options data, and may contain information such as a drop point id.
+	Data core.JSONB `json:"data" gorm:"default:null"`
+
+	// Indicates if the shipping method price include tax
 	IncludesTax bool `json:"includes_tax" gorm:"default:null"`
 }

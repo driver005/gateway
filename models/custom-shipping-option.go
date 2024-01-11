@@ -10,7 +10,7 @@ type CustomShippingOption struct {
 	core.Model
 
 	// The custom price set that will override the shipping option's original price
-	Price int32 `json:"price"`
+	Price float64 `json:"price"`
 
 	// The ID of the Shipping Option that the custom shipping option overrides
 	ShippingOptionId uuid.NullUUID `json:"shipping_option_id"`

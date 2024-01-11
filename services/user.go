@@ -2,34 +2,35 @@ package services
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/repository"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
+	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
-	ctx              context.Context
-	repo             *repository.UserRepo
-	analyticsService AnalyticsConfigService
+	ctx context.Context
+	r   Registry
 }
 
 func NewUserService(
-	ctx context.Context,
-	repo *repository.UserRepo,
-	analyticsService AnalyticsConfigService,
+	r Registry,
 ) *UserService {
 	return &UserService{
-		ctx,
-		repo,
-		analyticsService,
+		context.Background(),
+		r,
 	}
+}
+
+func (s *UserService) SetContext(context context.Context) *UserService {
+	s.ctx = context
+	return s
 }
 
 func (s *UserService) HashPassword(password string) (string, error) {
@@ -37,119 +38,161 @@ func (s *UserService) HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (s *UserService) List(selector types.FilterableUser, config repository.Options) ([]models.User, error) {
+func (s *UserService) List(selector types.FilterableUser, config sql.Options) ([]models.User, *utils.ApplictaionError) {
 	var res []models.User
-	query := repository.BuildQuery[types.FilterableUser](selector, config)
-	if err := s.repo.Find(s.ctx, res, query); err != nil {
+	query := sql.BuildQuery[types.FilterableUser](selector, config)
+	if err := s.r.UserRepository().Find(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *UserService) Retrieve(userId uuid.UUID, config repository.Options) (*models.User, error) {
+func (s *UserService) Retrieve(userId uuid.UUID, config sql.Options) (*models.User, *utils.ApplictaionError) {
 	if userId == uuid.Nil {
-		return nil, errors.New(`"userId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"userId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	var res *models.User
 
-	query := repository.BuildQuery[types.FilterableUser](types.FilterableUser{
+	query := sql.BuildQuery[types.FilterableUser](types.FilterableUser{
 		FilterModel: core.FilterModel{
 			Id: []uuid.UUID{userId},
 		},
 	}, config)
 
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
+	if err := s.r.UserRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *UserService) RetrieveByApiToken(apiToken string, relations []string) (*models.User, error) {
+func (s *UserService) RetrieveByApiToken(apiToken string, relations []string) (*models.User, *utils.ApplictaionError) {
 	if apiToken == "" {
-		return nil, errors.New(`"apiToken" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"apiToken" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	var res *models.User
 
-	query := repository.BuildQuery[models.User](models.User{ApiToken: apiToken}, repository.NewOptions(nil, nil, nil, relations, nil))
+	query := sql.BuildQuery[models.User](models.User{ApiToken: apiToken}, sql.Options{
+		Relations: relations,
+	})
 
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
+	if err := s.r.UserRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *UserService) RetrieveByEmail(email string, config repository.Options) (*models.User, error) {
+func (s *UserService) RetrieveByEmail(email string, config sql.Options) (*models.User, *utils.ApplictaionError) {
 	if email == "" {
-		return nil, errors.New(`"email" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"email" must be defined`,
+			"500",
+			nil,
+		)
 	}
 	var res *models.User
 
-	query := repository.BuildQuery[types.FilterableUser](types.FilterableUser{Email: strings.ToLower(email)}, config)
+	query := sql.BuildQuery[types.FilterableUser](types.FilterableUser{Email: strings.ToLower(email)}, config)
 
-	if err := s.repo.FindOne(s.ctx, res, query); err != nil {
+	if err := s.r.UserRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *UserService) Create(model *models.User) (*models.User, error) {
+func (s *UserService) Create(model *models.User) (*models.User, *utils.ApplictaionError) {
 	if err := validator.New().Var(model.Email, "required,email"); err != nil {
-		return nil, err
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			err.Error(),
+			"500",
+			nil,
+		)
 	}
 
 	if model.Password != "" {
 		hashedPassword, err := s.HashPassword(model.Password)
 		if err != nil {
-			return nil, err
+			return nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				err.Error(),
+				"500",
+				nil,
+			)
 		}
 
 		model.PasswordHash = hashedPassword
 	}
 
-	if err := s.repo.Save(s.ctx, model); err != nil {
+	if err := s.r.UserRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
 	return model, nil
 }
 
-func (s *UserService) Update(userId uuid.UUID, update *models.User) (*models.User, error) {
-	if update.Email != "" {
-		return nil, errors.New(`"You are not allowed to update email"`)
+func (s *UserService) Update(userId uuid.UUID, Update *models.User) (*models.User, *utils.ApplictaionError) {
+	if Update.Email != "" {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"You are not allowed to Update email"`,
+			"500",
+			nil,
+		)
 	}
 
-	if update.PasswordHash != "" || update.Password != "" {
-		return nil, errors.New("use dedicated methods, `setPassword`, `generateResetPasswordToken` for password operations")
+	if Update.PasswordHash != "" || Update.Password != "" {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"use dedicated methods, `setPassword`, `generateResetPasswordToken` for password operations",
+			"500",
+			nil,
+		)
 	}
 
 	if userId == uuid.Nil {
-		return nil, errors.New(`"userId" must be defined`)
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			`"userId" must be defined`,
+			"500",
+			nil,
+		)
 	}
 
-	update.Id = userId
+	Update.Id = userId
 
-	if err := s.repo.FindOne(s.ctx, update, repository.Query{}); err != nil {
+	if err := s.r.UserRepository().FindOne(s.ctx, Update, sql.Query{}); err != nil {
 		return nil, err
 	}
 
-	if err := s.repo.Upsert(s.ctx, update); err != nil {
+	if err := s.r.UserRepository().Upsert(s.ctx, Update); err != nil {
 		return nil, err
 	}
 
-	return update, nil
+	return Update, nil
 }
 
-func (s *UserService) Delete(userId uuid.UUID) error {
-	data, err := s.Retrieve(userId, repository.Options{})
+func (s *UserService) Delete(userId uuid.UUID) *utils.ApplictaionError {
+	data, err := s.Retrieve(userId, sql.Options{})
 	if err != nil {
 		return err
 	}
 
-	if err := s.analyticsService.Delete(userId); err != nil {
+	if err := s.r.AnalyticsConfigService().Delete(userId); err != nil {
 		return err
 	}
 
-	if err := s.repo.SoftRemove(s.ctx, data); err != nil {
+	if err := s.r.UserRepository().SoftRemove(s.ctx, data); err != nil {
 		return err
 	}
 
