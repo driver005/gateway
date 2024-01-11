@@ -1,0 +1,43 @@
+# This is a sample config file whose sole purpose is to enumerate
+# all the available configuration options, and is intended to be used
+# solely as a reference. Please copy this file to create a config.
+
+# Server configuration
+[server]
+port = 8080
+host = "127.0.0.1"
+server_name = "Test_App"
+# This is the grace time (in seconds) given to the server to stop the execution
+# For more details: https://actix.rs/docs/server/#graceful-shutdown
+timeout = 30
+# HTTP Request body limit. Defaults to 32kB
+request_body_limit = 32_768
+# Proxy server configuration for connecting to payment gateways.
+# Don't define the fields if a Proxy isn't needed. Empty strings will cause failure.
+cors_allowed_origins = "http://localhost:8000"
+
+# Main SQL data store credentials
+[master_database]
+type = "postgres"         # DB Type
+username = "postgres"      # DB Username
+password = "postgres"      # DB Password. Use base-64 encoded kms encrypted value here when kms is enabled
+host = "localhost"        # DB Host
+port = 5432               # DB Port
+dbname = "medusa-Snl0" # Name of Database
+pool_size = 5             # Number of connections to keep open
+connection_timeout = 10   # Timeout for database connection in seconds
+
+# This section provides some secret values.
+[secrets]
+master_enc_key = "sample_key"            # Master Encryption key used to encrypt merchant wise encryption key. Should be 32-byte long.
+jwt_secret = "secret"                    # JWT secret used for user authentication. Only applicable when KMS is disabled.
+
+[applictaion]
+preload = true
+
+[logger]
+development = true
+# levels can be "DEBUG", "INFO", "WARN", "ERROR", "DPANIC", "PANIC", "FATAL", "OFF"
+# defaults to "WARN"
+level = "DEBUG"
+encoding = "console"
