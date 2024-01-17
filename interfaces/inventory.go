@@ -38,11 +38,12 @@ type ReservationItemDTO struct {
 
 type InventoryLevelDTO struct {
 	core.Model
-	InventoryItemId  uuid.UUID
-	LocationId       uuid.UUID
-	StockedQuantity  int
-	ReservedQuantity int
-	IncomingQuantity int
+	InventoryItemId   uuid.UUID
+	LocationId        uuid.UUID
+	StockedQuantity   int
+	ReservedQuantity  int
+	IncomingQuantity  int
+	AvailableQuantity int
 }
 
 type FilterableReservationItemProps struct {
@@ -126,7 +127,7 @@ type UpdateReservationItemInput struct {
 	Quantity    int
 	LocationID  string
 	Description string
-	Metadata    map[string]interface{}
+	Metadata    core.JSONB
 }
 
 type ReserveQuantityContext struct {
@@ -146,10 +147,10 @@ type SharedContext struct {
 }
 
 type IInventoryService interface {
-	ListInventoryItems(context context.Context, selector FilterableInventoryItemProps, config sql.Options) ([]InventoryItemDTO, *int64, *utils.ApplictaionError)
-	ListReservationItems(context context.Context, selector FilterableReservationItemProps, config sql.Options) ([]ReservationItemDTO, *int64, *utils.ApplictaionError)
-	ListInventoryLevels(context context.Context, selector FilterableInventoryLevelProps, config sql.Options) ([]InventoryLevelDTO, *int64, *utils.ApplictaionError)
-	RetrieveInventoryItem(context context.Context, inventoryItemId uuid.UUID, config sql.Options) (InventoryItemDTO, *utils.ApplictaionError)
+	ListInventoryItems(context context.Context, selector FilterableInventoryItemProps, config *sql.Options) ([]InventoryItemDTO, *int64, *utils.ApplictaionError)
+	ListReservationItems(context context.Context, selector FilterableReservationItemProps, config *sql.Options) ([]ReservationItemDTO, *int64, *utils.ApplictaionError)
+	ListInventoryLevels(context context.Context, selector FilterableInventoryLevelProps, config *sql.Options) ([]InventoryLevelDTO, *int64, *utils.ApplictaionError)
+	RetrieveInventoryItem(context context.Context, inventoryItemId uuid.UUID, config *sql.Options) (InventoryItemDTO, *utils.ApplictaionError)
 	RetrieveInventoryLevel(context context.Context, inventoryItemId uuid.UUID, locationId string) (InventoryLevelDTO, *utils.ApplictaionError)
 	RetrieveReservationItem(context context.Context, reservationId uuid.UUID) (ReservationItemDTO, *utils.ApplictaionError)
 	CreateReservationItem(context context.Context, input CreateReservationItemInput) (ReservationItemDTO, *utils.ApplictaionError)

@@ -48,7 +48,7 @@ func (s *AuthService) AuthenticateAPIToken(token string) types.AuthenticateResul
 }
 
 func (s *AuthService) Authenticate(email string, password string) types.AuthenticateResult {
-	passwordHash, err := s.r.UserService().SetContext(s.ctx).RetrieveByEmail(email, sql.Options{
+	passwordHash, err := s.r.UserService().SetContext(s.ctx).RetrieveByEmail(email, &sql.Options{
 		Selects: []string{"password_hash"},
 	})
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *AuthService) Authenticate(email string, password string) types.Authenti
 
 	passwordsMatch := s.ComparePassword(password, passwordHash.PasswordHash)
 	if passwordsMatch {
-		model, err := s.r.UserService().SetContext(s.ctx).RetrieveByEmail(email, sql.Options{})
+		model, err := s.r.UserService().SetContext(s.ctx).RetrieveByEmail(email, &sql.Options{})
 		if err != nil {
 			return types.AuthenticateResult{
 				Error:   "Invalid email or password",
@@ -81,7 +81,7 @@ func (s *AuthService) Authenticate(email string, password string) types.Authenti
 }
 
 func (s *AuthService) AuthenticateCustomer(email string, password string) types.AuthenticateResult {
-	passwordHash, err := s.r.CustomerService().SetContext(s.ctx).RetrieveRegisteredByEmail(email, sql.Options{
+	passwordHash, err := s.r.CustomerService().SetContext(s.ctx).RetrieveRegisteredByEmail(email, &sql.Options{
 		Selects: []string{"password_hash"},
 	})
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *AuthService) AuthenticateCustomer(email string, password string) types.
 	if passwordHash.PasswordHash != "" {
 		passwordsMatch := s.ComparePassword(password, passwordHash.PasswordHash)
 		if passwordsMatch {
-			model, err := s.r.CustomerService().SetContext(s.ctx).RetrieveRegisteredByEmail(email, sql.Options{})
+			model, err := s.r.CustomerService().SetContext(s.ctx).RetrieveRegisteredByEmail(email, &sql.Options{})
 			if err != nil {
 				return types.AuthenticateResult{
 					Error:   "Invalid email or password",

@@ -19,5 +19,5 @@ type OAuth struct {
 	UninstallUrl string `json:"uninstall_url" gorm:"default:null"`
 
 	// Any data necessary to the app.
-	Data JSONB `json:"data" gorm:"default:null"`
+	Data core.JSONB `json:"data" gorm:"default:null"`
 }

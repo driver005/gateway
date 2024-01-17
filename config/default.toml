@@ -23,7 +23,7 @@ username = "postgres"      # DB Username
 password = "postgres"      # DB Password. Use base-64 encoded kms encrypted value here when kms is enabled
 host = "localhost"        # DB Host
 port = 5432               # DB Port
-dbname = "medusa-Snl0" # Name of Database
+dbname = "medusa-test" # Name of Database
 pool_size = 5             # Number of connections to keep open
 connection_timeout = 10   # Timeout for database connection in seconds
 
@@ -41,3 +41,6 @@ development = true
 # defaults to "WARN"
 level = "DEBUG"
 encoding = "console"
+
+[migration]
+active = true

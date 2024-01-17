@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+
 	"github.com/driver005/gateway/core"
 	"github.com/google/uuid"
 )
@@ -30,7 +32,7 @@ type ClaimItem struct {
 	Variant *ProductVariant `json:"variant" gorm:"foreignKey:id;references:variant_id"`
 
 	// The reason for the claim
-	Reason string `json:"reason"`
+	Reason ClaimReasonType `json:"reason"`
 
 	// An optional note about the claim, for additional information
 	Note string `json:"note" gorm:"default:null"`
@@ -40,4 +42,22 @@ type ClaimItem struct {
 
 	// User defined tags for easy filtering and grouping. Available if the relation 'tags' is expanded.
 	Tags []ClaimTag `json:"tags" gorm:"foreignKey:id"`
+}
+
+type ClaimReasonType string
+
+const (
+	ClaimReasonTypeMissingItem       ClaimReasonType = "missing_item"
+	ClaimReasonTypeWrongItem         ClaimReasonType = "wrong_item"
+	ClaimReasonTypeProductionFailure ClaimReasonType = "production_failure"
+	ClaimReasonTypeOther             ClaimReasonType = "other"
+)
+
+func (pl *ClaimReasonType) Scan(value interface{}) error {
+	*pl = ClaimReasonType(value.([]byte))
+	return nil
+}
+
+func (pl ClaimReasonType) Value() (driver.Value, error) {
+	return string(pl), nil
 }

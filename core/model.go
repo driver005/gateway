@@ -1,7 +1,6 @@
 package core
 
 import (
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,8 +8,8 @@ import (
 )
 
 type Model struct {
-	Id        uuid.UUID      `json:"id" gorm:"primarykey"`
-	Object    string         `json:"object"`
+	Id uuid.UUID `json:"id" gorm:"primarykey"`
+	// Object    string         `json:"object"`
 	Metadata  JSONB          `json:"metadata,omitempty" gorm:"default:null"`
 	CreatedAt time.Time      `json:"created_at,omitempty" db:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at,omitempty" db:"updated_at"`
@@ -25,9 +24,9 @@ func (m *Model) BeforeCreate(tx *gorm.DB) (err error) {
 		}
 	}
 
-	if m.Object == "" {
-		m.Object = strings.ToLower(tx.Statement.Schema.Table)
-	}
+	// if m.Object == "" {
+	// 	m.Object = strings.ToLower(tx.Statement.Schema.Table)
+	// }
 
 	m.CreatedAt = time.Now().UTC().Round(time.Second)
 	m.UpdatedAt = m.CreatedAt

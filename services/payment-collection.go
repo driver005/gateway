@@ -33,12 +33,11 @@ func (s *PaymentCollectionService) SetContext(context context.Context) *PaymentC
 	return s
 }
 
-func (s *PaymentCollectionService) Retrieve(id uuid.UUID, config sql.Options) (*models.PaymentCollection, *utils.ApplictaionError) {
+func (s *PaymentCollectionService) Retrieve(id uuid.UUID, config *sql.Options) (*models.PaymentCollection, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -53,18 +52,29 @@ func (s *PaymentCollectionService) Retrieve(id uuid.UUID, config sql.Options) (*
 	return res, nil
 }
 
-func (s *PaymentCollectionService) Create(data *models.PaymentCollection) (*models.PaymentCollection, *utils.ApplictaionError) {
-	data.Status = models.PaymentCollectionStatusNotPaid
+func (s *PaymentCollectionService) Create(data *types.CreatePaymentCollectionInput) (*models.PaymentCollection, *utils.ApplictaionError) {
+	model := &models.PaymentCollection{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Status:       models.PaymentCollectionStatusNotPaid,
+		RegionId:     uuid.NullUUID{UUID: data.RegionId},
+		Type:         data.Type,
+		CurrencyCode: data.CurrencyCode,
+		Amount:       data.Amount,
+		CreatedBy:    data.CreatedBy,
+		Description:  data.Description,
+	}
 
-	if err := s.r.PaymentCollectionRepository().Save(s.ctx, data); err != nil {
+	if err := s.r.PaymentCollectionRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 	// eventBusService.emit(PaymentCollectionService.Events.CREATED, paymentCollection)
-	return data, nil
+	return model, nil
 }
 
 func (s *PaymentCollectionService) Update(id uuid.UUID, Update *models.PaymentCollection) (*models.PaymentCollection, *utils.ApplictaionError) {
-	paymentCollection, err := s.Retrieve(id, sql.Options{})
+	paymentCollection, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +89,7 @@ func (s *PaymentCollectionService) Update(id uuid.UUID, Update *models.PaymentCo
 }
 
 func (s *PaymentCollectionService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	paymentCollection, err := s.Retrieve(id, sql.Options{})
+	paymentCollection, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -93,7 +103,7 @@ func (s *PaymentCollectionService) Delete(id uuid.UUID) *utils.ApplictaionError 
 	return nil
 }
 
-func (s *PaymentCollectionService) IsValidTotalAmount(total float64, sessionsInput []models.PaymentSession) bool {
+func (s *PaymentCollectionService) IsValidTotalAmount(total float64, sessionsInput []types.PaymentCollectionsSessionsBatchInput) bool {
 	sum := 0.0
 	for _, sess := range sessionsInput {
 		sum += sess.Amount
@@ -101,9 +111,9 @@ func (s *PaymentCollectionService) IsValidTotalAmount(total float64, sessionsInp
 	return total == sum
 }
 
-func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, paymentCollection *models.PaymentCollection, sessionsInput []models.PaymentSession, customerId uuid.UUID) (*models.PaymentCollection, *utils.ApplictaionError) {
+func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, paymentCollection *models.PaymentCollection, sessionsInput []types.PaymentCollectionsSessionsBatchInput, customerId uuid.UUID) (*models.PaymentCollection, *utils.ApplictaionError) {
 	if id != uuid.Nil {
-		p, err := s.Retrieve(id, sql.Options{
+		p, err := s.Retrieve(id, &sql.Options{
 			Relations: []string{"region", "region.payment_providers", "payment_sessions"},
 		})
 		if err != nil {
@@ -116,7 +126,6 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf(`Cannot set payment sessions for a payment collection with status %v`, paymentCollection.Status),
-			"500",
 			nil,
 		)
 	}
@@ -126,10 +135,10 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 		payColRegionProviderMap[provider.Id] = provider
 	}
 
-	var sessions []models.PaymentSession
+	var sessions []types.PaymentCollectionsSessionsBatchInput
 
 	for _, input := range sessionsInput {
-		if payColRegionProviderMap[input.ProviderId.UUID] != nil {
+		if payColRegionProviderMap[input.ProviderId] != nil {
 			sessions = append(sessions, input)
 		}
 	}
@@ -138,14 +147,13 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf(`The sum of sessions is not equal to %f on Payment Collection`, paymentCollection.Amount),
-			"500",
 			nil,
 		)
 	}
 
 	var customer *models.Customer
 	if customerId != uuid.Nil {
-		c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, sql.Options{
+		c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, &sql.Options{
 			Selects: []string{"id", "email", "metadata"},
 		})
 		if err != nil {
@@ -162,7 +170,7 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 	var selectedSessionIds uuid.UUIDs
 	var paymentSessions []models.PaymentSession
 	for _, session := range sessions {
-		pay, ok := payColSessionMap[session.Id]
+		pay, ok := payColSessionMap[session.SessionId]
 
 		var existingSession *models.PaymentSession
 		if ok {
@@ -170,11 +178,18 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 		}
 
 		inputData := &types.PaymentSessionInput{
-			Cart:         *session.Cart,
+			Cart: &models.Cart{
+				Email:           customer.Email,
+				Context:         core.JSONB{},
+				ShippingMethods: []models.ShippingMethod{},
+				ShippingAddress: &models.Address{},
+				RegionId:        paymentCollection.RegionId,
+				Total:           session.Amount,
+			},
 			ResourceId:   paymentCollection.Id,
 			CurrencyCode: paymentCollection.CurrencyCode,
 			Amount:       session.Amount,
-			ProviderId:   session.ProviderId.UUID,
+			ProviderId:   session.ProviderId,
 			Customer:     customer,
 		}
 
@@ -225,8 +240,8 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 	return paymentCollection, nil
 }
 
-func (s *PaymentCollectionService) SetPaymentSession(id uuid.UUID, sessionInput models.PaymentSession, customerId uuid.UUID) (*models.PaymentCollection, *utils.ApplictaionError) {
-	paymentCollection, err := s.Retrieve(id, sql.Options{
+func (s *PaymentCollectionService) SetPaymentSession(id uuid.UUID, sessionInput types.PaymentCollectionsSessionsInput, customerId uuid.UUID) (*models.PaymentCollection, *utils.ApplictaionError) {
+	paymentCollection, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"region", "region.payment_providers", "payment_sessions"},
 	})
 	if err != nil {
@@ -235,7 +250,7 @@ func (s *PaymentCollectionService) SetPaymentSession(id uuid.UUID, sessionInput 
 
 	hasProvider := false
 	for _, p := range paymentCollection.Region.PaymentProviders {
-		if p.Id == sessionInput.ProviderId.UUID {
+		if p.Id == sessionInput.ProviderId {
 			hasProvider = true
 			break
 		}
@@ -245,27 +260,29 @@ func (s *PaymentCollectionService) SetPaymentSession(id uuid.UUID, sessionInput 
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Payment provider not found",
-			"500",
 			nil,
 		)
 	}
 
 	var existingSession models.PaymentSession
 	for _, sess := range paymentCollection.PaymentSessions {
-		if sessionInput.ProviderId == sess.ProviderId {
+		if sessionInput.ProviderId == sess.ProviderId.UUID {
 			existingSession = sess
 			break
 		}
 	}
 
-	sessionInput.Id = existingSession.Id
-	sessionInput.Amount = paymentCollection.Amount
-
-	return s.SetPaymentSessionsBatch(uuid.Nil, paymentCollection, []models.PaymentSession{sessionInput}, customerId)
+	return s.SetPaymentSessionsBatch(uuid.Nil, paymentCollection, []types.PaymentCollectionsSessionsBatchInput{
+		{
+			ProviderId: sessionInput.ProviderId,
+			Amount:     paymentCollection.Amount,
+			SessionId:  existingSession.Id,
+		},
+	}, customerId)
 }
 
 func (s *PaymentCollectionService) RefreshPaymentSession(id uuid.UUID, sessionId uuid.UUID, customerId uuid.UUID) (*models.PaymentSession, *utils.ApplictaionError) {
-	paymentCollection, err := s.r.PaymentCollectionRepository().GetPaymentCollectionIdBySessionId(sessionId, sql.Options{
+	paymentCollection, err := s.r.PaymentCollectionRepository().GetPaymentCollectionIdBySessionId(sessionId, &sql.Options{
 		Relations: []string{"region", "payment_sessions"},
 	})
 	if err != nil {
@@ -276,7 +293,6 @@ func (s *PaymentCollectionService) RefreshPaymentSession(id uuid.UUID, sessionId
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Payment Session `+sessionId.String()+` does not belong to Payment Collection `+id.String(),
-			"500",
 			nil,
 		)
 	}
@@ -293,14 +309,13 @@ func (s *PaymentCollectionService) RefreshPaymentSession(id uuid.UUID, sessionId
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Session with id `+sessionId.String()+` was not found`,
-			"500",
 			nil,
 		)
 	}
 
 	var customer *models.Customer
 	if customerId != uuid.Nil {
-		c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, sql.Options{
+		c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, &sql.Options{
 			Selects: []string{"id", "email", "metadata"},
 		})
 		if err != nil {
@@ -343,7 +358,7 @@ func (s *PaymentCollectionService) RefreshPaymentSession(id uuid.UUID, sessionId
 }
 
 func (s *PaymentCollectionService) MarkAsAuthorized(id uuid.UUID) (*models.PaymentCollection, *utils.ApplictaionError) {
-	paymentCollection, err := s.Retrieve(id, sql.Options{})
+	paymentCollection, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +372,7 @@ func (s *PaymentCollectionService) MarkAsAuthorized(id uuid.UUID) (*models.Payme
 }
 
 func (s *PaymentCollectionService) AuthorizePaymentSessions(id uuid.UUID, sessionIds uuid.UUIDs, context map[string]interface{}) (*models.PaymentCollection, *utils.ApplictaionError) {
-	paymentCollection, err := s.Retrieve(id, sql.Options{
+	paymentCollection, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"payment_sessions", "payments"},
 	})
 	if err != nil {
@@ -382,7 +397,6 @@ func (s *PaymentCollectionService) AuthorizePaymentSessions(id uuid.UUID, sessio
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"You cannot complete a Payment Collection without a payment session.",
-			"500",
 			nil,
 		)
 	}
@@ -406,11 +420,12 @@ func (s *PaymentCollectionService) AuthorizePaymentSessions(id uuid.UUID, sessio
 		}
 		if paymentSession.Status == models.PaymentSessionStatusAuthorized {
 			authorizedAmount += session.Amount
-			data, err := s.r.PaymentProviderService().SetContext(s.ctx).CreatePayment(&models.Payment{
-				Amount:       session.Amount,
-				CurrencyCode: paymentCollection.CurrencyCode,
-				ProviderId:   session.ProviderId,
-				Data:         paymentSession.Data,
+			data, err := s.r.PaymentProviderService().SetContext(s.ctx).CreatePayment(&types.CreatePaymentInput{
+				Amount:         session.Amount,
+				CurrencyCode:   paymentCollection.CurrencyCode,
+				ProviderId:     session.ProviderId.UUID,
+				ResourceId:     paymentCollection.Id,
+				PaymentSession: paymentSession,
 			})
 			if err != nil {
 				return nil, err

@@ -30,10 +30,10 @@ func (s *ShippingTaxRateService) SetContext(context context.Context) *ShippingTa
 	return s
 }
 
-func (s *ShippingTaxRateService) List(selector types.FilterableShippingTaxRate, config sql.Options) ([]models.ShippingTaxRate, *utils.ApplictaionError) {
+func (s *ShippingTaxRateService) List(selector types.FilterableShippingTaxRate, config *sql.Options) ([]models.ShippingTaxRate, *utils.ApplictaionError) {
 	var res []models.ShippingTaxRate
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")

@@ -7,8 +7,7 @@ import (
 
 // FilterableProductTaxRate represents the filters that can be applied when querying for shipping tax rates.
 type FilterableProductTaxRate struct {
-	ProductId uuid.UUIDs
-	RateId    uuid.UUIDs
-	CreatedAt *core.TimeModel
-	UpdatedAt *core.TimeModel
+	core.FilterModel
+	ProductId uuid.UUIDs `json:"product_id,omitempty" validate:"omitempty"`
+	RateId    uuid.UUIDs `json:"rate_id,omitempty" validate:"omitempty"`
 }

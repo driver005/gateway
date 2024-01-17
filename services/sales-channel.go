@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -31,7 +32,7 @@ func (s *SalesChannelService) SetContext(context context.Context) *SalesChannelS
 	return s
 }
 
-func (s *SalesChannelService) Retrieve(selector *models.SalesChannel, config sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {
+func (s *SalesChannelService) Retrieve(selector *models.SalesChannel, config *sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {
 	var res *models.SalesChannel
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.SalesChannelRepository().FindOne(s.ctx, res, query); err != nil {
@@ -41,12 +42,11 @@ func (s *SalesChannelService) Retrieve(selector *models.SalesChannel, config sql
 	return res, nil
 }
 
-func (s *SalesChannelService) RetrieveById(salesChannelId uuid.UUID, config sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {
+func (s *SalesChannelService) RetrieveById(salesChannelId uuid.UUID, config *sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {
 	if salesChannelId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"optionId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -54,19 +54,18 @@ func (s *SalesChannelService) RetrieveById(salesChannelId uuid.UUID, config sql.
 	return s.Retrieve(&models.SalesChannel{Model: core.Model{Id: salesChannelId}}, config)
 }
 
-func (s *SalesChannelService) RetrieveByName(name string, config sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {
+func (s *SalesChannelService) RetrieveByName(name string, config *sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {
 	if name == "" {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"name" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.Retrieve(&models.SalesChannel{Name: name}, config)
 }
 
-func (s *SalesChannelService) List(selector models.SalesChannel, config sql.Options) ([]models.SalesChannel, *utils.ApplictaionError) {
+func (s *SalesChannelService) List(selector models.SalesChannel, config *sql.Options) ([]models.SalesChannel, *utils.ApplictaionError) {
 	res, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -75,8 +74,8 @@ func (s *SalesChannelService) List(selector models.SalesChannel, config sql.Opti
 	return res, nil
 }
 
-func (s *SalesChannelService) ListAndCount(selector models.SalesChannel, config sql.Options) ([]models.SalesChannel, *int64, *utils.ApplictaionError) {
-	if reflect.DeepEqual(config, sql.Options{}) {
+func (s *SalesChannelService) ListAndCount(selector models.SalesChannel, config *sql.Options) ([]models.SalesChannel, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -93,29 +92,36 @@ func (s *SalesChannelService) ListAndCount(selector models.SalesChannel, config 
 	return res, count, nil
 }
 
-func (s *SalesChannelService) Create(data *models.SalesChannel) (*models.SalesChannel, *utils.ApplictaionError) {
+func (s *SalesChannelService) Create(data *types.CreateSalesChannelInput) (*models.SalesChannel, *utils.ApplictaionError) {
 	// err := s.EventBusService.withTransaction(manager).emit(SalesChannelService.Events.CREATED, map[string]interface{}{
 	// 	"id": salesChannel.ID,
 	// })
 	// if err != nil {
 	// 	return nil, err
 	// }
-	if err := s.r.SalesChannelRepository().Save(s.ctx, data); err != nil {
+	model := &models.SalesChannel{
+		Name:        data.Name,
+		Description: data.Description,
+		IsDisabled:  data.IsDisabled,
+	}
+	if err := s.r.SalesChannelRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
-	return data, nil
+	return model, nil
 
 }
 
-func (s *SalesChannelService) Update(salesChannelId uuid.UUID, Update *models.SalesChannel) (*models.SalesChannel, *utils.ApplictaionError) {
-	salesChannel, err := s.RetrieveById(salesChannelId, sql.Options{})
+func (s *SalesChannelService) Update(salesChannelId uuid.UUID, data *types.UpdateSalesChannelInput) (*models.SalesChannel, *utils.ApplictaionError) {
+	salesChannel, err := s.RetrieveById(salesChannelId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	Update.Id = salesChannel.Id
+	salesChannel.Name = data.Name
+	salesChannel.Description = data.Description
+	salesChannel.IsDisabled = data.IsDisabled
 
-	if err := s.r.SalesChannelRepository().Save(s.ctx, Update); err != nil {
+	if err := s.r.SalesChannelRepository().Save(s.ctx, salesChannel); err != nil {
 		return nil, err
 	}
 	// err = s.EventBusService.emit(SalesChannelService.Events.UPDATED, map[string]interface{}{
@@ -124,18 +130,18 @@ func (s *SalesChannelService) Update(salesChannelId uuid.UUID, Update *models.Sa
 	// if err != nil {
 	// 	return nil, err
 	// }
-	return Update, nil
+	return salesChannel, nil
 
 }
 
 func (s *SalesChannelService) Delete(salesChannelId uuid.UUID) *utils.ApplictaionError {
-	salesChannel, err := s.RetrieveById(salesChannelId, sql.Options{
+	salesChannel, err := s.RetrieveById(salesChannelId, &sql.Options{
 		Relations: []string{"locations"},
 	})
 	if err != nil {
 		return err
 	}
-	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(sql.Options{
+	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(&sql.Options{
 		Selects: []string{"default_sales_channel_id"},
 	})
 	if err != nil {
@@ -145,7 +151,6 @@ func (s *SalesChannelService) Delete(salesChannelId uuid.UUID) *utils.Applictaio
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"You cannot Delete the default sales channel",
-			"500",
 			nil,
 		)
 	}
@@ -162,7 +167,7 @@ func (s *SalesChannelService) Delete(salesChannelId uuid.UUID) *utils.Applictaio
 }
 
 func (s *SalesChannelService) CreateDefault() (*models.SalesChannel, *utils.ApplictaionError) {
-	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(sql.Options{
+	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(&sql.Options{
 		Relations: []string{"default_sales_channel"},
 	})
 	if err != nil {
@@ -171,7 +176,7 @@ func (s *SalesChannelService) CreateDefault() (*models.SalesChannel, *utils.Appl
 	if store.DefaultSalesChannelId.UUID != uuid.Nil {
 		return store.DefaultSalesChannel, nil
 	}
-	defaultSalesChannel, err := s.Create(&models.SalesChannel{
+	defaultSalesChannel, err := s.Create(&types.CreateSalesChannelInput{
 		Description: "Created by Medusa",
 		Name:        "Default Sales Channel",
 		IsDisabled:  false,
@@ -179,8 +184,8 @@ func (s *SalesChannelService) CreateDefault() (*models.SalesChannel, *utils.Appl
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.r.StoreService().SetContext(s.ctx).Update(&models.Store{
-		DefaultSalesChannelId: uuid.NullUUID{UUID: defaultSalesChannel.Id},
+	_, err = s.r.StoreService().SetContext(s.ctx).Update(&types.UpdateStoreInput{
+		DefaultSalesChannelId: defaultSalesChannel.Id,
 	})
 	if err != nil {
 		return nil, err
@@ -190,7 +195,7 @@ func (s *SalesChannelService) CreateDefault() (*models.SalesChannel, *utils.Appl
 }
 
 func (s *SalesChannelService) RetrieveDefault() (*models.SalesChannel, *utils.ApplictaionError) {
-	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(sql.Options{
+	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(&sql.Options{
 		Relations: []string{"default_sales_channel"},
 	})
 	if err != nil {
@@ -200,7 +205,6 @@ func (s *SalesChannelService) RetrieveDefault() (*models.SalesChannel, *utils.Ap
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			"Default Sales channel was not found",
-			"500",
 			nil,
 		)
 	}
@@ -217,7 +221,7 @@ func (s *SalesChannelService) AddProducts(salesChannelId uuid.UUID, productIds u
 	if err != nil {
 		return nil, err
 	}
-	return s.RetrieveById(salesChannelId, sql.Options{})
+	return s.RetrieveById(salesChannelId, &sql.Options{})
 }
 
 func (s *SalesChannelService) RemoveProducts(salesChannelId uuid.UUID, productIds uuid.UUIDs) (*models.SalesChannel, *utils.ApplictaionError) {
@@ -225,5 +229,5 @@ func (s *SalesChannelService) RemoveProducts(salesChannelId uuid.UUID, productId
 	if err != nil {
 		return nil, err
 	}
-	return s.RetrieveById(salesChannelId, sql.Options{})
+	return s.RetrieveById(salesChannelId, &sql.Options{})
 }

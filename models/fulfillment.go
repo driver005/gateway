@@ -36,7 +36,7 @@ type Fulfillment struct {
 	Provider *FulfillmentProvider `json:"provider" gorm:"foreignKey:id;references:provider_id"`
 
 	// The id of the Fulfillment Provider responsible for handling the fulfillment
-	LocationId string `json:"location_id"`
+	LocationId uuid.UUID `json:"location_id"`
 
 	// The Fulfillment Items in the Fulfillment - these hold information about how many of each Line Item has been fulfilled. Available if the relation `items` is expanded.
 	Items []FulfillmentItem `json:"items" gorm:"foreignKey:fulfillment_id"`

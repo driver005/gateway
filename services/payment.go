@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
@@ -30,12 +31,11 @@ func (s *PaymentService) SetContext(context context.Context) *PaymentService {
 	return s
 }
 
-func (s *PaymentService) Retrieve(id uuid.UUID, config sql.Options) (*models.Payment, *utils.ApplictaionError) {
+func (s *PaymentService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Payment, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -47,7 +47,7 @@ func (s *PaymentService) Retrieve(id uuid.UUID, config sql.Options) (*models.Pay
 	return res, nil
 }
 
-func (s *PaymentService) List(selector models.Payment, config sql.Options) ([]models.Payment, *utils.ApplictaionError) {
+func (s *PaymentService) List(selector models.Payment, config *sql.Options) ([]models.Payment, *utils.ApplictaionError) {
 	var res []models.Payment
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.PaymentRepository().Find(s.ctx, res, query); err != nil {
@@ -56,32 +56,44 @@ func (s *PaymentService) List(selector models.Payment, config sql.Options) ([]mo
 	return res, nil
 }
 
-func (s *PaymentService) Create(data *models.Payment) (*models.Payment, *utils.ApplictaionError) {
-	if err := s.r.PaymentRepository().Save(s.ctx, data); err != nil {
+func (s *PaymentService) Create(data *types.CreatePaymentInput) (*models.Payment, *utils.ApplictaionError) {
+	model := &models.Payment{
+		CartId:       uuid.NullUUID{UUID: data.CartId},
+		Amount:       data.Amount,
+		CurrencyCode: data.CurrencyCode,
+		ProviderId:   uuid.NullUUID{UUID: data.ProviderId},
+	}
+	if err := s.r.PaymentRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 	// err = s.EventBusService.Emit(PaymentService.Events.CREATED, saved)
-	return data, nil
+	return model, nil
 }
 
-func (s *PaymentService) Update(id uuid.UUID, Update *models.Payment) (*models.Payment, *utils.ApplictaionError) {
-	payment, err := s.Retrieve(id, sql.Options{})
+func (s *PaymentService) Update(id uuid.UUID, data *types.UpdatePaymentInput) (*models.Payment, *utils.ApplictaionError) {
+	payment, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	Update.Id = payment.Id
+	if data.OrderId != uuid.Nil {
+		payment.OrderId = uuid.NullUUID{UUID: data.OrderId}
+	}
 
-	if err := s.r.PaymentRepository().Save(s.ctx, Update); err != nil {
+	if data.SwapId != uuid.Nil {
+		payment.SwapId = uuid.NullUUID{UUID: data.SwapId}
+	}
+
+	if err := s.r.PaymentRepository().Save(s.ctx, payment); err != nil {
 		return nil, err
 	}
 	// err = s.EventBusService.Emit(PaymentService.Events.UPDATED, updated)
-	return Update, nil
+	return payment, nil
 }
 
 func (s *PaymentService) Capture(id uuid.UUID, payment *models.Payment) (*models.Payment, *utils.ApplictaionError) {
 	if id != uuid.Nil {
-		p, err := s.Retrieve(id, sql.Options{})
+		p, err := s.Retrieve(id, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +121,7 @@ func (s *PaymentService) Capture(id uuid.UUID, payment *models.Payment) (*models
 
 func (s *PaymentService) Refund(id uuid.UUID, payment *models.Payment, amount float64, reason string, note *string) (*models.Refund, *utils.ApplictaionError) {
 	if id != uuid.Nil {
-		p, err := s.Retrieve(id, sql.Options{})
+		p, err := s.Retrieve(id, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +132,6 @@ func (s *PaymentService) Refund(id uuid.UUID, payment *models.Payment, amount fl
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Payment `+payment.Id.String()+` is not captured`,
-			"500",
 			nil,
 		)
 	}
@@ -130,7 +141,6 @@ func (s *PaymentService) Refund(id uuid.UUID, payment *models.Payment, amount fl
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("Only %f can be refunded from models.Payment %v", refundable, payment.Id),
-			"500",
 			nil,
 		)
 	}

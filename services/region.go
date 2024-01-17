@@ -9,6 +9,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -33,8 +34,18 @@ func (s *RegionService) SetContext(context context.Context) *RegionService {
 	return s
 }
 
-func (s *RegionService) Create(data *models.Region) (*models.Region, *utils.ApplictaionError) {
-	validated, err := s.validateFields(data, uuid.Nil)
+func (s *RegionService) Create(data *types.CreateRegionInput) (*models.Region, *utils.ApplictaionError) {
+	validated, err := s.validateFields(&types.UpdateRegionInput{
+		Name:                 data.Name,
+		CurrencyCode:         data.CurrencyCode,
+		TaxCode:              data.TaxCode,
+		TaxRate:              data.TaxRate,
+		PaymentProviders:     data.PaymentProviders,
+		FulfillmentProviders: data.FulfillmentProviders,
+		Countries:            data.Countries,
+		IncludesTax:          data.IncludesTax,
+		Metadata:             data.Metadata,
+	}, uuid.Nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +63,17 @@ func (s *RegionService) Create(data *models.Region) (*models.Region, *utils.Appl
 		}
 
 		var currency *models.Currency
-		query := sql.BuildQuery(models.Currency{Code: strings.ToLower(data.CurrencyCode)}, sql.Options{})
+		query := sql.BuildQuery(models.Currency{Code: strings.ToLower(data.CurrencyCode)}, &sql.Options{})
 		if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
 			return nil, err
 		}
 
 		validated.Currency = currency
 		validated.CurrencyCode = strings.ToLower(data.CurrencyCode)
+	}
+
+	if data.Metadata != nil {
+		validated.Metadata = utils.MergeMaps(validated.Metadata, data.Metadata)
 	}
 
 	if err := s.r.RegionRepository().Save(s.ctx, validated); err != nil {
@@ -70,8 +85,8 @@ func (s *RegionService) Create(data *models.Region) (*models.Region, *utils.Appl
 	return validated, nil
 }
 
-func (s *RegionService) Update(regionId uuid.UUID, Update *models.Region) (*models.Region, *utils.ApplictaionError) {
-	region, err := s.Retrieve(regionId, sql.Options{})
+func (s *RegionService) Update(regionId uuid.UUID, Update *types.UpdateRegionInput) (*models.Region, *utils.ApplictaionError) {
+	region, err := s.Retrieve(regionId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +107,7 @@ func (s *RegionService) Update(regionId uuid.UUID, Update *models.Region) (*mode
 			return nil, err
 		}
 		var currency *models.Currency
-		query := sql.BuildQuery(models.Currency{Code: strings.ToLower(Update.CurrencyCode)}, sql.Options{})
+		query := sql.BuildQuery(models.Currency{Code: strings.ToLower(Update.CurrencyCode)}, &sql.Options{})
 		if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
 			return nil, err
 		}
@@ -113,17 +128,27 @@ func (s *RegionService) Update(regionId uuid.UUID, Update *models.Region) (*mode
 
 }
 
-func (s *RegionService) validateFields(regionData *models.Region, id uuid.UUID) (*models.Region, *utils.ApplictaionError) {
-	region := regionData
+func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UUID) (*models.Region, *utils.ApplictaionError) {
+	region := &models.Region{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Name:             data.Name,
+		CurrencyCode:     data.CurrencyCode,
+		TaxCode:          data.TaxCode,
+		TaxRate:          data.TaxRate,
+		GiftCardsTaxable: data.GiftCardsTaxable,
+		AutomaticTaxes:   data.AutomaticTaxes,
+		IncludesTax:      data.IncludesTax,
+	}
 
-	if err := s.validateTaxRate(regionData.TaxRate); err != nil {
+	if err := s.validateTaxRate(data.TaxRate); err != nil {
 		return nil, err
 	}
 
-	region.Countries = nil
-	if regionData.Countries != nil {
-		for _, countries := range regionData.Countries {
-			validate, err := s.validateCountry(countries.NumCode, id)
+	if data.Countries != nil {
+		for _, countries := range data.Countries {
+			validate, err := s.validateCountry(countries, id)
 			if err != nil {
 				return nil, err
 			}
@@ -132,43 +157,41 @@ func (s *RegionService) validateFields(regionData *models.Region, id uuid.UUID) 
 		}
 	}
 
-	if regionData.TaxProviderId.UUID != uuid.Nil {
-		var data *models.TaxProvider
-		query := sql.BuildQuery(models.TaxProvider{Model: core.Model{Id: regionData.TaxProviderId.UUID}}, sql.Options{})
-		err := s.r.TaxProviderRepository().FindOne(s.ctx, data, query)
+	if data.TaxProviderId != uuid.Nil {
+		var provider *models.TaxProvider
+		query := sql.BuildQuery(models.TaxProvider{Model: core.Model{Id: data.TaxProviderId}}, &sql.Options{})
+		err := s.r.TaxProviderRepository().FindOne(s.ctx, provider, query)
 		if err != nil {
 			return nil, err
 		}
 
-		region.TaxProviderId = regionData.TaxProviderId
-		region.TaxProvider = data
+		region.TaxProviderId = uuid.NullUUID{UUID: data.TaxProviderId}
+		region.TaxProvider = provider
 	}
 
-	region.PaymentProviders = nil
-	if regionData.PaymentProviders != nil {
-		for _, paymentProvider := range regionData.PaymentProviders {
-			var data *models.PaymentProvider
-			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: paymentProvider.Id}}, sql.Options{})
-			err := s.r.PaymentProviderRepository().FindOne(s.ctx, data, query)
+	if data.PaymentProviders != nil {
+		for _, paymentProvider := range data.PaymentProviders {
+			var provider *models.PaymentProvider
+			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: paymentProvider}}, &sql.Options{})
+			err := s.r.PaymentProviderRepository().FindOne(s.ctx, provider, query)
 			if err != nil {
 				return nil, err
 			}
 
-			region.PaymentProviders = append(region.PaymentProviders, *data)
+			region.PaymentProviders = append(region.PaymentProviders, *provider)
 		}
 	}
 
-	region.FulfillmentProviders = nil
-	if regionData.FulfillmentProviders != nil {
-		for _, fulfillmentProviders := range regionData.FulfillmentProviders {
-			var data *models.FulfillmentProvider
-			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: fulfillmentProviders.Id}}, sql.Options{})
-			err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, data, query)
+	if data.FulfillmentProviders != nil {
+		for _, fulfillmentProviders := range data.FulfillmentProviders {
+			var provider *models.FulfillmentProvider
+			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: fulfillmentProviders}}, &sql.Options{})
+			err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, provider, query)
 			if err != nil {
 				return nil, err
 			}
 
-			region.FulfillmentProviders = append(region.FulfillmentProviders, *data)
+			region.FulfillmentProviders = append(region.FulfillmentProviders, *provider)
 		}
 	}
 
@@ -180,7 +203,6 @@ func (s *RegionService) validateTaxRate(taxRate float64) *utils.ApplictaionError
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"The tax_rate must be between 0 and 1",
-			"500",
 			nil,
 		)
 	}
@@ -188,7 +210,7 @@ func (s *RegionService) validateTaxRate(taxRate float64) *utils.ApplictaionError
 }
 
 func (s *RegionService) validateCurrency(currencyCode string) *utils.ApplictaionError {
-	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(sql.Options{Relations: []string{"currencies"}})
+	store, err := s.r.StoreService().SetContext(s.ctx).Retrieve(&sql.Options{Relations: []string{"currencies"}})
 	if err != nil {
 		return err
 	}
@@ -202,7 +224,6 @@ func (s *RegionService) validateCurrency(currencyCode string) *utils.Applictaion
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Invalid currency code",
-			"500",
 			nil,
 		)
 	}
@@ -223,13 +244,12 @@ func (s *RegionService) validateCountry(code string, regionId uuid.UUID) (*model
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Invalid country code",
-			"500",
 			nil,
 		)
 	}
 
 	var country *models.Country
-	query := sql.BuildQuery(models.Country{Iso2: strings.ToLower(code)}, sql.Options{})
+	query := sql.BuildQuery(models.Country{Iso2: strings.ToLower(code)}, &sql.Options{})
 	if err := s.r.CountryRepository().FindOne(s.ctx, country, query); err != nil {
 		return nil, err
 	}
@@ -237,16 +257,15 @@ func (s *RegionService) validateCountry(code string, regionId uuid.UUID) (*model
 		return nil, utils.NewApplictaionError(
 			utils.DUPLICATE_ERROR,
 			fmt.Sprintf("%s already exists in region %s", country.DisplayName, country.RegionId.UUID),
-			"500",
 			nil,
 		)
 	}
 	return country, nil
 }
 
-func (s *RegionService) RetrieveByCountryCode(code string, config sql.Options) (*models.Region, *utils.ApplictaionError) {
+func (s *RegionService) RetrieveByCountryCode(code string, config *sql.Options) (*models.Region, *utils.ApplictaionError) {
 	var country *models.Country
-	query := sql.BuildQuery(models.Country{Iso2: strings.ToLower(code)}, sql.Options{})
+	query := sql.BuildQuery(models.Country{Iso2: strings.ToLower(code)}, &sql.Options{})
 	if err := s.r.CountryRepository().FindOne(s.ctx, country, query); err != nil {
 		return nil, err
 	}
@@ -255,7 +274,6 @@ func (s *RegionService) RetrieveByCountryCode(code string, config sql.Options) (
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Country does not belong to a region",
-			"500",
 			nil,
 		)
 	}
@@ -263,7 +281,7 @@ func (s *RegionService) RetrieveByCountryCode(code string, config sql.Options) (
 }
 
 func (s *RegionService) RetrieveByName(name string) (*models.Region, *utils.ApplictaionError) {
-	regions, err := s.List(models.Region{Name: name}, sql.Options{Take: gox.NewInt(1)})
+	regions, err := s.List(models.Region{Name: name}, &sql.Options{Take: gox.NewInt(1)})
 	if err != nil {
 		return nil, err
 	}
@@ -271,19 +289,17 @@ func (s *RegionService) RetrieveByName(name string) (*models.Region, *utils.Appl
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			fmt.Sprintf("Region \"%s\" was not found", name),
-			"500",
 			nil,
 		)
 	}
 	return &regions[0], nil
 }
 
-func (s *RegionService) Retrieve(regionId uuid.UUID, config sql.Options) (*models.Region, *utils.ApplictaionError) {
+func (s *RegionService) Retrieve(regionId uuid.UUID, config *sql.Options) (*models.Region, *utils.ApplictaionError) {
 	if regionId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"regionId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -294,14 +310,13 @@ func (s *RegionService) Retrieve(regionId uuid.UUID, config sql.Options) (*model
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Region with id `+regionId.String()+` was not found`,
-			"500",
 			nil,
 		)
 	}
 	return res, nil
 }
 
-func (s *RegionService) List(selector models.Region, config sql.Options) ([]models.Region, *utils.ApplictaionError) {
+func (s *RegionService) List(selector models.Region, config *sql.Options) ([]models.Region, *utils.ApplictaionError) {
 	customerGroups, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -309,7 +324,7 @@ func (s *RegionService) List(selector models.Region, config sql.Options) ([]mode
 	return customerGroups, nil
 }
 
-func (s *RegionService) ListAndCount(selector models.Region, config sql.Options) ([]models.Region, *int64, *utils.ApplictaionError) {
+func (s *RegionService) ListAndCount(selector models.Region, config *sql.Options) ([]models.Region, *int64, *utils.ApplictaionError) {
 	var res []models.Region
 
 	query := sql.BuildQuery(selector, config)
@@ -322,7 +337,7 @@ func (s *RegionService) ListAndCount(selector models.Region, config sql.Options)
 }
 
 func (s *RegionService) Delete(regionId uuid.UUID) *utils.ApplictaionError {
-	data, err := s.Retrieve(regionId, sql.Options{
+	data, err := s.Retrieve(regionId, &sql.Options{
 		Relations: []string{"countries"},
 	})
 	if err != nil {
@@ -354,7 +369,7 @@ func (s *RegionService) AddCountry(regionId uuid.UUID, code string) (*models.Reg
 	if err != nil {
 		return nil, err
 	}
-	region, err := s.Retrieve(regionId, sql.Options{Relations: []string{"countries"}})
+	region, err := s.Retrieve(regionId, &sql.Options{Relations: []string{"countries"}})
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +390,7 @@ func (s *RegionService) AddCountry(regionId uuid.UUID, code string) (*models.Reg
 }
 
 func (s *RegionService) RemoveCountry(regionId uuid.UUID, code string) (*models.Region, *utils.ApplictaionError) {
-	region, err := s.Retrieve(regionId, sql.Options{Relations: []string{"countries"}})
+	region, err := s.Retrieve(regionId, &sql.Options{Relations: []string{"countries"}})
 	if err != nil {
 		return nil, err
 	}
@@ -404,7 +419,7 @@ func (s *RegionService) RemoveCountry(regionId uuid.UUID, code string) (*models.
 }
 
 func (s *RegionService) AddPaymentProvider(regionId uuid.UUID, providerId uuid.UUID) (*models.Region, *utils.ApplictaionError) {
-	region, err := s.Retrieve(regionId, sql.Options{Relations: []string{"payment_providers"}})
+	region, err := s.Retrieve(regionId, &sql.Options{Relations: []string{"payment_providers"}})
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +431,7 @@ func (s *RegionService) AddPaymentProvider(regionId uuid.UUID, providerId uuid.U
 	}
 
 	var paymentProvider *models.PaymentProvider
-	query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: providerId}}, sql.Options{})
+	query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: providerId}}, &sql.Options{})
 	if err := s.r.PaymentProviderRepository().FindOne(s.ctx, paymentProvider, query); err == nil {
 		return nil, err
 	}
@@ -433,7 +448,7 @@ func (s *RegionService) AddPaymentProvider(regionId uuid.UUID, providerId uuid.U
 }
 
 func (s *RegionService) RemovePaymentProvider(regionId uuid.UUID, providerId uuid.UUID) (*models.Region, *utils.ApplictaionError) {
-	region, err := s.Retrieve(regionId, sql.Options{Relations: []string{"payment_providers"}})
+	region, err := s.Retrieve(regionId, &sql.Options{Relations: []string{"payment_providers"}})
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +478,7 @@ func (s *RegionService) RemovePaymentProvider(regionId uuid.UUID, providerId uui
 }
 
 func (s *RegionService) AddFulfillmentProvider(regionId uuid.UUID, providerId uuid.UUID) (*models.Region, *utils.ApplictaionError) {
-	region, err := s.Retrieve(regionId, sql.Options{Relations: []string{"fulfillment_providers"}})
+	region, err := s.Retrieve(regionId, &sql.Options{Relations: []string{"fulfillment_providers"}})
 	if err != nil {
 		return nil, err
 	}
@@ -475,7 +490,7 @@ func (s *RegionService) AddFulfillmentProvider(regionId uuid.UUID, providerId uu
 	}
 
 	var fulfillmentProvider *models.FulfillmentProvider
-	query := sql.BuildQuery(models.FulfillmentProvider{Model: core.Model{Id: providerId}}, sql.Options{})
+	query := sql.BuildQuery(models.FulfillmentProvider{Model: core.Model{Id: providerId}}, &sql.Options{})
 	if err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, fulfillmentProvider, query); err == nil {
 		return nil, err
 	}
@@ -492,7 +507,7 @@ func (s *RegionService) AddFulfillmentProvider(regionId uuid.UUID, providerId uu
 }
 
 func (s *RegionService) RemoveFulfillmentProvider(regionId uuid.UUID, providerId uuid.UUID) (*models.Region, *utils.ApplictaionError) {
-	region, err := s.Retrieve(regionId, sql.Options{Relations: []string{"fulfillment_providers"}})
+	region, err := s.Retrieve(regionId, &sql.Options{Relations: []string{"fulfillment_providers"}})
 	if err != nil {
 		return nil, err
 	}

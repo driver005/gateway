@@ -45,10 +45,10 @@ func (s *CartService) SetContext(context context.Context) *CartService {
 	return s
 }
 
-func (s *CartService) List(selector types.FilterableCartProps, config sql.Options) ([]models.Cart, *utils.ApplictaionError) {
+func (s *CartService) List(selector types.FilterableCartProps, config *sql.Options) ([]models.Cart, *utils.ApplictaionError) {
 	var res []models.Cart
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -62,12 +62,11 @@ func (s *CartService) List(selector types.FilterableCartProps, config sql.Option
 	return res, nil
 }
 
-func (s *CartService) Retrieve(id uuid.UUID, config sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
+func (s *CartService) Retrieve(id uuid.UUID, config *sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -97,7 +96,7 @@ func (s *CartService) Retrieve(id uuid.UUID, config sql.Options, totalsConfig To
 	return res, nil
 }
 
-func (s *CartService) RetrieveLegacy(id uuid.UUID, config sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
+func (s *CartService) RetrieveLegacy(id uuid.UUID, config *sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
 	var res *models.Cart
 	query := sql.BuildQuery(models.Cart{Model: core.Model{Id: id}}, config)
 
@@ -111,7 +110,7 @@ func (s *CartService) RetrieveLegacy(id uuid.UUID, config sql.Options, totalsCon
 	return s.decorateTotals(res, totalsToSelect, totalsConfig)
 }
 
-func (s *CartService) RetrieveWithTotals(id uuid.UUID, config sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
+func (s *CartService) RetrieveWithTotals(id uuid.UUID, config *sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
 	relations := s.getTotalsRelations(config)
 	config.Relations = relations
 
@@ -133,22 +132,26 @@ func (s *CartService) RetrieveWithTotals(id uuid.UUID, config sql.Options, total
 	return s.DecorateTotals(cart, totalsConfig)
 }
 
-func (s *CartService) Create(data *models.Cart) (*models.Cart, *utils.ApplictaionError) {
-	cart := data
+func (s *CartService) Create(data *types.CartCreateProps) (*models.Cart, *utils.ApplictaionError) {
+	var cart *models.Cart
+
+	if data.Context != nil {
+		cart.Context = utils.MergeMaps(cart.Context, data.Context)
+	}
 
 	feature := true
 	featurev2 := true
 	if feature && !featurev2 {
-		salesChannel, err := s.getValidatedSalesChannel(data.SalesChannelId.UUID)
+		salesChannel, err := s.getValidatedSalesChannel(data.SalesChannelId)
 		if err != nil {
 			return nil, err
 		}
 		cart.SalesChannelId = uuid.NullUUID{UUID: salesChannel.Id}
 	}
-	if data.CustomerId.UUID != uuid.Nil || data.Customer != nil {
+	if data.CustomerId != uuid.Nil || data.Customer != nil {
 		customer := data.Customer
-		if data.CustomerId.UUID != uuid.Nil {
-			c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(data.CustomerId.UUID, sql.Options{})
+		if data.CustomerId != uuid.Nil {
+			c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(data.CustomerId, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
@@ -167,20 +170,19 @@ func (s *CartService) Create(data *models.Cart) (*models.Cart, *utils.Applictaio
 		cart.CustomerId = uuid.NullUUID{UUID: customer.Id}
 		cart.Email = customer.Email
 	}
-	if data.RegionId.UUID == uuid.Nil && data.Region == nil {
+	if data.RegionId == uuid.Nil && data.Region == nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`A region_id must be provided when creating a cart`,
-			"500",
 			nil,
 		)
 	}
 
-	cart.RegionId = data.RegionId
+	cart.RegionId = uuid.NullUUID{UUID: data.RegionId}
 	region := data.Region
 
 	if region == nil {
-		r, err := s.r.RegionService().SetContext(s.ctx).Retrieve(data.RegionId.UUID, sql.Options{
+		r, err := s.r.RegionService().SetContext(s.ctx).Retrieve(data.RegionId, &sql.Options{
 			Relations: []string{"countries"},
 		})
 		if err != nil {
@@ -194,7 +196,7 @@ func (s *CartService) Create(data *models.Cart) (*models.Cart, *utils.Applictaio
 		regCountries = append(regCountries, country.Iso2)
 	}
 
-	if data.ShippingAddress == nil && data.ShippingAddressId.UUID == uuid.Nil {
+	if data.ShippingAddress == nil && data.ShippingAddressId == uuid.Nil {
 		if len(region.Countries) == 1 {
 			cart.ShippingAddress = &models.Address{
 				CountryCode: regCountries[0],
@@ -210,12 +212,13 @@ func (s *CartService) Create(data *models.Cart) (*models.Cart, *utils.Applictaio
 					nil,
 				)
 			}
-			cart.ShippingAddress = data.ShippingAddress
+
+			cart.ShippingAddress = utils.ToAddress(data.ShippingAddress)
 		}
-		if data.ShippingAddressId.UUID != uuid.Nil {
+		if data.ShippingAddressId != uuid.Nil {
 			var addr *models.Address
 
-			query := sql.BuildQuery(models.Address{Model: core.Model{Id: data.ShippingAddressId.UUID}}, sql.Options{})
+			query := sql.BuildQuery(models.Address{Model: core.Model{Id: data.ShippingAddressId}}, &sql.Options{})
 
 			if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 				return nil, err
@@ -229,7 +232,7 @@ func (s *CartService) Create(data *models.Cart) (*models.Cart, *utils.Applictaio
 					nil,
 				)
 			}
-			cart.ShippingAddressId = data.ShippingAddressId
+			cart.ShippingAddressId = uuid.NullUUID{UUID: data.ShippingAddressId}
 		}
 	}
 	if data.BillingAddress != nil {
@@ -241,12 +244,12 @@ func (s *CartService) Create(data *models.Cart) (*models.Cart, *utils.Applictaio
 				nil,
 			)
 		}
-		cart.BillingAddress = data.BillingAddress
+		cart.BillingAddress = utils.ToAddress(data.BillingAddress)
 	}
-	if data.BillingAddressId.UUID != uuid.Nil {
+	if data.BillingAddressId != uuid.Nil {
 		var addr *models.Address
 
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: data.BillingAddressId.UUID}}, sql.Options{})
+		query := sql.BuildQuery(models.Address{Model: core.Model{Id: data.BillingAddressId}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return nil, err
@@ -260,19 +263,27 @@ func (s *CartService) Create(data *models.Cart) (*models.Cart, *utils.Applictaio
 				nil,
 			)
 		}
-		cart.BillingAddressId = data.BillingAddressId
+		cart.BillingAddressId = uuid.NullUUID{UUID: data.BillingAddressId}
+	}
+
+	if data.Type != "" {
+		cart.Type = data.Type
+	}
+
+	if data.Metadata != nil {
+		cart.Metadata = utils.MergeMaps(cart.Metadata, data.Metadata)
 	}
 
 	if err := s.r.CartRepository().Save(s.ctx, cart); err != nil {
 		return nil, err
 	}
 	if feature && featurev2 {
-		salesChannel, err := s.getValidatedSalesChannel(data.SalesChannelId.UUID)
+		_, err := s.getValidatedSalesChannel(data.SalesChannelId)
 		if err != nil {
 			return nil, err
 		}
 
-		s.r.SalesChannelService().SetContext(s.ctx).Create(&models.SalesChannel{Model: core.Model{Id: salesChannel.Id}})
+		// s.r.SalesChannelService().SetContext(s.ctx).Create(&types.CreateSalesChannelInput{Model: core.Model{Id: salesChannel.Id}})
 		// s.remoteLink.Create(map[string]interface{}{
 		// 	"cartService": map[string]interface{}{
 		// 		"cart_id": cart.Id,
@@ -293,20 +304,20 @@ func (s *CartService) getValidatedSalesChannel(salesChannelId uuid.UUID) (*model
 	featurev2 := true
 	if salesChannelId != uuid.Nil {
 		if featurev2 {
-			result, err := s.r.SalesChannelService().SetContext(s.ctx).RetrieveById(salesChannelId, sql.Options{})
+			result, err := s.r.SalesChannelService().SetContext(s.ctx).RetrieveById(salesChannelId, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
 			salesChannel = result
 		} else {
-			result, err := s.r.SalesChannelService().SetContext(s.ctx).RetrieveById(salesChannelId, sql.Options{})
+			result, err := s.r.SalesChannelService().SetContext(s.ctx).RetrieveById(salesChannelId, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
 			salesChannel = result
 		}
 	} else {
-		result, err := s.r.StoreService().SetContext(s.ctx).Retrieve(sql.Options{
+		result, err := s.r.StoreService().SetContext(s.ctx).Retrieve(&sql.Options{
 			Relations: []string{"default_sales_channel"},
 		})
 		if err != nil {
@@ -318,7 +329,6 @@ func (s *CartService) getValidatedSalesChannel(salesChannelId uuid.UUID) (*model
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			fmt.Sprintf("Unable to assign the cart to a disabled Sales Channel \"%s\"", salesChannel.Name),
-			"500",
 			nil,
 		)
 	}
@@ -326,7 +336,7 @@ func (s *CartService) getValidatedSalesChannel(salesChannelId uuid.UUID) (*model
 }
 
 func (s *CartService) RemoveLineItem(id uuid.UUID, lineItemIds uuid.UUIDs) *utils.ApplictaionError {
-	cart, err := s.Retrieve(id, sql.Options{
+	cart, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"items.variant.product.profiles", "shipping_methods"},
 	}, TotalsConfig{})
 
@@ -359,7 +369,7 @@ func (s *CartService) RemoveLineItem(id uuid.UUID, lineItemIds uuid.UUIDs) *util
 		}
 	}
 
-	result, err := s.Retrieve(id, sql.Options{
+	result, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"items.variant.product.profiles", "discounts.rule", "region"},
 	}, TotalsConfig{})
 	if err != nil {
@@ -399,21 +409,22 @@ func (s *CartService) validateLineItemShipping(
 
 func (s *CartService) ValidateLineItem(
 	salesChannelId uuid.UUID,
-	lineItem models.LineItem,
+	lineItem types.LineItemValidateData,
 ) (bool, *utils.ApplictaionError) {
-	if salesChannelId == uuid.Nil || lineItem.VariantId.UUID == uuid.Nil {
+	if salesChannelId == uuid.Nil || lineItem.VariantId == uuid.Nil {
 		return true, nil
 	}
 
-	if lineItem.Variant == nil || lineItem.Variant.ProductId.UUID == uuid.Nil {
-		productVariant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(lineItem.VariantId.UUID, sql.Options{Selects: []string{"id", "product_id"}})
+	lineItemVariant := lineItem.Variant.ProductId
+	if lineItem.Variant == nil || lineItem.Variant.ProductId == uuid.Nil {
+		productVariant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(lineItem.VariantId, &sql.Options{Selects: []string{"id", "product_id"}})
 		if err != nil {
 			return false, err
 		}
-		lineItem.Variant = productVariant
+		lineItemVariant = productVariant.ProductId.UUID
 	}
 
-	products, err := s.r.ProductService().SetContext(s.ctx).FilterProductsBySalesChannel(uuid.UUIDs{lineItem.Variant.ProductId.UUID}, salesChannelId, sql.Options{})
+	products, err := s.r.ProductService().SetContext(s.ctx).FilterProductsBySalesChannel(uuid.UUIDs{lineItemVariant}, salesChannelId, &sql.Options{})
 	if err != nil {
 		return false, err
 	}
@@ -438,7 +449,7 @@ func (s *CartService) AddLineItem(
 			fields = append(fields, "sales_channel_id")
 		}
 	}
-	cart, err := s.Retrieve(cartId, sql.Options{
+	cart, err := s.Retrieve(cartId, &sql.Options{
 		Selects:   fields,
 		Relations: relations,
 	}, TotalsConfig{})
@@ -448,7 +459,10 @@ func (s *CartService) AddLineItem(
 	if feature {
 		if validateSalesChannels {
 			if lineItem.VariantId.UUID != uuid.Nil {
-				lineItemIsValid, err := s.ValidateLineItem(cart.SalesChannelId.UUID, lineItem)
+				lineItemIsValid, err := s.ValidateLineItem(cart.SalesChannelId.UUID, types.LineItemValidateData{
+					VariantId: lineItem.VariantId.UUID,
+					Variant:   &struct{ ProductId uuid.UUID }{lineItem.ProductId.UUID},
+				})
 				if err != nil {
 					return err
 				}
@@ -471,7 +485,7 @@ func (s *CartService) AddLineItem(
 			CartId:      uuid.NullUUID{UUID: cart.Id},
 			VariantId:   lineItem.VariantId,
 			ShouldMerge: true,
-		}, sql.Options{
+		}, &sql.Options{
 			Selects: []string{"id", "metadata", "quantity"},
 			Take:    gox.NewInt(1),
 		})
@@ -509,7 +523,7 @@ func (s *CartService) AddLineItem(
 	if currentItem != nil {
 		_, err = s.r.LineItemService().SetContext(s.ctx).Update(currentItem.Id, nil, &models.LineItem{
 			Quantity: currentItem.Quantity,
-		}, sql.Options{})
+		}, &sql.Options{})
 		if err != nil {
 			return err
 		}
@@ -533,7 +547,7 @@ func (s *CartService) AddLineItem(
 		&models.LineItem{
 			HasShipping: false,
 		},
-		sql.Options{},
+		&sql.Options{},
 	)
 	if err != nil {
 		return err
@@ -546,7 +560,7 @@ func (s *CartService) AddLineItem(
 		}
 	}
 
-	cart, err = s.Retrieve(cart.Id, sql.Options{
+	cart, err = s.Retrieve(cart.Id, &sql.Options{
 		Relations: []string{
 			"items.variant.product.profiles",
 			"discounts",
@@ -588,7 +602,7 @@ func (s *CartService) AddOrUpdateLineItems(
 			fields = append(fields, "sales_channel_id")
 		}
 	}
-	cart, err := s.Retrieve(cartId, sql.Options{
+	cart, err := s.Retrieve(cartId, &sql.Options{
 		Selects:   fields,
 		Relations: relations,
 	}, TotalsConfig{})
@@ -601,7 +615,10 @@ func (s *CartService) AddOrUpdateLineItems(
 			var areValid []bool
 			for _, item := range lineItems {
 				if item.VariantId.UUID != uuid.Nil {
-					valid, err := s.ValidateLineItem(cart.SalesChannelId.UUID, item)
+					valid, err := s.ValidateLineItem(cart.SalesChannelId.UUID, types.LineItemValidateData{
+						VariantId: item.VariantId.UUID,
+						Variant:   &struct{ ProductId uuid.UUID }{item.ProductId.UUID},
+					})
 					if err != nil {
 						return err
 					}
@@ -638,7 +655,7 @@ func (s *CartService) AddOrUpdateLineItems(
 	existingItems, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{
 		CartId:      uuid.NullUUID{UUID: cart.Id},
 		ShouldMerge: true,
-	}, sql.Options{
+	}, &sql.Options{
 		Selects: []string{"id", "metadata", "quantity", "variant_id"},
 		Specification: []sql.Specification{
 			sql.In("variant_id", variantIds),
@@ -717,7 +734,7 @@ func (s *CartService) AddOrUpdateLineItems(
 
 	if len(lineItemsToUpdate) > 0 {
 		for id, item := range lineItemsToUpdate {
-			s.r.LineItemService().SetContext(s.ctx).Update(id, nil, &item, sql.Options{})
+			s.r.LineItemService().SetContext(s.ctx).Update(id, nil, &item, &sql.Options{})
 		}
 		if err != nil {
 			return err
@@ -733,7 +750,7 @@ func (s *CartService) AddOrUpdateLineItems(
 		HasShipping: true,
 	}, &models.LineItem{
 		HasShipping: false,
-	}, sql.Options{})
+	}, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -744,7 +761,7 @@ func (s *CartService) AddOrUpdateLineItems(
 			return err
 		}
 	}
-	cart, err = s.Retrieve(cart.Id, sql.Options{
+	cart, err = s.Retrieve(cart.Id, &sql.Options{
 		Relations: []string{
 			"items.variant.product.profiles",
 			"discounts",
@@ -772,8 +789,7 @@ func (s *CartService) AddOrUpdateLineItems(
 func (s *CartService) UpdateLineItem(
 	cartId uuid.UUID,
 	lineItemId uuid.UUID,
-	update *models.LineItem,
-	shouldCalculatePrices bool,
+	update *types.LineItemUpdate,
 ) (*models.Cart, *utils.ApplictaionError) {
 	selectFields := []string{"id", "region_id", "customerId"}
 
@@ -781,14 +797,14 @@ func (s *CartService) UpdateLineItem(
 	if feature {
 		selectFields = append(selectFields, "sales_channel_id")
 	}
-	cart, err := s.Retrieve(cartId, sql.Options{
+	cart, err := s.Retrieve(cartId, &sql.Options{
 		Selects:   selectFields,
 		Relations: []string{"shipping_methods"},
 	}, TotalsConfig{})
 	if err != nil {
 		return nil, err
 	}
-	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(lineItemId, sql.Options{
+	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(lineItemId, &sql.Options{
 		Selects: []string{"id", "quantity", "variant_id", "cart_id"},
 	})
 	if err != nil {
@@ -798,7 +814,6 @@ func (s *CartService) UpdateLineItem(
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"A line item with the provided id doesn't exist in the cart",
-			"500",
 			nil,
 		)
 	}
@@ -818,7 +833,7 @@ func (s *CartService) UpdateLineItem(
 					nil,
 				)
 			}
-			if shouldCalculatePrices {
+			if update.ShouldCalculatePrices {
 				variantsPricing, err := s.r.PricingService().SetContext(s.ctx).GetProductVariantsPricing([]interfaces.Pricing{
 					{
 						VariantId: lineItem.VariantId.UUID,
@@ -843,11 +858,20 @@ func (s *CartService) UpdateLineItem(
 			return nil, err
 		}
 	}
-	_, err = s.r.LineItemService().SetContext(s.ctx).Update(lineItemId, nil, update, sql.Options{})
+	_, err = s.r.LineItemService().SetContext(s.ctx).Update(lineItemId, nil, &models.LineItem{
+		Model: core.Model{
+			Metadata: update.Metadata,
+		},
+		Title:       update.Title,
+		UnitPrice:   update.UnitPrice,
+		Quantity:    update.Quantity,
+		VariantId:   uuid.NullUUID{UUID: update.VariantId},
+		HasShipping: update.HasShipping,
+	}, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
-	updatedCart, err := s.Retrieve(cartId, sql.Options{
+	updatedCart, err := s.Retrieve(cartId, &sql.Options{
 		Relations: []string{
 			"items.variant.product.profiles",
 			"discounts",
@@ -907,7 +931,7 @@ func (s *CartService) adjustFreeShipping(
 	return nil
 }
 
-func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *models.Cart) (*models.Cart, *utils.ApplictaionError) {
+func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *types.CartUpdateProps) (*models.Cart, *utils.ApplictaionError) {
 	relations := []string{
 		"items.variant.product.profiles",
 		"shipping_methods",
@@ -923,7 +947,7 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *models.Cart)
 		"discounts.rule",
 	}
 	if id == uuid.Nil {
-		c, err := s.Retrieve(id, sql.Options{
+		c, err := s.Retrieve(id, &sql.Options{
 			Relations: relations,
 		}, TotalsConfig{})
 		if err != nil {
@@ -937,8 +961,8 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *models.Cart)
 	// 	originalCartCustomer = cart.Customer
 	// }
 
-	if data.CustomerId.UUID != uuid.Nil {
-		if err := s.updateCustomerId(cart, data.CustomerId.UUID); err != nil {
+	if data.CustomerId != uuid.Nil {
+		if err := s.updateCustomerId(cart, data.CustomerId); err != nil {
 			return nil, err
 		}
 	} else if data.Email != "" {
@@ -950,23 +974,23 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *models.Cart)
 		cart.CustomerId = uuid.NullUUID{UUID: customer.Id}
 		cart.Email = customer.Email
 	}
-	if data.CustomerId.UUID != uuid.Nil || data.RegionId.UUID != uuid.Nil {
-		if err := s.updateUnitPrices(cart, data.RegionId.UUID, data.CustomerId.UUID); err != nil {
+	if data.CustomerId != uuid.Nil || data.RegionId != uuid.Nil {
+		if err := s.updateUnitPrices(cart, data.RegionId, data.CustomerId); err != nil {
 			return nil, err
 		}
 	}
-	if data.RegionId.UUID != uuid.Nil && cart.RegionId != data.RegionId {
+	if data.RegionId != uuid.Nil && cart.RegionId.UUID != data.RegionId {
 		shippingAddress := data.ShippingAddress
 		countryCode := shippingAddress.CountryCode
-		if err := s.setRegion(cart, data.RegionId.UUID, countryCode); err != nil {
+		if err := s.setRegion(cart, data.RegionId, countryCode); err != nil {
 			return nil, err
 		}
 	}
 	var billingAddress *models.Address
-	if data.BillingAddressId.UUID != uuid.Nil {
-		billingAddress = &models.Address{Model: core.Model{Id: data.BillingAddressId.UUID}}
+	if data.BillingAddressId != uuid.Nil {
+		billingAddress = &models.Address{Model: core.Model{Id: data.BillingAddressId}}
 	} else if data.BillingAddress != nil {
-		billingAddress = data.BillingAddress
+		billingAddress = utils.ToAddress(data.BillingAddress)
 	}
 
 	if billingAddress != nil {
@@ -976,10 +1000,10 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *models.Cart)
 	}
 
 	var shippingAddress *models.Address
-	if data.ShippingAddressId.UUID != uuid.Nil {
-		shippingAddress = &models.Address{Model: core.Model{Id: data.ShippingAddressId.UUID}}
+	if data.ShippingAddressId != uuid.Nil {
+		shippingAddress = &models.Address{Model: core.Model{Id: data.ShippingAddressId}}
 	} else if data.BillingAddress != nil {
-		shippingAddress = data.ShippingAddress
+		shippingAddress = utils.ToAddress(data.ShippingAddress)
 	}
 
 	if shippingAddress != nil {
@@ -990,12 +1014,12 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *models.Cart)
 
 	feature := false
 	featurev2 := false
-	if feature && data.SalesChannelId.UUID != uuid.Nil && data.SalesChannelId != cart.SalesChannelId {
-		salesChannel, err := s.getValidatedSalesChannel(data.SalesChannelId.UUID)
+	if feature && data.SalesChannelId != uuid.Nil && data.SalesChannelId != cart.SalesChannelId.UUID {
+		salesChannel, err := s.getValidatedSalesChannel(data.SalesChannelId)
 		if err != nil {
 			return nil, err
 		}
-		err = s.onSalesChannelChange(cart, data.SalesChannelId.UUID)
+		err = s.onSalesChannelChange(cart, data.SalesChannelId)
 		if err != nil {
 			return nil, err
 		}
@@ -1120,7 +1144,7 @@ func (s *CartService) onSalesChannelChange(cart *models.Cart, newSalesChannelId 
 	for _, item := range cart.Items {
 		productIDs = append(productIDs, item.Variant.ProductId.UUID)
 	}
-	productsToKeep, err := s.r.ProductService().SetContext(s.ctx).FilterProductsBySalesChannel(productIDs, newSalesChannelId, sql.Options{
+	productsToKeep, err := s.r.ProductService().SetContext(s.ctx).FilterProductsBySalesChannel(productIDs, newSalesChannelId, &sql.Options{
 		Selects: []string{"id"},
 		Take:    gox.NewInt(len(productIDs)),
 	})
@@ -1159,7 +1183,7 @@ func (s *CartService) onSalesChannelChange(cart *models.Cart, newSalesChannelId 
 }
 
 func (s *CartService) updateCustomerId(cart *models.Cart, customerId uuid.UUID) *utils.ApplictaionError {
-	customer, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, sql.Options{})
+	customer, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -1174,13 +1198,12 @@ func (s *CartService) createOrFetchGuestCustomerFromEmail(email string) (*models
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
-	customer, err := s.r.CustomerService().SetContext(s.ctx).RetrieveUnregisteredByEmail(email, sql.Options{})
+	customer, err := s.r.CustomerService().SetContext(s.ctx).RetrieveUnregisteredByEmail(email, &sql.Options{})
 	if err != nil {
-		customer, err = s.r.CustomerService().SetContext(s.ctx).Create(&models.Customer{
+		customer, err = s.r.CustomerService().SetContext(s.ctx).Create(&types.CreateCustomerInput{
 			Email: email,
 		})
 		if err != nil {
@@ -1194,7 +1217,7 @@ func (s *CartService) updateBillingAddress(cart *models.Cart, id uuid.UUID, addr
 	if id != uuid.Nil {
 		var addr *models.Address
 
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: id}}, sql.Options{})
+		query := sql.BuildQuery(models.Address{Model: core.Model{Id: id}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -1208,7 +1231,7 @@ func (s *CartService) updateBillingAddress(cart *models.Cart, id uuid.UUID, addr
 		if cart.BillingAddressId.UUID != uuid.Nil {
 			var addr *models.Address
 
-			query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.BillingAddressId.UUID}}, sql.Options{})
+			query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.BillingAddressId.UUID}}, &sql.Options{})
 
 			if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 				return err
@@ -1230,7 +1253,7 @@ func (s *CartService) updateShippingAddress(cart *models.Cart, id uuid.UUID, add
 	if id != uuid.Nil {
 		var addr *models.Address
 
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: id}}, sql.Options{})
+		query := sql.BuildQuery(models.Address{Model: core.Model{Id: id}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -1244,7 +1267,6 @@ func (s *CartService) updateShippingAddress(cart *models.Cart, id uuid.UUID, add
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Shipping country must be in the cart region",
-			"500",
 			nil,
 		)
 	}
@@ -1254,7 +1276,7 @@ func (s *CartService) updateShippingAddress(cart *models.Cart, id uuid.UUID, add
 		if cart.ShippingAddressId.UUID != uuid.Nil {
 			var addr *models.Address
 
-			query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.ShippingAddressId.UUID}}, sql.Options{})
+			query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.ShippingAddressId.UUID}}, &sql.Options{})
 
 			if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 				return err
@@ -1273,7 +1295,7 @@ func (s *CartService) updateShippingAddress(cart *models.Cart, id uuid.UUID, add
 }
 
 func (s *CartService) applyGiftCard(cart *models.Cart, code string) *utils.ApplictaionError {
-	giftCard, err := s.r.GiftCardService().SetContext(s.ctx).RetrieveByCode(code, sql.Options{})
+	giftCard, err := s.r.GiftCardService().SetContext(s.ctx).RetrieveByCode(code, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -1281,7 +1303,6 @@ func (s *CartService) applyGiftCard(cart *models.Cart, code string) *utils.Appli
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"The gift card is disabled",
-			"500",
 			nil,
 		)
 	}
@@ -1289,7 +1310,6 @@ func (s *CartService) applyGiftCard(cart *models.Cart, code string) *utils.Appli
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"The gift card cannot be used in the current region",
-			"500",
 			nil,
 		)
 	}
@@ -1373,7 +1393,7 @@ func (s *CartService) ApplyDiscounts(cart *models.Cart, discountCodes []string) 
 }
 
 func (s *CartService) RemoveDiscount(cartId uuid.UUID, discountCode string) (*models.Cart, *utils.ApplictaionError) {
-	cart, err := s.Retrieve(cartId, sql.Options{
+	cart, err := s.Retrieve(cartId, &sql.Options{
 		Relations: []string{
 			"items.variant.product.profiles",
 			"region",
@@ -1425,7 +1445,7 @@ func (s *CartService) RemoveDiscount(cartId uuid.UUID, discountCode string) (*mo
 }
 
 func (s *CartService) UpdatePaymentSession(cartId uuid.UUID, update map[string]interface{}) (*models.Cart, *utils.ApplictaionError) {
-	cart, err := s.Retrieve(cartId, sql.Options{
+	cart, err := s.Retrieve(cartId, &sql.Options{
 		Relations: []string{"payment_sessions"},
 	}, TotalsConfig{})
 	if err != nil {
@@ -1437,7 +1457,7 @@ func (s *CartService) UpdatePaymentSession(cartId uuid.UUID, update map[string]i
 			return nil, err
 		}
 	}
-	updatedCart, err := s.Retrieve(cart.Id, sql.Options{}, TotalsConfig{})
+	updatedCart, err := s.Retrieve(cart.Id, &sql.Options{}, TotalsConfig{})
 	if err != nil {
 		return nil, err
 	}
@@ -1456,7 +1476,7 @@ func (s *CartService) AuthorizePayment(id uuid.UUID, cart *models.Cart, context 
 	}
 
 	if id != uuid.Nil {
-		c, err := s.RetrieveWithTotals(id, sql.Options{
+		c, err := s.RetrieveWithTotals(id, &sql.Options{
 			Relations: []string{"payment_sessions", "items.variant.product.profiles"},
 		}, TotalsConfig{})
 		if err != nil {
@@ -1464,6 +1484,7 @@ func (s *CartService) AuthorizePayment(id uuid.UUID, cart *models.Cart, context 
 		}
 		cart = c
 	}
+
 	if cart.Total <= 0 {
 		now := time.Now()
 		cart.PaymentAuthorizedAt = &now
@@ -1479,11 +1500,11 @@ func (s *CartService) AuthorizePayment(id uuid.UUID, cart *models.Cart, context 
 		// }
 		return cart, nil
 	}
+
 	if cart.PaymentSession == nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"You cannot complete a cart without a payment session.",
-			"500",
 			nil,
 		)
 	}
@@ -1491,19 +1512,18 @@ func (s *CartService) AuthorizePayment(id uuid.UUID, cart *models.Cart, context 
 	if err != nil {
 		return nil, err
 	}
-	freshCart, err := s.Retrieve(cart.Id, sql.Options{
+	freshCart, err := s.Retrieve(cart.Id, &sql.Options{
 		Relations: []string{"payment_sessions"},
 	}, TotalsConfig{})
 	if err != nil {
 		return nil, err
 	}
 	if session.Status == models.PaymentSessionStatusAuthorized {
-		payment, err := s.r.PaymentProviderService().SetContext(s.ctx).CreatePayment(&models.Payment{
-			CartId:       uuid.NullUUID{UUID: cart.Id},
-			CurrencyCode: cart.Region.CurrencyCode,
-			Amount:       cart.Total,
-			ProviderId:   freshCart.PaymentSession.ProviderId,
-			Data:         freshCart.PaymentSession.Data,
+		payment, err := s.r.PaymentProviderService().SetContext(s.ctx).CreatePayment(&types.CreatePaymentInput{
+			CartId:         cart.Id,
+			CurrencyCode:   cart.Region.CurrencyCode,
+			Amount:         cart.Total,
+			PaymentSession: freshCart.PaymentSession,
 		})
 		if err != nil {
 			return nil, err
@@ -1523,7 +1543,7 @@ func (s *CartService) AuthorizePayment(id uuid.UUID, cart *models.Cart, context 
 }
 
 func (s *CartService) SetPaymentSession(id uuid.UUID, providerId uuid.UUID) *utils.ApplictaionError {
-	cart, err := s.RetrieveWithTotals(id, sql.Options{
+	cart, err := s.RetrieveWithTotals(id, &sql.Options{
 		Relations: []string{
 			"items.variant.product.profiles",
 			"customer",
@@ -1546,7 +1566,6 @@ func (s *CartService) SetPaymentSession(id uuid.UUID, providerId uuid.UUID) *uti
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"The payment method is not available in this region",
-			"500",
 			nil,
 		)
 	}
@@ -1590,12 +1609,11 @@ func (s *CartService) SetPaymentSession(id uuid.UUID, providerId uuid.UUID) *uti
 		return utils.NewApplictaionError(
 			utils.UNEXPECTED_STATE,
 			"Could not find payment session",
-			"500",
 			nil,
 		)
 	}
 	sessionInput := &types.PaymentSessionInput{
-		Cart:             *cart,
+		Cart:             cart,
 		Customer:         cart.Customer,
 		Amount:           cart.Total,
 		CurrencyCode:     cart.Region.CurrencyCode,
@@ -1631,7 +1649,7 @@ func (s *CartService) SetPaymentSession(id uuid.UUID, providerId uuid.UUID) *uti
 
 func (s *CartService) setPaymentSessions(id uuid.UUID, cart *models.Cart) *utils.ApplictaionError {
 	if id != uuid.Nil {
-		c, err := s.RetrieveWithTotals(id, sql.Options{
+		c, err := s.RetrieveWithTotals(id, &sql.Options{
 			Relations: []string{
 				"items.variant.product.profiles",
 				"items.adjustments",
@@ -1683,14 +1701,14 @@ func (s *CartService) setPaymentSessions(id uuid.UUID, cart *models.Cart) *utils
 	}
 	var alreadyConsumedProviderIds uuid.UUIDs
 	paymentSessionInput := &types.PaymentSessionInput{
-		Cart:         *cart,
+		Cart:         cart,
 		Customer:     cart.Customer,
 		Amount:       total,
 		CurrencyCode: cart.Region.CurrencyCode,
 	}
 	paymentSessionData := &models.PaymentSession{
 		CartId: uuid.NullUUID{UUID: cart.Id},
-		Data:   models.JSONB{},
+		Data:   core.JSONB{},
 		Status: models.PaymentSessionStatusPending,
 		Amount: total,
 	}
@@ -1753,7 +1771,7 @@ func (s *CartService) setPaymentSessions(id uuid.UUID, cart *models.Cart) *utils
 }
 
 func (s *CartService) DeletePaymentSession(id uuid.UUID, providerId uuid.UUID) *utils.ApplictaionError {
-	cart, err := s.Retrieve(id, sql.Options{
+	cart, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"payment_sessions"},
 	}, TotalsConfig{})
 	if err != nil {
@@ -1801,7 +1819,7 @@ func (s *CartService) DeletePaymentSession(id uuid.UUID, providerId uuid.UUID) *
 }
 
 func (s *CartService) RefreshPaymentSession(id uuid.UUID, providerId uuid.UUID) *utils.ApplictaionError {
-	cart, err := s.RetrieveWithTotals(id, sql.Options{
+	cart, err := s.RetrieveWithTotals(id, &sql.Options{
 		Relations: []string{"payment_sessions"},
 	}, TotalsConfig{})
 	if err != nil {
@@ -1818,7 +1836,7 @@ func (s *CartService) RefreshPaymentSession(id uuid.UUID, providerId uuid.UUID) 
 		if paymentSession != nil {
 			if paymentSession.IsSelected {
 				_, err = s.r.PaymentProviderService().SetContext(s.ctx).RefreshSession(paymentSession, &types.PaymentSessionInput{
-					Cart:         *cart,
+					Cart:         cart,
 					Customer:     cart.Customer,
 					Amount:       cart.Total,
 					CurrencyCode: cart.Region.CurrencyCode,
@@ -1848,7 +1866,7 @@ func (s *CartService) RefreshPaymentSession(id uuid.UUID, providerId uuid.UUID) 
 
 func (s *CartService) AddShippingMethod(id uuid.UUID, cart *models.Cart, optionId uuid.UUID, data map[string]interface{}) (*models.Cart, *utils.ApplictaionError) {
 	if id != uuid.Nil {
-		c, err := s.RetrieveWithTotals(id, sql.Options{
+		c, err := s.RetrieveWithTotals(id, &sql.Options{
 			Relations: []string{
 				"shipping_methods",
 				"shipping_methods.shipping_option",
@@ -1863,7 +1881,7 @@ func (s *CartService) AddShippingMethod(id uuid.UUID, cart *models.Cart, optionI
 	}
 	cartCustomShippingOptions, err := s.r.CustomShippingOptionService().SetContext(s.ctx).List(models.CustomShippingOption{
 		CartId: uuid.NullUUID{UUID: cart.Id},
-	}, sql.Options{})
+	}, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -1872,9 +1890,9 @@ func (s *CartService) AddShippingMethod(id uuid.UUID, cart *models.Cart, optionI
 	if err != nil {
 		return nil, err
 	}
-	var shippingMethodConfig *models.ShippingMethod
+	var shippingMethodConfig *types.CreateShippingMethodDto
 	if customShippingOption != nil {
-		shippingMethodConfig.CartId = uuid.NullUUID{UUID: cart.Id}
+		shippingMethodConfig.CartId = cart.Id
 		shippingMethodConfig.Price = customShippingOption.Price
 	} else {
 		shippingMethodConfig.Cart = cart
@@ -1919,13 +1937,13 @@ func (s *CartService) AddShippingMethod(id uuid.UUID, cart *models.Cart, optionI
 		for _, item := range cart.Items {
 			_, err := s.r.LineItemService().SetContext(s.ctx).Update(item.Id, nil, &models.LineItem{
 				HasShipping: s.validateLineItemShipping(methods, productShippingProfileMap[item.Variant.ProductId.UUID]),
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
-	updatedCart, err := s.Retrieve(cart.Id, sql.Options{
+	updatedCart, err := s.Retrieve(cart.Id, &sql.Options{
 		Relations: []string{
 			"discounts",
 			"discounts.rule",
@@ -1963,7 +1981,6 @@ func (s *CartService) findCustomShippingOption(cartCustomShippingOptions []model
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Wrong shipping option",
-			"500",
 			nil,
 		)
 	}
@@ -1980,7 +1997,7 @@ func (s *CartService) updateUnitPrices(cart *models.Cart, regionId uuid.UUID, cu
 	if customerId == uuid.Nil {
 		customerId = cart.CustomerId.UUID
 	}
-	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(regionId, sql.Options{
+	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(regionId, &sql.Options{
 		Relations: []string{"countries"},
 	})
 	if err != nil {
@@ -2014,7 +2031,7 @@ func (s *CartService) updateUnitPrices(cart *models.Cart, regionId uuid.UUID, cu
 			_, err := s.r.LineItemService().SetContext(s.ctx).Update(item.Id, nil, &models.LineItem{
 				HasShipping: false,
 				UnitPrice:   availablePrice.CalculatedPrice,
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return err
 			}
@@ -2028,7 +2045,7 @@ func (s *CartService) updateUnitPrices(cart *models.Cart, regionId uuid.UUID, cu
 	for _, item := range cart.Items {
 		itemIds = append(itemIds, item.Id)
 	}
-	items, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{}, sql.Options{
+	items, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{}, &sql.Options{
 		Relations:     []string{"variant.product.profiles"},
 		Specification: []sql.Specification{sql.In("id", itemIds)},
 	})
@@ -2045,11 +2062,10 @@ func (s *CartService) setRegion(cart *models.Cart, regionId uuid.UUID, countryCo
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Cannot change the region of a completed cart",
-			"500",
 			nil,
 		)
 	}
-	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(regionId, sql.Options{
+	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(regionId, &sql.Options{
 		Relations: []string{"countries"},
 	})
 	if err != nil {
@@ -2060,7 +2076,7 @@ func (s *CartService) setRegion(cart *models.Cart, regionId uuid.UUID, countryCo
 
 	var shippingAddress *models.Address
 	if cart.SalesChannelId.UUID != uuid.Nil {
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.ShippingAddressId.UUID}}, sql.Options{})
+		query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.ShippingAddressId.UUID}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, shippingAddress, query); err != nil {
 			return err
@@ -2110,7 +2126,7 @@ func (s *CartService) setRegion(cart *models.Cart, regionId uuid.UUID, countryCo
 		discountIds = append(discountIds, discount.Id)
 	}
 
-	discounts, err := s.r.DiscountService().SetContext(s.ctx).List(types.FilterableDiscount{}, sql.Options{
+	discounts, err := s.r.DiscountService().SetContext(s.ctx).List(types.FilterableDiscount{}, &sql.Options{
 		Relations:     []string{"rule", "regions"},
 		Specification: []sql.Specification{sql.In("id", discountIds)},
 	})
@@ -2142,7 +2158,7 @@ func (s *CartService) setRegion(cart *models.Cart, regionId uuid.UUID, countryCo
 }
 
 func (s *CartService) Delete(id uuid.UUID) (*models.Cart, *utils.ApplictaionError) {
-	cart, err := s.Retrieve(id, sql.Options{
+	cart, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{
 			"items.variant.product.profiles",
 			"discounts",
@@ -2157,7 +2173,6 @@ func (s *CartService) Delete(id uuid.UUID) (*models.Cart, *utils.ApplictaionErro
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Completed carts cannot be deleted",
-			"500",
 			nil,
 		)
 	}
@@ -2165,7 +2180,6 @@ func (s *CartService) Delete(id uuid.UUID) (*models.Cart, *utils.ApplictaionErro
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Can't delete a cart with an authorized payment",
-			"500",
 			nil,
 		)
 	}
@@ -2181,11 +2195,10 @@ func (s *CartService) SetMetadata(id uuid.UUID, key string, value string) (*mode
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Key type is invalid. Metadata keys must be strings",
-			"500",
 			nil,
 		)
 	}
-	cart, err := s.Retrieve(id, sql.Options{}, TotalsConfig{})
+	cart, err := s.Retrieve(id, &sql.Options{}, TotalsConfig{})
 	if err != nil {
 		return nil, err
 	}
@@ -2204,7 +2217,7 @@ func (s *CartService) SetMetadata(id uuid.UUID, key string, value string) (*mode
 
 func (s *CartService) CreateTaxLines(id uuid.UUID, cart *models.Cart) *utils.ApplictaionError {
 	if id != uuid.Nil {
-		c, err := s.Retrieve(id, sql.Options{
+		c, err := s.Retrieve(id, &sql.Options{
 			Relations: []string{
 				"customer",
 				"discounts",
@@ -2226,7 +2239,14 @@ func (s *CartService) CreateTaxLines(id uuid.UUID, cart *models.Cart) *utils.App
 		cart = c
 	}
 
-	calculationContext, err := s.r.TotalsService().GetCalculationContext(cart, nil, CalculationContextOptions{})
+	calculationContext, err := s.r.TotalsService().GetCalculationContext(types.CalculationContextData{
+		Discounts:       cart.Discounts,
+		Items:           cart.Items,
+		Customer:        cart.Customer,
+		Region:          cart.Region,
+		ShippingAddress: cart.ShippingAddress,
+		ShippingMethods: cart.ShippingMethods,
+	}, CalculationContextOptions{})
 	if err != nil {
 		return err
 	}
@@ -2238,7 +2258,7 @@ func (s *CartService) CreateTaxLines(id uuid.UUID, cart *models.Cart) *utils.App
 }
 
 func (s *CartService) DeleteTaxLines(id uuid.UUID) *utils.ApplictaionError {
-	cart, err := s.Retrieve(id, sql.Options{
+	cart, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{
 			"items",
 			"items.tax_lines",
@@ -2263,7 +2283,14 @@ func (s *CartService) DeleteTaxLines(id uuid.UUID) *utils.ApplictaionError {
 }
 
 func (s *CartService) DecorateTotals(cart *models.Cart, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
-	calculationContext, err := s.r.TotalsService().GetCalculationContext(cart, nil, CalculationContextOptions{})
+	calculationContext, err := s.r.TotalsService().GetCalculationContext(types.CalculationContextData{
+		Discounts:       cart.Discounts,
+		Items:           cart.Items,
+		Customer:        cart.Customer,
+		Region:          cart.Region,
+		ShippingAddress: cart.ShippingAddress,
+		ShippingMethods: cart.ShippingMethods,
+	}, CalculationContextOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -2344,7 +2371,7 @@ func (s *CartService) refreshAdjustments(cart *models.Cart) *utils.ApplictaionEr
 		}
 	}
 
-	err := s.r.LineItemAdjustmentService().SetContext(s.ctx).Delete(uuid.Nil, &models.LineItemAdjustment{}, sql.Options{
+	err := s.r.LineItemAdjustmentService().SetContext(s.ctx).Delete(uuid.Nil, &models.LineItemAdjustment{}, &sql.Options{
 		Specification: []sql.Specification{
 			sql.In("item_id", nonReturnLineIds),
 			sql.Not(sql.IsNull("discount_id")),
@@ -2361,7 +2388,7 @@ func (s *CartService) refreshAdjustments(cart *models.Cart) *utils.ApplictaionEr
 	return nil
 }
 
-func (s *CartService) transformQueryForTotals(config sql.Options) ([]string, []string, []types.TotalField) {
+func (s *CartService) transformQueryForTotals(config *sql.Options) ([]string, []string, []types.TotalField) {
 	selectFields := config.Selects
 	relations := config.Relations
 
@@ -2485,7 +2512,7 @@ func (s *CartService) decorateTotals(cart *models.Cart, totalsToSelect []types.T
 	return cart, nil
 }
 
-func (s *CartService) getTotalsRelations(config sql.Options) []string {
+func (s *CartService) getTotalsRelations(config *sql.Options) []string {
 	relationSet := []string{
 		"items.variant.product.profiles",
 		"items.tax_lines",

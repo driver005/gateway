@@ -13,3 +13,9 @@ const (
 	TotalFieldGiftCardTotal    TotalField = "gift_card_total"
 	TotalFieldGiftCardTaxTotal TotalField = "gift_card_tax_total"
 )
+
+// FindParams is used to configure how data is retrieved.
+type FindParams struct {
+	Expand string `json:"expand,omitempty" validate:"omitempty"`
+	Fields string `json:"fields,omitempty" validate:"omitempty"`
+}

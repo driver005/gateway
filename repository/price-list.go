@@ -19,7 +19,7 @@ func PriceListRepository(db *gorm.DB) *PriceListRepo {
 	return &PriceListRepo{*sql.NewRepository[models.PriceList](db)}
 }
 
-func (r *PriceListRepo) ListAndCount(ctx context.Context, selector types.FilterablePriceList, config sql.Options, q *string) ([]models.PriceList, *int64, *utils.ApplictaionError) {
+func (r *PriceListRepo) ListAndCount(ctx context.Context, selector types.FilterablePriceList, config *sql.Options, q *string) ([]models.PriceList, *int64, *utils.ApplictaionError) {
 	var res []models.PriceList
 
 	if q != nil {

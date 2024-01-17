@@ -6,6 +6,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
@@ -29,12 +30,11 @@ func (s *ProductCollectionService) SetContext(context context.Context) *ProductC
 	return s
 }
 
-func (s *ProductCollectionService) Retrieve(collectionId uuid.UUID, config sql.Options) (*models.ProductCollection, *utils.ApplictaionError) {
+func (s *ProductCollectionService) Retrieve(collectionId uuid.UUID, config *sql.Options) (*models.ProductCollection, *utils.ApplictaionError) {
 	if collectionId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"collectionId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -48,12 +48,11 @@ func (s *ProductCollectionService) Retrieve(collectionId uuid.UUID, config sql.O
 	return res, nil
 }
 
-func (s *ProductCollectionService) RetrieveByHandle(collectionHandle string, config sql.Options) (*models.ProductCollection, *utils.ApplictaionError) {
+func (s *ProductCollectionService) RetrieveByHandle(collectionHandle string, config *sql.Options) (*models.ProductCollection, *utils.ApplictaionError) {
 	if collectionHandle == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"collectionHandle" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -68,7 +67,7 @@ func (s *ProductCollectionService) RetrieveByHandle(collectionHandle string, con
 	return res, nil
 }
 
-func (s *ProductCollectionService) List(selector models.ProductCollection, config sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductCollection, *utils.ApplictaionError) {
+func (s *ProductCollectionService) List(selector models.ProductCollection, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductCollection, *utils.ApplictaionError) {
 	collections, _, err := s.ListAndCount(selector, config, q, discountConditionId)
 	if err != nil {
 		return nil, err
@@ -76,7 +75,7 @@ func (s *ProductCollectionService) List(selector models.ProductCollection, confi
 	return collections, nil
 }
 
-func (s *ProductCollectionService) ListAndCount(selector models.ProductCollection, config sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
+func (s *ProductCollectionService) ListAndCount(selector models.ProductCollection, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
 	var res []models.ProductCollection
 
 	if q != nil {
@@ -100,32 +99,42 @@ func (s *ProductCollectionService) ListAndCount(selector models.ProductCollectio
 	return res, count, nil
 }
 
-func (s *ProductCollectionService) Create(collection *models.ProductCollection) (*models.ProductCollection, *utils.ApplictaionError) {
-	if err := s.r.ProductCollectionRepository().Save(s.ctx, collection); err != nil {
+func (s *ProductCollectionService) Create(data *types.CreateProductCollection) (*models.ProductCollection, *utils.ApplictaionError) {
+	model := &models.ProductCollection{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Title:  data.Title,
+		Handle: data.Handle,
+	}
+
+	if err := s.r.ProductCollectionRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 	// s.eventBus_.withTransaction(manager).emit(ProductCollectionService.Events.CREATED, map[string]interface{}{"id": productCollection.id})
-	return collection, nil
+	return model, nil
 }
 
-func (s *ProductCollectionService) Update(collectionId uuid.UUID, Update *models.ProductCollection) (*models.ProductCollection, *utils.ApplictaionError) {
-	productCollection, err := s.Retrieve(collectionId, sql.Options{})
+func (s *ProductCollectionService) Update(collectionId uuid.UUID, data *types.UpdateProductCollection) (*models.ProductCollection, *utils.ApplictaionError) {
+	productCollection, err := s.Retrieve(collectionId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	Update.Id = productCollection.Id
+	productCollection.Metadata = data.Metadata
+	productCollection.Title = data.Title
+	productCollection.Handle = data.Handle
 
-	if err := s.r.ProductCollectionRepository().Save(s.ctx, Update); err != nil {
+	if err := s.r.ProductCollectionRepository().Save(s.ctx, productCollection); err != nil {
 		return nil, err
 	}
 
 	// s.eventBus_.withTransaction(manager).emit(ProductCollectionService.Events.UPDATED, map[string]interface{}{"id": productCollection.id})
-	return Update, nil
+	return productCollection, nil
 }
 
 func (s *ProductCollectionService) Delete(collectionId uuid.UUID) *utils.ApplictaionError {
-	productCollection, err := s.Retrieve(collectionId, sql.Options{})
+	productCollection, err := s.Retrieve(collectionId, &sql.Options{})
 	if err != nil {
 		return nil
 	}
@@ -142,7 +151,7 @@ func (s *ProductCollectionService) Delete(collectionId uuid.UUID) *utils.Applict
 }
 
 func (s *ProductCollectionService) AddProducts(collectionId uuid.UUID, productIds uuid.UUIDs) (*models.ProductCollection, *utils.ApplictaionError) {
-	collection, err := s.Retrieve(collectionId, sql.Options{Selects: []string{"id"}})
+	collection, err := s.Retrieve(collectionId, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +161,7 @@ func (s *ProductCollectionService) AddProducts(collectionId uuid.UUID, productId
 		return nil, err
 	}
 
-	productCollection, err := s.Retrieve(collection.Id, sql.Options{Relations: []string{"products"}})
+	productCollection, err := s.Retrieve(collection.Id, &sql.Options{Relations: []string{"products"}})
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +171,7 @@ func (s *ProductCollectionService) AddProducts(collectionId uuid.UUID, productId
 }
 
 func (s *ProductCollectionService) RemoveProducts(collectionId uuid.UUID, productIds uuid.UUIDs) *utils.ApplictaionError {
-	collection, err := s.Retrieve(collectionId, sql.Options{Selects: []string{"id"}})
+	collection, err := s.Retrieve(collectionId, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/middlewares"
 	"github.com/driver005/gateway/services"
 	"github.com/gofiber/fiber/v3/middleware/session"
@@ -11,6 +12,7 @@ type Registry interface {
 
 	Middleware() *middlewares.Handler
 
+	//Services
 	AnalyticsConfigService() *services.AnalyticsConfigService
 	AuthService() *services.AuthService
 	BatchJobService() *services.BatchJobService
@@ -76,4 +78,13 @@ type Registry interface {
 	TockenService() *services.TockenService
 	TotalsService() *services.TotalsService
 	UserService() *services.UserService
+
+	//Interfaces
+	PriceSelectionStrategy() interfaces.IPriceSelectionStrategy
+	TaxCalculationStrategy() interfaces.ITaxCalculationStrategy
+	InventoryService() interfaces.IInventoryService
+	StockLocationService() interfaces.IStockLocationService
+	CacheService() interfaces.ICacheService
+	PricingModuleService() interfaces.IPricingModuleService
+	FileService() interfaces.IFileService
 }

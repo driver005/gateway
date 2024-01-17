@@ -3,7 +3,7 @@ package interfaces
 import (
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/types"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 )
 
 type CartCompletionResponse struct {

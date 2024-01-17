@@ -8,6 +8,6 @@ import (
 type FilterableShippingTaxRate struct {
 	core.FilterModel
 
-	ShippingOptionID uuid.UUID `json:"shipping_option_id,omitempty"`
-	RateID           string    `json:"rate_id,omitempty"`
+	ShippingOptionId uuid.UUID `json:"shipping_option_id,omitempty" validate:"omitempty"`
+	RateId           uuid.UUID `json:"rate_id,omitempty" validate:"omitempty"`
 }

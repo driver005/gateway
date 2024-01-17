@@ -34,19 +34,18 @@ func (s *DiscountService) SetContext(context context.Context) *DiscountService {
 	return s
 }
 
-func (s *DiscountService) ValidateDiscountRule(discountRule *models.DiscountRule) (*models.DiscountRule, *utils.ApplictaionError) {
-	if discountRule.Type == "percentage" && discountRule.Value > 100 {
+func (s *DiscountService) ValidateDiscountRule(discountRule *types.CreateDiscountRuleInput) (*types.CreateDiscountRuleInput, *utils.ApplictaionError) {
+	if discountRule.Type == models.DiscountRulePersentage && discountRule.Value > 100 {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"models.Discount value above 100 is not allowed when type is percentage",
-			"500",
 			nil,
 		)
 	}
 	return discountRule, nil
 }
 
-func (s *DiscountService) List(selector types.FilterableDiscount, config sql.Options) ([]models.Discount, *utils.ApplictaionError) {
+func (s *DiscountService) List(selector types.FilterableDiscount, config *sql.Options) ([]models.Discount, *utils.ApplictaionError) {
 	var discounts []models.Discount
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.DiscountRepository().Find(s.ctx, discounts, query); err != nil {
@@ -55,7 +54,7 @@ func (s *DiscountService) List(selector types.FilterableDiscount, config sql.Opt
 	return discounts, nil
 }
 
-func (s *DiscountService) ListAndCount(selector types.FilterableDiscount, config sql.Options) ([]models.Discount, *int64, *utils.ApplictaionError) {
+func (s *DiscountService) ListAndCount(selector types.FilterableDiscount, config *sql.Options) ([]models.Discount, *int64, *utils.ApplictaionError) {
 	var discounts []models.Discount
 	query := sql.BuildQuery(selector, config)
 	count, err := s.r.DiscountRepository().FindAndCount(s.ctx, discounts, query)
@@ -65,50 +64,70 @@ func (s *DiscountService) ListAndCount(selector types.FilterableDiscount, config
 	return discounts, count, nil
 }
 
-func (s *DiscountService) Create(discount *models.Discount) (*models.Discount, *utils.ApplictaionError) {
-	conditions := discount.Rule.Conditions
-	ruleToCreate := discount.Rule
+func (s *DiscountService) Create(data *types.CreateDiscountInput) (*models.Discount, *utils.ApplictaionError) {
+	var discount *models.Discount
+
+	conditions := data.Rule.Conditions
+	ruleToCreate := data.Rule
 	ruleToCreate.Conditions = nil
-	validatedRule, err := s.ValidateDiscountRule(ruleToCreate)
+
+	validatedRule, err := s.ValidateDiscountRule(&ruleToCreate)
 	if err != nil {
 		return nil, err
 	}
-	if len(discount.Regions) > 1 && discount.Rule.Type == "fixed" {
+	if len(data.Regions) > 1 && data.Rule.Type == models.DiscountRuleFixed {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Fixed discounts can have one region",
-			"500",
 			nil,
 		)
 	}
-	if discount.Regions != nil {
+	if data.Regions != nil {
 		discount.Regions = make([]models.Region, len(discount.Regions))
-		for i, region := range discount.Regions {
-			res, err := s.r.RegionService().SetContext(s.ctx).Retrieve(region.Id, sql.Options{})
+		for i, region := range data.Regions {
+			res, err := s.r.RegionService().SetContext(s.ctx).Retrieve(region, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
 			discount.Regions[i] = *res
 		}
 	}
-	if len(discount.Regions) == 0 {
+	if len(data.Regions) == 0 {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"models.Discount must have atleast 1 region",
-			"500",
 			nil,
 		)
 	}
-	if err := s.r.DiscountRuleRepository().Save(s.ctx, validatedRule); err != nil {
+
+	discount.Code = data.Code
+	discount.IsDynamic = data.IsDynamic
+	discount.IsDisabled = data.IsDisabled
+	discount.StartsAt = data.StartsAt
+	discount.EndsAt = data.EndsAt
+	discount.ValidDuration = data.ValidDuration
+	discount.UsageLimit = data.UsageLimit
+	discount.Metadata = data.Metadata
+
+	rule := &models.DiscountRule{
+		Type:        validatedRule.Type,
+		Allocation:  validatedRule.Allocation,
+		Description: validatedRule.Description,
+		Value:       validatedRule.Value,
+	}
+	if err := s.r.DiscountRuleRepository().Save(s.ctx, rule); err != nil {
 		return nil, err
 	}
-	discount.Rule = validatedRule
+
+	discount.Rule = rule
+
 	if err := s.r.DiscountRepository().Save(s.ctx, discount); err != nil {
 		return nil, err
 	}
+
 	if len(conditions) > 0 {
 		for _, cond := range conditions {
-			cond.DiscountRuleId = discount.RuleId
+			cond.RuleId = discount.RuleId.UUID
 			_, err := s.r.DiscountConditionService().SetContext(s.ctx).UpsertCondition(&cond, false)
 
 			if err != nil {
@@ -127,12 +146,11 @@ func (s *DiscountService) Create(discount *models.Discount) (*models.Discount, *
 
 }
 
-func (s *DiscountService) Retrieve(discountId uuid.UUID, config sql.Options) (*models.Discount, *utils.ApplictaionError) {
+func (s *DiscountService) Retrieve(discountId uuid.UUID, config *sql.Options) (*models.Discount, *utils.ApplictaionError) {
 	if discountId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"discountId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -145,14 +163,13 @@ func (s *DiscountService) Retrieve(discountId uuid.UUID, config sql.Options) (*m
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			fmt.Sprintf("models.Discount with id %s was not found", discountId),
-			"500",
 			nil,
 		)
 	}
 	return discount, nil
 }
 
-func (s *DiscountService) RetrieveByCode(discountCode string, config sql.Options) (*models.Discount, *utils.ApplictaionError) {
+func (s *DiscountService) RetrieveByCode(discountCode string, config *sql.Options) (*models.Discount, *utils.ApplictaionError) {
 	var discount *models.Discount
 
 	query := sql.BuildQuery(models.Discount{Code: strings.ToUpper(strings.TrimSpace(discountCode))}, config)
@@ -163,7 +180,6 @@ func (s *DiscountService) RetrieveByCode(discountCode string, config sql.Options
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			fmt.Sprintf("Discounts with code %s was not found", discountCode),
-			"500",
 			nil,
 		)
 	}
@@ -184,83 +200,92 @@ func (s *DiscountService) ListByCodes(discountCodes []string, config sql.Query) 
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			fmt.Sprintf("Discounts with code [%s] was not found", strings.Join(normalizedCodes, ", ")),
-			"500",
 			nil,
 		)
 	}
 	return discounts, nil
 }
 
-func (s *DiscountService) Update(discountId uuid.UUID, Update *models.Discount) (*models.Discount, *utils.ApplictaionError) {
-	if discountId == uuid.Nil {
-		Update.Id = discountId
-	}
-	if err := s.r.DiscountRepository().FindOne(s.ctx, Update, sql.Query{Relations: []string{"rule"}}); err != nil {
+func (s *DiscountService) Update(discountId uuid.UUID, data *types.UpdateDiscountInput) (*models.Discount, *utils.ApplictaionError) {
+	model, err := s.Retrieve(discountId, &sql.Options{Relations: []string{"rule"}})
+	if err != nil {
 		return nil, err
 	}
-	conditions := Update.Rule.Conditions
-	Update.Rule.Conditions = nil
-	rule := Update.Rule
-	regions := Update.Regions
-	if Update.StartsAt.Before(*Update.EndsAt) {
+
+	if model.StartsAt.Before(*data.EndsAt) {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"ends_at" must be greater than "starts_at"`,
-			"500",
 			nil,
 		)
 	}
 
-	if len(regions) > 1 && Update.Rule.Type == "fixed" {
+	if len(data.Regions) > 1 && model.Rule.Type == models.DiscountRuleFixed {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Fixed discounts can have one region",
-			"500",
 			nil,
 		)
 	}
-	if len(conditions) > 0 {
-		for _, cond := range conditions {
-			cond.DiscountRuleId = Update.RuleId
+	if len(data.Rule.Conditions) > 0 {
+		for _, cond := range data.Rule.Conditions {
+			cond.RuleId = model.RuleId.UUID
 			_, err := s.r.DiscountConditionService().SetContext(s.ctx).UpsertCondition(&cond, false)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
-	if regions != nil {
-		Update.Regions = make([]models.Region, len(regions))
-		for i, region := range regions {
-			res, err := s.r.RegionService().SetContext(s.ctx).Retrieve(region.Id, sql.Options{})
+	if data.Regions != nil {
+		model.Regions = make([]models.Region, len(data.Regions))
+		for i, region := range data.Regions {
+			res, err := s.r.RegionService().SetContext(s.ctx).Retrieve(region, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
-			Update.Regions[i] = *res
+			model.Regions[i] = *res
 		}
 	}
 
-	if rule != nil {
-		if rule.Value != 0.0 {
-			s.ValidateDiscountRule(&models.DiscountRule{
-				Value: rule.Value,
-				Type:  Update.Rule.Type,
-			})
+	if data.Rule != nil {
+		ruleUpdate, err := s.ValidateDiscountRule(&types.CreateDiscountRuleInput{
+			Value: data.Rule.Value,
+			Type:  model.Rule.Type,
+		})
+		if err != nil {
+			return nil, err
 		}
-		// discount.Rule = s.r.DiscountRuleRepository().Create(*models.DiscountRule{
-		// 	...discount.Rule,
-		// 	...ruleUpdate,
-		// })
+
+		model.Rule.Type = ruleUpdate.Type
+		model.Rule.Allocation = ruleUpdate.Allocation
+		model.Rule.Description = ruleUpdate.Description
+		model.Rule.Value = ruleUpdate.Value
+
+		if err := s.r.DiscountRuleRepository().Create(s.ctx, model.Rule); err != nil {
+			return nil, err
+		}
 	}
 
-	Update.Code = strings.ToUpper(Update.Code)
-	if err := s.r.DiscountRepository().Upsert(s.ctx, Update); err != nil {
+	model.Code = strings.ToUpper(data.Code)
+
+	model.IsDisabled = data.IsDisabled
+	model.StartsAt = data.StartsAt
+	model.EndsAt = data.EndsAt
+	model.ValidDuration = data.ValidDuration
+	model.UsageLimit = data.UsageLimit
+
+	if data.Metadata != nil {
+		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
+	}
+
+	if err := s.r.DiscountRepository().Upsert(s.ctx, model); err != nil {
 		return nil, err
 	}
-	return Update, nil
+	return model, nil
 }
 
-func (s *DiscountService) CreateDynamicCode(discountId uuid.UUID, data *models.Discount) (*models.Discount, *utils.ApplictaionError) {
-	discount, err := s.Retrieve(discountId, sql.Options{})
+func (s *DiscountService) CreateDynamicCode(discountId uuid.UUID, data *types.CreateDynamicDiscountInput) (*models.Discount, *utils.ApplictaionError) {
+	discount, err := s.Retrieve(discountId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +293,6 @@ func (s *DiscountService) CreateDynamicCode(discountId uuid.UUID, data *models.D
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"models.Discount must be set to dynamic",
-			"500",
 			nil,
 		)
 	}
@@ -276,7 +300,6 @@ func (s *DiscountService) CreateDynamicCode(discountId uuid.UUID, data *models.D
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"models.Discount must have a code",
-			"500",
 			nil,
 		)
 	}
@@ -303,7 +326,7 @@ func (s *DiscountService) CreateDynamicCode(discountId uuid.UUID, data *models.D
 
 func (s *DiscountService) DeleteDynamicCode(discountId uuid.UUID, code string) *utils.ApplictaionError {
 	var discount *models.Discount
-	query := sql.BuildQuery(models.Discount{ParentDiscountId: uuid.NullUUID{UUID: discountId}, Code: code}, sql.Options{})
+	query := sql.BuildQuery(models.Discount{ParentDiscountId: uuid.NullUUID{UUID: discountId}, Code: code}, &sql.Options{})
 	if err := s.r.DiscountRepository().FindOne(s.ctx, discount, query); err != nil {
 		return err
 	}
@@ -314,7 +337,7 @@ func (s *DiscountService) DeleteDynamicCode(discountId uuid.UUID, code string) *
 }
 
 func (s *DiscountService) AddRegion(discountId uuid.UUID, regionId uuid.UUID) (*models.Discount, *utils.ApplictaionError) {
-	discount, err := s.Retrieve(discountId, sql.Options{
+	discount, err := s.Retrieve(discountId, &sql.Options{
 		Relations: []string{"regions", "rule"},
 	})
 	if err != nil {
@@ -335,11 +358,10 @@ func (s *DiscountService) AddRegion(discountId uuid.UUID, regionId uuid.UUID) (*
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Fixed discounts can have one region",
-			"500",
 			nil,
 		)
 	}
-	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(regionId, sql.Options{})
+	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(regionId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +374,7 @@ func (s *DiscountService) AddRegion(discountId uuid.UUID, regionId uuid.UUID) (*
 }
 
 func (s *DiscountService) RemoveRegion(discountId uuid.UUID, regionId uuid.UUID) (*models.Discount, *utils.ApplictaionError) {
-	discount, err := s.Retrieve(discountId, sql.Options{
+	discount, err := s.Retrieve(discountId, &sql.Options{
 		Relations: []string{"regions"},
 	})
 	if err != nil {
@@ -382,7 +404,7 @@ func (s *DiscountService) RemoveRegion(discountId uuid.UUID, regionId uuid.UUID)
 }
 
 func (s *DiscountService) Delete(discountId uuid.UUID) *utils.ApplictaionError {
-	data, err := s.Retrieve(discountId, sql.Options{})
+	data, err := s.Retrieve(discountId, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -399,26 +421,25 @@ func (s *DiscountService) ValidateDiscountForProduct(discountRuleId uuid.UUID, p
 		return false, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"`productId` can not be undifined",
-			"500",
 			nil,
 		)
 	}
 	return s.r.DiscountConditionRepository().IsValidForProduct(discountRuleId, productId)
 }
 
-func (s *DiscountService) CalculateDiscountForLineItem(discountId uuid.UUID, lineItem *models.LineItem, cart *models.Cart) (float64, *utils.ApplictaionError) {
+func (s *DiscountService) CalculateDiscountForLineItem(discountId uuid.UUID, lineItem *models.LineItem, calculationContextData types.CalculationContextData) (float64, *utils.ApplictaionError) {
 	adjustment := 0.0
 	if !lineItem.AllowDiscounts {
 		return adjustment, nil
 	}
-	discount, err := s.Retrieve(discountId, sql.Options{Relations: []string{"rule"}})
+	discount, err := s.Retrieve(discountId, &sql.Options{Relations: []string{"rule"}})
 	if err != nil {
 		return 0, err
 	}
 	discountType := discount.Rule.Type
 	discountValue := discount.Rule.Value
 	discountAllocation := discount.Rule.Allocation
-	calculationContext, err := s.r.TotalsService().GetCalculationContext(lineItem.Cart, lineItem.Order, CalculationContextOptions{ExcludeShipping: true})
+	calculationContext, err := s.r.TotalsService().GetCalculationContext(calculationContextData, CalculationContextOptions{ExcludeShipping: true})
 	if err != nil {
 		return 0, err
 	}
@@ -434,8 +455,8 @@ func (s *DiscountService) CalculateDiscountForLineItem(discountId uuid.UUID, lin
 	if discountType == models.DiscountRulePersentage {
 		adjustment = math.Round(fullItemPrice / 100 * discountValue)
 	} else if discountType == models.DiscountRuleFixed && discountAllocation == models.AllocationTotal {
-		discountedItems := make([]models.LineItem, 0, len(cart.Items))
-		for _, item := range cart.Items {
+		discountedItems := make([]models.LineItem, 0, len(calculationContextData.Items))
+		for _, item := range calculationContextData.Items {
 			if item.AllowDiscounts {
 				discountedItems = append(discountedItems, item)
 			}
@@ -561,7 +582,7 @@ func (s *DiscountService) isDisabled(discount models.Discount) bool {
 func (s *DiscountService) isValidForRegion(discount models.Discount, region_id uuid.UUID) (bool, *utils.ApplictaionError) {
 	regions := discount.Regions
 	if discount.ParentDiscountId.UUID != uuid.Nil {
-		parent, err := s.Retrieve(discount.ParentDiscountId.UUID, sql.Options{Relations: []string{"rule", "regions"}})
+		parent, err := s.Retrieve(discount.ParentDiscountId.UUID, &sql.Options{Relations: []string{"rule", "regions"}})
 		if err != nil {
 			return false, err
 		}
@@ -580,11 +601,10 @@ func (s *DiscountService) canApplyForCustomer(discountRuleId uuid.UUID, customer
 		return false, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"`customerId` can not be null",
-			"500",
 			nil,
 		)
 	}
-	customer, _ := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, sql.Options{Relations: []string{"groups"}})
+	customer, _ := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, &sql.Options{Relations: []string{"groups"}})
 	return s.r.DiscountConditionRepository().CanApplyForCustomer(discountRuleId, customer.Id)
 
 }

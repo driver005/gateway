@@ -30,12 +30,11 @@ func (s *LineItemAdjustmentService) SetContext(context context.Context) *LineIte
 	return s
 }
 
-func (s *LineItemAdjustmentService) Retrieve(id uuid.UUID, config sql.Options) (*models.LineItemAdjustment, *utils.ApplictaionError) {
+func (s *LineItemAdjustmentService) Retrieve(id uuid.UUID, config *sql.Options) (*models.LineItemAdjustment, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -58,7 +57,7 @@ func (s *LineItemAdjustmentService) Create(data *models.LineItemAdjustment) (*mo
 }
 
 func (s *LineItemAdjustmentService) Update(id uuid.UUID, Update *models.LineItemAdjustment) (*models.LineItemAdjustment, *utils.ApplictaionError) {
-	lineItemAdjustment, err := s.Retrieve(id, sql.Options{})
+	lineItemAdjustment, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +71,7 @@ func (s *LineItemAdjustmentService) Update(id uuid.UUID, Update *models.LineItem
 	return Update, nil
 }
 
-func (s *LineItemAdjustmentService) List(selector types.FilterableLineItemAdjustmentProps, config sql.Options) ([]models.LineItemAdjustment, *utils.ApplictaionError) {
+func (s *LineItemAdjustmentService) List(selector types.FilterableLineItemAdjustmentProps, config *sql.Options) ([]models.LineItemAdjustment, *utils.ApplictaionError) {
 	var res []models.LineItemAdjustment
 	query := sql.BuildQuery(selector, config)
 
@@ -83,7 +82,7 @@ func (s *LineItemAdjustmentService) List(selector types.FilterableLineItemAdjust
 	return res, nil
 }
 
-func (s *LineItemAdjustmentService) Delete(id uuid.UUID, selector *models.LineItemAdjustment, config sql.Options) *utils.ApplictaionError {
+func (s *LineItemAdjustmentService) Delete(id uuid.UUID, selector *models.LineItemAdjustment, config *sql.Options) *utils.ApplictaionError {
 	var data *models.LineItemAdjustment
 	if id != uuid.Nil {
 		var err *utils.ApplictaionError
@@ -107,7 +106,7 @@ func (s *LineItemAdjustmentService) DeleteSlice(ids uuid.UUIDs, selector []model
 	if ids != nil {
 		for _, id := range ids {
 			var err *utils.ApplictaionError
-			lineItem, err := s.Retrieve(id, sql.Options{})
+			lineItem, err := s.Retrieve(id, &sql.Options{})
 			if err != nil {
 				return err
 			}
@@ -125,15 +124,15 @@ func (s *LineItemAdjustmentService) DeleteSlice(ids uuid.UUIDs, selector []model
 	return nil
 }
 
-func (s *LineItemAdjustmentService) GenerateAdjustments(cart *models.Cart, generatedLineItem *models.LineItem, context *models.ProductVariant) ([]models.LineItemAdjustment, *utils.ApplictaionError) {
+func (s *LineItemAdjustmentService) GenerateAdjustments(calculationContextData types.CalculationContextData, generatedLineItem *models.LineItem, context *models.ProductVariant) ([]models.LineItemAdjustment, *utils.ApplictaionError) {
 	lineItem := generatedLineItem
 
-	if !lineItem.AllowDiscounts || lineItem.IsReturn || len(cart.Discounts) == 0 {
+	if !lineItem.AllowDiscounts || lineItem.IsReturn || len(calculationContextData.Discounts) == 0 {
 		return nil, nil
 	}
 
 	var discount *models.Discount
-	for _, d := range cart.Discounts {
+	for _, d := range calculationContextData.Discounts {
 		if d.Rule.Type != models.DiscountRuleFreeShipping {
 			discount = &d
 			break
@@ -154,7 +153,7 @@ func (s *LineItemAdjustmentService) GenerateAdjustments(cart *models.Cart, gener
 
 	lineItem.Id = generatedLineItem.Id
 
-	amount, err := s.r.DiscountService().SetContext(s.ctx).CalculateDiscountForLineItem(discount.Id, lineItem, cart)
+	amount, err := s.r.DiscountService().SetContext(s.ctx).CalculateDiscountForLineItem(discount.Id, lineItem, calculationContextData)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +171,14 @@ func (s *LineItemAdjustmentService) GenerateAdjustments(cart *models.Cart, gener
 }
 
 func (s *LineItemAdjustmentService) CreateAdjustmentForLineItem(cart *models.Cart, lineItem *models.LineItem) ([]models.LineItemAdjustment, *utils.ApplictaionError) {
-	adjustments, err := s.GenerateAdjustments(cart, lineItem, lineItem.Variant)
+	adjustments, err := s.GenerateAdjustments(types.CalculationContextData{
+		Discounts:       cart.Discounts,
+		Items:           cart.Items,
+		Customer:        cart.Customer,
+		Region:          cart.Region,
+		ShippingAddress: cart.ShippingAddress,
+		ShippingMethods: cart.ShippingMethods,
+	}, lineItem, lineItem.Variant)
 	if err != nil {
 		return nil, err
 	}

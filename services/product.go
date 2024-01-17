@@ -31,7 +31,7 @@ func (s *ProductService) SetContext(context context.Context) *ProductService {
 	return s
 }
 
-func (s *ProductService) List(selector types.FilterableProduct, config sql.Options, q *string) ([]models.Product, *utils.ApplictaionError) {
+func (s *ProductService) List(selector types.FilterableProduct, config *sql.Options, q *string) ([]models.Product, *utils.ApplictaionError) {
 	products, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (s *ProductService) List(selector types.FilterableProduct, config sql.Optio
 	return products, nil
 }
 
-func (s *ProductService) ListAndCount(selector types.FilterableProduct, config sql.Options, q *string) ([]models.Product, *int64, *utils.ApplictaionError) {
+func (s *ProductService) ListAndCount(selector types.FilterableProduct, config *sql.Options, q *string) ([]models.Product, *int64, *utils.ApplictaionError) {
 	hasSalesChannelsRelation := false
 	for _, r := range config.Relations {
 		if r == "sales_channels" {
@@ -88,7 +88,7 @@ func (s *ProductService) ListAndCount(selector types.FilterableProduct, config s
 }
 
 func (s *ProductService) Count(selector models.Product) (*int64, *utils.ApplictaionError) {
-	query := sql.BuildQuery(selector, sql.Options{})
+	query := sql.BuildQuery(selector, &sql.Options{})
 
 	count, err := s.r.ProductRepository().Count(s.ctx, query)
 	if err != nil {
@@ -98,24 +98,22 @@ func (s *ProductService) Count(selector models.Product) (*int64, *utils.Applicta
 	return count, nil
 }
 
-func (s *ProductService) RetrieveById(id uuid.UUID, config sql.Options) (*models.Product, *utils.ApplictaionError) {
+func (s *ProductService) RetrieveById(id uuid.UUID, config *sql.Options) (*models.Product, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.Retrieve(models.Product{Model: core.Model{Id: id}}, config)
 }
 
-func (s *ProductService) RetrieveByHandle(productHandle string, config sql.Options) (*models.Product, *utils.ApplictaionError) {
+func (s *ProductService) RetrieveByHandle(productHandle string, config *sql.Options) (*models.Product, *utils.ApplictaionError) {
 	if productHandle == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"productHandle" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -123,19 +121,18 @@ func (s *ProductService) RetrieveByHandle(productHandle string, config sql.Optio
 	return s.Retrieve(models.Product{Handle: productHandle}, config)
 }
 
-func (s *ProductService) RetrieveByExternalId(externalId string, config sql.Options) (*models.Product, *utils.ApplictaionError) {
+func (s *ProductService) RetrieveByExternalId(externalId string, config *sql.Options) (*models.Product, *utils.ApplictaionError) {
 	if externalId == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"externalId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.Retrieve(models.Product{ExternalId: externalId}, config)
 }
 
-func (s *ProductService) Retrieve(selector models.Product, config sql.Options) (*models.Product, *utils.ApplictaionError) {
+func (s *ProductService) Retrieve(selector models.Product, config *sql.Options) (*models.Product, *utils.ApplictaionError) {
 	var res *models.Product
 
 	query := sql.BuildQuery(selector, config)
@@ -146,7 +143,7 @@ func (s *ProductService) Retrieve(selector models.Product, config sql.Options) (
 	return res, nil
 }
 
-func (s *ProductService) RetrieveVariants(id uuid.UUID, config sql.Options) ([]models.ProductVariant, *utils.ApplictaionError) {
+func (s *ProductService) RetrieveVariants(id uuid.UUID, config *sql.Options) ([]models.ProductVariant, *utils.ApplictaionError) {
 	requiredRelations := []string{"variants"}
 
 	config.Relations = append(config.Relations, requiredRelations...)
@@ -158,7 +155,7 @@ func (s *ProductService) RetrieveVariants(id uuid.UUID, config sql.Options) ([]m
 	return product.Variants, nil
 }
 
-func (s *ProductService) FilterProductsBySalesChannel(productIds uuid.UUIDs, salesChannelId uuid.UUID, config sql.Options) ([]models.Product, *utils.ApplictaionError) {
+func (s *ProductService) FilterProductsBySalesChannel(productIds uuid.UUIDs, salesChannelId uuid.UUID, config *sql.Options) ([]models.Product, *utils.ApplictaionError) {
 	requiredRelations := []string{"sales_channels"}
 
 	config.Relations = append(config.Relations, requiredRelations...)
@@ -202,7 +199,7 @@ func (s *ProductService) ListTagsByUsage(take int) ([]models.ProductTag, *utils.
 }
 
 func (s *ProductService) IsProductInSalesChannels(id uuid.UUID, salesChannelIds uuid.UUIDs) (bool, *utils.ApplictaionError) {
-	product, err := s.RetrieveById(id, sql.Options{Relations: []string{"sales_channels"}})
+	product, err := s.RetrieveById(id, &sql.Options{Relations: []string{"sales_channels"}})
 	if err != nil {
 		return false, err
 	}
@@ -219,34 +216,54 @@ func (s *ProductService) IsProductInSalesChannels(id uuid.UUID, salesChannelIds 
 	return false, nil
 }
 
-func (s *ProductService) Create(data *models.Product) (*models.Product, *utils.ApplictaionError) {
+func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product, *utils.ApplictaionError) {
 	var err *utils.ApplictaionError
 	var product *models.Product
 
 	if data.Thumbnail == "" && len(data.Images) > 0 {
-		product.Thumbnail = data.Images[0].Url
+		product.Thumbnail = data.Images[0]
 	}
 	if data.IsGiftcard {
 		product.Discountable = false
 	}
 
-	if data.ProfileId.UUID != uuid.Nil {
-		product.Profiles = []models.ShippingProfile{{Model: core.Model{Id: data.ProfileId.UUID}}}
+	if data.ProfileId != uuid.Nil {
+		product.Profiles = []models.ShippingProfile{{Model: core.Model{Id: data.ProfileId}}}
 	}
 	if len(data.Images) > 0 {
-		product.Images, err = s.r.ImageRepository().UpsertImages(data.Images)
+		var images []models.Image
+		for _, i := range data.Images {
+			images = append(images, models.Image{
+				Url: i,
+			})
+		}
+		product.Images, err = s.r.ImageRepository().UpsertImages(images)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if len(data.Tags) > 0 {
-		product.Tags, err = s.r.ProductTagRepository().UpsertTags(data.Tags)
+		var tags []models.ProductTag
+		for _, t := range data.Tags {
+			tags = append(tags, models.ProductTag{
+				Model: core.Model{
+					Id: t.Id,
+				},
+				Value: t.Value,
+			})
+		}
+		product.Tags, err = s.r.ProductTagRepository().UpsertTags(tags)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if data.Type != nil {
-		ty, err := s.r.ProductTypeRepository().UpsertType(data.Type)
+		ty, err := s.r.ProductTypeRepository().UpsertType(&models.ProductType{
+			Model: core.Model{
+				Id: data.Type.Id,
+			},
+			Value: data.Type.Value,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +281,7 @@ func (s *ProductService) Create(data *models.Product) (*models.Product, *utils.A
 				salesChannelIds = append(salesChannelIds, sc.Id)
 			}
 			for _, id := range salesChannelIds {
-				product.SalesChannels = append(data.SalesChannels, models.SalesChannel{Model: core.Model{Id: id}})
+				product.SalesChannels = append(product.SalesChannels, models.SalesChannel{Model: core.Model{Id: id}})
 			}
 		}
 	}
@@ -275,14 +292,14 @@ func (s *ProductService) Create(data *models.Product) (*models.Product, *utils.A
 			categoryIds = append(categoryIds, c.Id)
 		}
 		for _, id := range categoryIds {
-			product.Categories = append(data.Categories, models.ProductCategory{Model: core.Model{Id: id}})
+			product.Categories = append(product.Categories, models.ProductCategory{Model: core.Model{Id: id}})
 		}
 	}
 
 	if featurev2 {
 		if len(data.SalesChannels) > 0 {
 			for _, sc := range data.SalesChannels {
-				_, err = s.r.SalesChannelService().SetContext(s.ctx).AddProducts(sc.Id, uuid.UUIDs{data.Id})
+				_, err = s.r.SalesChannelService().SetContext(s.ctx).AddProducts(sc.Id, uuid.UUIDs{product.Id})
 				if err != nil {
 					return nil, err
 				}
@@ -291,24 +308,25 @@ func (s *ProductService) Create(data *models.Product) (*models.Product, *utils.A
 	}
 	product.Options = []models.ProductOption{}
 	for _, option := range data.Options {
-		if err := s.r.ProductOptionRepository().Save(s.ctx, &option); err != nil {
+		if err := s.r.ProductOptionRepository().Save(s.ctx, &models.ProductOption{Title: option.Title}); err != nil {
 			return nil, err
 		}
 		if err != nil {
 			return nil, err
 		}
-		product.Options = append(data.Options, option)
+		product.Options = append(product.Options, models.ProductOption{Title: option.Title})
 	}
 	if data.Variants != nil {
-		var variants []models.ProductVariant
+		var variants []types.CreateProductVariantInput
 		for _, variant := range data.Variants {
-			// var options []models.ProductOption
-			// for i, option := range variant.Options {
-			// 	options = append(options, ProductOption{OptionID: product.Options[i].ID, Option: option})
-			// }
-			variants = append(variants, models.ProductVariant{Options: variant.Options})
+			var options []types.ProductVariantOption
+			for i, option := range variant.Options {
+				options = append(options, types.ProductVariantOption{OptionId: product.Options[i].Id, Value: option.Value})
+			}
+			variant.Options = options
+			variants = append(variants, variant)
 		}
-		product.Variants, err = s.r.ProductVariantService().SetContext(s.ctx).Create(data.Id, nil, variants)
+		product.Variants, err = s.r.ProductVariantService().SetContext(s.ctx).Create(product.Id, nil, variants)
 		if err != nil {
 			return nil, err
 		}
@@ -318,7 +336,7 @@ func (s *ProductService) Create(data *models.Product) (*models.Product, *utils.A
 		return nil, err
 	}
 
-	result, err := s.RetrieveById(data.Id, sql.Options{Relations: []string{"options"}})
+	result, err := s.RetrieveById(product.Id, &sql.Options{Relations: []string{"options"}})
 	if err != nil {
 		return nil, err
 	}
@@ -329,85 +347,131 @@ func (s *ProductService) Create(data *models.Product) (*models.Product, *utils.A
 	return result, nil
 }
 
-func (s *ProductService) Update(id uuid.UUID, update *models.Product) (*models.Product, *utils.ApplictaionError) {
+func (s *ProductService) Update(id uuid.UUID, data *types.UpdateProductInput) (*models.Product, *utils.ApplictaionError) {
 	relations := []string{"tags", "images"}
-
-	data := update
 
 	feature := true
 	featurev2 := true
 	if feature {
 		relations = append(relations, "sales_channels")
 	}
-	product, err := s.RetrieveById(id, sql.Options{Relations: relations})
+	product, err := s.RetrieveById(id, &sql.Options{Relations: relations})
 	if err != nil {
 		return nil, err
 	}
 
-	if product.Thumbnail == "" && update.Thumbnail == "" && len(update.Images) > 0 {
-		data.Thumbnail = update.Images[0].Url
+	if product.Thumbnail == "" && data.Thumbnail == "" && len(data.Images) > 0 {
+		data.Thumbnail = data.Images[0]
 	}
 
-	if update.Type != nil {
-		t, err := s.r.ProductTypeRepository().UpsertType(update.Type)
+	if data.Type != nil {
+		t, err := s.r.ProductTypeRepository().UpsertType(&models.ProductType{
+			Model: core.Model{
+				Id: data.Type.Id,
+			},
+			Value: data.Type.Value,
+		})
 		if err != nil {
 			return nil, err
 		}
-		data.Type = t
+		product.Type = t
 	}
-	if len(update.Tags) > 0 {
-		t, err := s.r.ProductTagRepository().UpsertTags(update.Tags)
+	if len(data.Tags) > 0 {
+		var tags []models.ProductTag
+		for _, t := range data.Tags {
+			tags = append(tags, models.ProductTag{
+				Model: core.Model{
+					Id: t.Id,
+				},
+				Value: t.Value,
+			})
+		}
+		t, err := s.r.ProductTagRepository().UpsertTags(tags)
 		if err != nil {
 			return nil, err
 		}
-		data.Tags = t
+		product.Tags = t
 	}
-	if len(update.Categories) > 0 {
-		data.Categories = []models.ProductCategory{}
+	if len(data.Categories) > 0 {
+		product.Categories = []models.ProductCategory{}
 		var categoryIds uuid.UUIDs
-		for _, c := range update.Categories {
+		for _, c := range data.Categories {
 			categoryIds = append(categoryIds, c.Id)
 		}
 		for _, id := range categoryIds {
-			data.Categories = append(data.Categories, models.ProductCategory{Model: core.Model{Id: id}})
+			data.Categories = append(data.Categories, types.CreateProductProductCategoryInput{Id: id})
 		}
 	}
 	if feature && !featurev2 {
-		if len(update.SalesChannels) > 0 {
-			data.SalesChannels = []models.SalesChannel{}
+		if len(data.SalesChannels) > 0 {
+			product.SalesChannels = []models.SalesChannel{}
 			var salesChannelIds uuid.UUIDs
-			for _, sc := range update.SalesChannels {
+			for _, sc := range data.SalesChannels {
 				salesChannelIds = append(salesChannelIds, sc.Id)
 			}
 			for _, id := range salesChannelIds {
-				data.SalesChannels = append(data.SalesChannels, models.SalesChannel{Model: core.Model{Id: id}})
+				data.SalesChannels = append(data.SalesChannels, types.CreateProductProductSalesChannelInput{Id: id})
 			}
 		}
 	}
 
-	if len(update.Images) > 0 {
-		i, err := s.r.ImageRepository().UpsertImages(update.Images)
+	if len(data.Images) > 0 {
+		var images []models.Image
+		for _, i := range data.Images {
+			images = append(images, models.Image{
+				Url: i,
+			})
+		}
+		i, err := s.r.ImageRepository().UpsertImages(images)
 		if err != nil {
 			return nil, err
 		}
-		data.Images = i
+		product.Images = i
 	}
 
-	data.Metadata = update.Metadata
-	data.Id = product.Id
+	product.Metadata = utils.MergeMaps(product.Metadata, data.Metadata)
 
-	if err = s.r.ProductRepository().Save(s.ctx, data); err != nil {
+	var options []models.ProductOption
+	for _, o := range data.Options {
+		options = append(options, models.ProductOption{
+			Title: o.Title,
+		})
+	}
+
+	// if len(data.Variants) > 0 {
+	// 	var variants []models.ProductVariant
+	// 	for _, v := range data.Variants {
+	// 		variants = append(variants, models.ProductVariant{
+
+	// 		})
+	// 	}
+	// 	product.Variants = variants
+	// }
+
+	product.Title = data.Title
+	product.Subtitle = data.Subtitle
+	product.ProfileId = uuid.NullUUID{UUID: data.ProfileId}
+	product.Description = data.Description
+	product.IsGiftcard = data.IsGiftcard
+	product.Discountable = data.Discountable
+	product.Thumbnail = data.Thumbnail
+	product.Handle = data.Handle
+	product.Status = data.Status
+	product.CollectionId = uuid.NullUUID{UUID: data.CollectionId}
+	product.Options = options
+	product.Weight = data.Weight
+	product.Length = data.Length
+	product.Height = data.Height
+	product.Width = data.Width
+	product.HsCode = data.HSCode
+	product.OriginCountry = data.OriginCountry
+	product.MIdCode = data.MIdCode
+	product.Material = data.Material
+	product.Metadata = data.Metadata
+	product.ExternalId = data.ExternalId
+
+	if err = s.r.ProductRepository().Save(s.ctx, product); err != nil {
 		return nil, err
-	}
-	if featurev2 {
-		if len(update.SalesChannels) > 0 {
-			for _, sc := range update.SalesChannels {
-				_, err = s.r.SalesChannelService().SetContext(s.ctx).AddProducts(sc.Id, uuid.UUIDs{product.Id})
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
 	}
 	// err = s.eventBus_.Emit(ProductServiceEventsUpdated, map[string]interface{}{"id": product.ID, "fields": Object.keys(Update)})
 	// if err != nil {
@@ -417,7 +481,7 @@ func (s *ProductService) Update(id uuid.UUID, update *models.Product) (*models.P
 }
 
 func (s *ProductService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	product, err := s.RetrieveById(id, sql.Options{Relations: []string{"variants.prices", "variants.options"}})
+	product, err := s.RetrieveById(id, &sql.Options{Relations: []string{"variants.prices", "variants.options"}})
 	if err != nil {
 		return err
 	}
@@ -435,7 +499,7 @@ func (s *ProductService) Delete(id uuid.UUID) *utils.ApplictaionError {
 }
 
 func (s *ProductService) AddOption(id uuid.UUID, optionTitle string) (*models.Product, *utils.ApplictaionError) {
-	product, err := s.RetrieveById(id, sql.Options{})
+	product, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -475,7 +539,7 @@ func (s *ProductService) AddOption(id uuid.UUID, optionTitle string) (*models.Pr
 }
 
 func (s *ProductService) ReorderVariants(id uuid.UUID, variantOrder uuid.UUIDs) (*models.Product, *utils.ApplictaionError) {
-	product, err := s.RetrieveById(id, sql.Options{})
+	product, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -484,7 +548,6 @@ func (s *ProductService) ReorderVariants(id uuid.UUID, variantOrder uuid.UUIDs) 
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"models.Product variants and new variant order differ in length.",
-			"500",
 			nil,
 		)
 	}
@@ -514,8 +577,8 @@ func (s *ProductService) ReorderVariants(id uuid.UUID, variantOrder uuid.UUIDs) 
 	return product, nil
 }
 
-func (s *ProductService) UpdateOption(id uuid.UUID, optionId uuid.UUID, data *models.ProductOption) (*models.Product, *utils.ApplictaionError) {
-	product, err := s.RetrieveById(id, sql.Options{})
+func (s *ProductService) UpdateOption(id uuid.UUID, optionId uuid.UUID, data *types.ProductOptionInput) (*models.Product, *utils.ApplictaionError) {
+	product, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -533,13 +596,17 @@ func (s *ProductService) UpdateOption(id uuid.UUID, optionId uuid.UUID, data *mo
 
 	var option *models.ProductOption
 
-	query := sql.BuildQuery(models.ProductOption{Model: core.Model{Id: optionId}}, sql.Options{})
+	query := sql.BuildQuery(models.ProductOption{Model: core.Model{Id: optionId}}, &sql.Options{})
 
 	if err := s.r.ProductOptionRepository().FindOne(s.ctx, option, query); err != nil {
 		return nil, err
 	}
 
-	data.Id = option.Id
+	if data.Values != nil {
+		option.Values = append(option.Values, data.Values...)
+	}
+
+	option.Title = data.Title
 
 	if err := s.r.ProductOptionRepository().Save(s.ctx, option); err != nil {
 		return nil, err
@@ -549,7 +616,7 @@ func (s *ProductService) UpdateOption(id uuid.UUID, optionId uuid.UUID, data *mo
 }
 
 func (s *ProductService) RetrieveOptionByTitle(title string, id uuid.UUID) (*models.ProductOption, *utils.ApplictaionError) {
-	product, err := s.RetrieveById(id, sql.Options{})
+	product, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -564,14 +631,14 @@ func (s *ProductService) RetrieveOptionByTitle(title string, id uuid.UUID) (*mod
 }
 
 func (s *ProductService) DeleteOption(id uuid.UUID, optionId uuid.UUID) (*models.Product, *utils.ApplictaionError) {
-	product, err := s.RetrieveById(id, sql.Options{})
+	product, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
 	var option *models.ProductOption
 
-	query := sql.BuildQuery(models.ProductOption{Model: core.Model{Id: optionId}}, sql.Options{})
+	query := sql.BuildQuery(models.ProductOption{Model: core.Model{Id: optionId}}, &sql.Options{})
 
 	if err := s.r.ProductOptionRepository().FindOne(s.ctx, option, query); err != nil {
 		return nil, err
@@ -620,7 +687,7 @@ func (s *ProductService) DeleteOption(id uuid.UUID, optionId uuid.UUID) (*models
 func (s *ProductService) UpdateShippingProfile(productIds uuid.UUIDs, profileId uuid.UUID) ([]models.Product, *utils.ApplictaionError) {
 	var products []models.Product
 	for _, id := range productIds {
-		product, err := s.RetrieveById(id, sql.Options{})
+		product, err := s.RetrieveById(id, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -663,7 +730,7 @@ func (s *ProductService) getSalesChannelModuleChannels(products []models.Product
 		productIds = append(productIds, product.Id)
 	}
 
-	query := sql.BuildQuery(models.Product{}, sql.Options{
+	query := sql.BuildQuery(models.Product{}, &sql.Options{
 		Specification: []sql.Specification{sql.In("id", productIds)},
 		Selects:       []string{"sales_channels", "id"},
 	})

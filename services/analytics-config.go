@@ -5,6 +5,7 @@ import (
 
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
@@ -34,7 +35,7 @@ func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsCon
 		models.AnalyticsConfig{
 			UserId: userId,
 		},
-		sql.Options{},
+		&sql.Options{},
 	)); err != nil {
 		return nil, err
 	}
@@ -42,7 +43,12 @@ func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsCon
 	return model, nil
 }
 
-func (s *AnalyticsConfigService) Create(model *models.AnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
+func (s *AnalyticsConfigService) Create(userId uuid.UUID, data *types.CreateAnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
+	model := &models.AnalyticsConfig{
+		UserId:    userId,
+		OptOut:    data.OptOut,
+		Anonymize: data.Anonymize,
+	}
 	if err := s.r.AnalyticsConfigRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
@@ -50,7 +56,12 @@ func (s *AnalyticsConfigService) Create(model *models.AnalyticsConfig) (*models.
 	return model, nil
 }
 
-func (s *AnalyticsConfigService) Update(model *models.AnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
+func (s *AnalyticsConfigService) Update(userId uuid.UUID, data *types.UpdateAnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
+	model := &models.AnalyticsConfig{
+		UserId:    userId,
+		OptOut:    data.OptOut,
+		Anonymize: data.Anonymize,
+	}
 	if err := s.r.AnalyticsConfigRepository().Upsert(s.ctx, model); err != nil {
 		return nil, err
 	}

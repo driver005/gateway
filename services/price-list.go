@@ -32,12 +32,11 @@ func (s *PriceListService) SetContext(context context.Context) *PriceListService
 	return s
 }
 
-func (s *PriceListService) Retrieve(id uuid.UUID, config sql.Options) (*models.PriceList, *utils.ApplictaionError) {
+func (s *PriceListService) Retrieve(id uuid.UUID, config *sql.Options) (*models.PriceList, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -52,7 +51,7 @@ func (s *PriceListService) Retrieve(id uuid.UUID, config sql.Options) (*models.P
 	return res, nil
 }
 
-func (s *PriceListService) List(selector types.FilterablePriceList, config sql.Options, q *string) ([]models.PriceList, *utils.ApplictaionError) {
+func (s *PriceListService) List(selector types.FilterablePriceList, config *sql.Options, q *string) ([]models.PriceList, *utils.ApplictaionError) {
 	res, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -60,8 +59,8 @@ func (s *PriceListService) List(selector types.FilterablePriceList, config sql.O
 	return res, nil
 }
 
-func (s *PriceListService) ListAndCount(selector types.FilterablePriceList, config sql.Options, q *string) ([]models.PriceList, *int64, *utils.ApplictaionError) {
-	if reflect.DeepEqual(config, sql.Options{}) {
+func (s *PriceListService) ListAndCount(selector types.FilterablePriceList, config *sql.Options, q *string) ([]models.PriceList, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -75,7 +74,6 @@ func (s *PriceListService) ListPriceListsVariantIdsMap(priceListIds uuid.UUIDs) 
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"priceListIds" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -86,13 +84,24 @@ func (s *PriceListService) ListPriceListsVariantIdsMap(priceListIds uuid.UUIDs) 
 	return priceListsVariantIdsMap, nil
 }
 
-func (s *PriceListService) Create(data *models.PriceList) (*models.PriceList, *utils.ApplictaionError) {
+func (s *PriceListService) Create(data *types.CreatePriceListInput) (*models.PriceList, *utils.ApplictaionError) {
 	feature := true
-	if !feature {
-		data.IncludesTax = false
+
+	model := &models.PriceList{
+		Name:        data.Name,
+		Description: data.Description,
+		Type:        data.Type,
+		Status:      data.Status,
+		StartsAt:    data.StartsAt,
+		EndsAt:      data.EndsAt,
+		IncludesTax: data.IncludesTax,
 	}
 
-	if err := s.r.PriceListRepository().Save(s.ctx, data); err != nil {
+	if !feature {
+		model.IncludesTax = false
+	}
+
+	if err := s.r.PriceListRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
@@ -101,56 +110,62 @@ func (s *PriceListService) Create(data *models.PriceList) (*models.PriceList, *u
 		if err != nil {
 			return nil, err
 		}
-		_, err = s.r.MoneyAmountRepository().AddPriceListPrices(data.Id, prices, false)
+		_, err = s.r.MoneyAmountRepository().AddPriceListPrices(model.Id, prices, false)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if data.CustomerGroups != nil {
-		err := s.UpsertCustomerGroups(data.Id, data.CustomerGroups)
+		err := s.UpsertCustomerGroups(model.Id, data.CustomerGroups)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return s.Retrieve(data.Id, sql.Options{Relations: []string{"prices", "customer_groups"}})
+	return s.Retrieve(model.Id, &sql.Options{Relations: []string{"prices", "customer_groups"}})
 }
 
-func (s *PriceListService) Update(id uuid.UUID, Update *models.PriceList) (*models.PriceList, *utils.ApplictaionError) {
-	priceList, err := s.Retrieve(id, sql.Options{Selects: []string{"id"}})
+func (s *PriceListService) Update(id uuid.UUID, data *types.UpdatePriceListInput) (*models.PriceList, *utils.ApplictaionError) {
+	priceList, err := s.Retrieve(id, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return nil, err
 	}
 	feature := true
 	if !feature {
-		Update.IncludesTax = false
+		priceList.IncludesTax = false
 	}
-	if Update.Prices != nil {
-		prices, err := s.AddCurrencyFromRegion(Update.Prices)
+	if data.Prices != nil {
+		prices, err := s.AddCurrencyFromRegion(data.Prices)
 		if err != nil {
 			return nil, err
 		}
-		_, err = s.r.MoneyAmountRepository().AddPriceListPrices(Update.Id, prices, false)
+		_, err = s.r.MoneyAmountRepository().AddPriceListPrices(priceList.Id, prices, false)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if Update.CustomerGroups != nil {
-		err := s.UpsertCustomerGroups(Update.Id, Update.CustomerGroups)
+	if data.CustomerGroups != nil {
+		err := s.UpsertCustomerGroups(priceList.Id, data.CustomerGroups)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	Update.Id = priceList.Id
+	priceList.Name = data.Name
+	priceList.Description = data.Description
+	priceList.StartsAt = data.StartsAt
+	priceList.EndsAt = data.EndsAt
+	priceList.Status = data.Status
+	priceList.Type = data.Type
+	priceList.IncludesTax = data.IncludesTax
 
-	if err := s.r.PriceListRepository().Save(s.ctx, Update); err != nil {
+	if err := s.r.PriceListRepository().Save(s.ctx, priceList); err != nil {
 		return nil, err
 	}
-	return s.Retrieve(Update.Id, sql.Options{Relations: []string{"prices", "customer_groups"}})
+	return s.Retrieve(priceList.Id, &sql.Options{Relations: []string{"prices", "customer_groups"}})
 }
 
 func (s *PriceListService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	priceList, err := s.Retrieve(id, sql.Options{})
+	priceList, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -163,8 +178,8 @@ func (s *PriceListService) Delete(id uuid.UUID) *utils.ApplictaionError {
 	return nil
 }
 
-func (s *PriceListService) AddPrices(id uuid.UUID, prices []models.MoneyAmount, replace bool) (*models.PriceList, *utils.ApplictaionError) {
-	priceList, err := s.Retrieve(id, sql.Options{Selects: []string{"id"}})
+func (s *PriceListService) AddPrices(id uuid.UUID, prices []types.PriceListPriceCreateInput, replace bool) (*models.PriceList, *utils.ApplictaionError) {
+	priceList, err := s.Retrieve(id, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return nil, err
 	}
@@ -176,11 +191,11 @@ func (s *PriceListService) AddPrices(id uuid.UUID, prices []models.MoneyAmount, 
 	if err != nil {
 		return nil, err
 	}
-	return s.Retrieve(priceList.Id, sql.Options{Relations: []string{"prices"}})
+	return s.Retrieve(priceList.Id, &sql.Options{Relations: []string{"prices"}})
 }
 
 func (s *PriceListService) DeletePrices(id uuid.UUID, priceIds uuid.UUIDs) *utils.ApplictaionError {
-	priceList, err := s.Retrieve(id, sql.Options{Selects: []string{"id"}})
+	priceList, err := s.Retrieve(id, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return err
 	}
@@ -192,7 +207,7 @@ func (s *PriceListService) DeletePrices(id uuid.UUID, priceIds uuid.UUIDs) *util
 }
 
 func (s *PriceListService) ClearPrices(id uuid.UUID) *utils.ApplictaionError {
-	priceList, err := s.Retrieve(id, sql.Options{Selects: []string{"id"}})
+	priceList, err := s.Retrieve(id, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return err
 	}
@@ -202,14 +217,14 @@ func (s *PriceListService) ClearPrices(id uuid.UUID) *utils.ApplictaionError {
 	return nil
 }
 
-func (s *PriceListService) UpsertCustomerGroups(id uuid.UUID, customerGroups []models.CustomerGroup) *utils.ApplictaionError {
-	priceList, err := s.Retrieve(id, sql.Options{Selects: []string{"id"}})
+func (s *PriceListService) UpsertCustomerGroups(id uuid.UUID, customerGroups []types.CustomerGroups) *utils.ApplictaionError {
+	priceList, err := s.Retrieve(id, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return err
 	}
 	var groups []models.CustomerGroup
 	for _, cg := range customerGroups {
-		customerGroup, err := s.r.CustomerGroupService().Retrieve(cg.Id, sql.Options{})
+		customerGroup, err := s.r.CustomerGroupService().Retrieve(cg.Id, &sql.Options{})
 		if err != nil {
 			return err
 		}
@@ -224,7 +239,7 @@ func (s *PriceListService) UpsertCustomerGroups(id uuid.UUID, customerGroups []m
 	return nil
 }
 
-func (s *PriceListService) ListProducts(id uuid.UUID, selector types.FilterableProduct, config sql.Options, requiresPriceList bool) ([]models.Product, *int64, *utils.ApplictaionError) {
+func (s *PriceListService) ListProducts(id uuid.UUID, selector types.FilterableProduct, config *sql.Options, requiresPriceList bool) ([]models.Product, *int64, *utils.ApplictaionError) {
 	products, count, err := s.r.ProductService().SetContext(s.ctx).ListAndCount(selector, config, nil)
 	if err != nil {
 		return nil, nil, err
@@ -249,7 +264,7 @@ func (s *PriceListService) ListProducts(id uuid.UUID, selector types.FilterableP
 	return productsWithPrices, count, nil
 }
 
-func (s *PriceListService) ListVariants(id uuid.UUID, selector types.FilterableProductVariant, config sql.Options, requiresPriceList bool) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
+func (s *PriceListService) ListVariants(id uuid.UUID, selector types.FilterableProductVariant, config *sql.Options, requiresPriceList bool) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
 	variants, count, err := s.r.ProductVariantService().ListAndCount(selector, config, nil)
 	if err != nil {
 		return nil, nil, err
@@ -268,7 +283,7 @@ func (s *PriceListService) ListVariants(id uuid.UUID, selector types.FilterableP
 }
 
 func (s *PriceListService) DeleteProductPrices(id uuid.UUID, productIds uuid.UUIDs) (uuid.UUIDs, *int, *utils.ApplictaionError) {
-	products, count, err := s.ListProducts(id, types.FilterableProduct{FilterModel: core.FilterModel{Id: productIds}}, sql.Options{Relations: []string{"variants"}}, true)
+	products, count, err := s.ListProducts(id, types.FilterableProduct{FilterModel: core.FilterModel{Id: productIds}}, &sql.Options{Relations: []string{"variants"}}, true)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -293,7 +308,7 @@ func (s *PriceListService) DeleteProductPrices(id uuid.UUID, productIds uuid.UUI
 }
 
 func (s *PriceListService) DeleteVariantPrices(id uuid.UUID, variantIds uuid.UUIDs) (uuid.UUIDs, *int, *utils.ApplictaionError) {
-	variants, count, err := s.ListVariants(id, types.FilterableProductVariant{FilterModel: core.FilterModel{Id: variantIds}}, sql.Options{}, true)
+	variants, count, err := s.ListVariants(id, types.FilterableProductVariant{FilterModel: core.FilterModel{Id: variantIds}}, &sql.Options{}, true)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -315,13 +330,13 @@ func (s *PriceListService) DeleteVariantPrices(id uuid.UUID, variantIds uuid.UUI
 	return priceIds, gox.NewInt(len(priceIds)), nil
 }
 
-func (s *PriceListService) AddCurrencyFromRegion(prices []models.MoneyAmount) ([]models.MoneyAmount, *utils.ApplictaionError) {
+func (s *PriceListService) AddCurrencyFromRegion(prices []types.PriceListPriceCreateInput) ([]models.MoneyAmount, *utils.ApplictaionError) {
 	var regionIds uuid.UUIDs
 	var pricesData []models.MoneyAmount
 	for _, p := range prices {
-		regionIds = append(regionIds, p.RegionId.UUID)
+		regionIds = append(regionIds, p.RegionId)
 	}
-	regions, err := s.r.RegionService().SetContext(s.ctx).List(models.Region{}, sql.Options{Specification: []sql.Specification{sql.In("id", regionIds)}})
+	regions, err := s.r.RegionService().SetContext(s.ctx).List(models.Region{}, &sql.Options{Specification: []sql.Specification{sql.In("id", regionIds)}})
 	if err != nil {
 		return nil, err
 	}
@@ -330,11 +345,18 @@ func (s *PriceListService) AddCurrencyFromRegion(prices []models.MoneyAmount) ([
 		regionsMap[r.Id] = r
 	}
 	for _, price := range prices {
-		if price.RegionId.UUID != uuid.Nil {
-			region := regionsMap[price.RegionId.UUID]
+		if price.RegionId != uuid.Nil {
+			region := regionsMap[price.RegionId]
 			price.CurrencyCode = region.CurrencyCode
 		}
-		pricesData = append(pricesData, price)
+		pricesData = append(pricesData, models.MoneyAmount{
+			RegionId:     uuid.NullUUID{UUID: price.RegionId},
+			CurrencyCode: price.CurrencyCode,
+			VariantId:    uuid.NullUUID{UUID: price.VariantId},
+			Amount:       price.Amount,
+			MinQuantity:  price.MinQuantity,
+			MaxQuantity:  price.MaxQuantity,
+		})
 	}
 	return pricesData, nil
 }

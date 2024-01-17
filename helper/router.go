@@ -1,49 +1,51 @@
 package helper
 
-import (
-	"github.com/julienschmidt/httprouter"
+// package helper
 
-	"github.com/ory/x/serverx"
-)
+// import (
+// 	"github.com/julienschmidt/httprouter"
 
-type Router struct {
-	*httprouter.Router
-}
+// 	"github.com/ory/x/serverx"
+// )
 
-type RouterAdmin struct {
-	*httprouter.Router
-}
+// type Router struct {
+// 	*httprouter.Router
+// }
 
-type RouterPublic struct {
-	*httprouter.Router
-}
+// type RouterAdmin struct {
+// 	*httprouter.Router
+// }
 
-func (r *RouterPublic) RouterAdmin() *RouterAdmin {
-	return &RouterAdmin{Router: r.Router}
-}
+// type RouterPublic struct {
+// 	*httprouter.Router
+// }
 
-func (r *RouterAdmin) RouterPublic() *RouterPublic {
-	return &RouterPublic{Router: r.Router}
-}
+// func (r *RouterPublic) RouterAdmin() *RouterAdmin {
+// 	return &RouterAdmin{Router: r.Router}
+// }
 
-func NewRouter() *httprouter.Router {
-	router := httprouter.New()
-	router.NotFound = serverx.DefaultNotFoundHandler
-	return router
-}
+// func (r *RouterAdmin) RouterPublic() *RouterPublic {
+// 	return &RouterPublic{Router: r.Router}
+// }
 
-func NewRouterPublic() *RouterPublic {
-	router := httprouter.New()
-	router.NotFound = serverx.DefaultNotFoundHandler
-	return &RouterPublic{
-		Router: router,
-	}
-}
+// func NewRouter() *httprouter.Router {
+// 	router := httprouter.New()
+// 	router.NotFound = serverx.DefaultNotFoundHandler
+// 	return router
+// }
 
-func NewRouterAdmin() *RouterAdmin {
-	router := httprouter.New()
-	router.NotFound = serverx.DefaultNotFoundHandler
-	return &RouterAdmin{
-		Router: router,
-	}
-}
+// func NewRouterPublic() *RouterPublic {
+// 	router := httprouter.New()
+// 	router.NotFound = serverx.DefaultNotFoundHandler
+// 	return &RouterPublic{
+// 		Router: router,
+// 	}
+// }
+
+// func NewRouterAdmin() *RouterAdmin {
+// 	router := httprouter.New()
+// 	router.NotFound = serverx.DefaultNotFoundHandler
+// 	return &RouterAdmin{
+// 		Router: router,
+// 	}
+// }

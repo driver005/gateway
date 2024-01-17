@@ -29,10 +29,10 @@ func (s *StagedJobService) SetContext(context context.Context) *StagedJobService
 	return s
 }
 
-func (s *StagedJobService) List(selector models.StagedJob, config sql.Options) ([]models.StagedJob, *utils.ApplictaionError) {
+func (s *StagedJobService) List(selector models.StagedJob, config *sql.Options) ([]models.StagedJob, *utils.ApplictaionError) {
 	var res []models.StagedJob
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -48,7 +48,7 @@ func (s *StagedJobService) List(selector models.StagedJob, config sql.Options) (
 
 func (s *StagedJobService) Delete(stagedJobIds uuid.UUIDs) *utils.ApplictaionError {
 	var data []models.StagedJob
-	query := sql.BuildQuery(models.StagedJob{}, sql.Options{
+	query := sql.BuildQuery(models.StagedJob{}, &sql.Options{
 		Specification: []sql.Specification{sql.In("id", stagedJobIds)},
 	})
 	if err := s.r.StagedJobRepository().Find(s.ctx, data, query); err != nil {

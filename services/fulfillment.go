@@ -89,7 +89,6 @@ func (s *FulfillmentService) ValidateFulfillmentLineItem(item *models.LineItem, 
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			"Cannot find any items",
-			"500",
 			nil,
 		)
 	}
@@ -97,7 +96,6 @@ func (s *FulfillmentService) ValidateFulfillmentLineItem(item *models.LineItem, 
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Cannot fulfill more items than have been purchased",
-			"500",
 			nil,
 		)
 	}
@@ -108,12 +106,11 @@ func (s *FulfillmentService) ValidateFulfillmentLineItem(item *models.LineItem, 
 	}, nil
 }
 
-func (s *FulfillmentService) Retrieve(fulfillmentId uuid.UUID, config sql.Options) (*models.Fulfillment, *utils.ApplictaionError) {
+func (s *FulfillmentService) Retrieve(fulfillmentId uuid.UUID, config *sql.Options) (*models.Fulfillment, *utils.ApplictaionError) {
 	if fulfillmentId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"fulfillmentId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -123,7 +120,6 @@ func (s *FulfillmentService) Retrieve(fulfillmentId uuid.UUID, config sql.Option
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Fulfillment with id `+fulfillmentId.String()+` was not found`,
-			"500",
 			nil,
 		)
 	}
@@ -179,11 +175,10 @@ func (s *FulfillmentService) CancelFulfillment(fulfillmentId uuid.UUID, fulfillm
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Invalid fulfillmentOrID type",
-			"500",
 			nil,
 		)
 	}
-	fulfillment, err := s.Retrieve(id, sql.Options{})
+	fulfillment, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +187,6 @@ func (s *FulfillmentService) CancelFulfillment(fulfillmentId uuid.UUID, fulfillm
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"The fulfillment has already been shipped. Shipped fulfillments cannot be canceled",
-			"500",
 			nil,
 		)
 	}
@@ -204,13 +198,13 @@ func (s *FulfillmentService) CancelFulfillment(fulfillmentId uuid.UUID, fulfillm
 	fulfillment.CanceledAt = new(time.Time)
 
 	for _, item := range fulfillment.Items {
-		litem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(item.ItemId.UUID, sql.Options{})
+		litem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(item.ItemId.UUID, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
 		fulfilledQuantity := litem.FulfilledQuantity - item.Quantity
 
-		_, err = s.r.LineItemService().SetContext(s.ctx).Update(litem.Id, nil, &models.LineItem{FulfilledQuantity: fulfilledQuantity}, sql.Options{})
+		_, err = s.r.LineItemService().SetContext(s.ctx).Update(litem.Id, nil, &models.LineItem{FulfilledQuantity: fulfilledQuantity}, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -223,8 +217,8 @@ func (s *FulfillmentService) CancelFulfillment(fulfillmentId uuid.UUID, fulfillm
 	return fulfillment, nil
 }
 
-func (s *FulfillmentService) CreateShipment(fulfillmentId uuid.UUID, trackingLinks []models.TrackingLink, config *models.Fulfillment) (*models.Fulfillment, *utils.ApplictaionError) {
-	fulfillment, err := s.Retrieve(fulfillmentId, sql.Options{})
+func (s *FulfillmentService) CreateShipment(fulfillmentId uuid.UUID, trackingLinks []models.TrackingLink, config *types.CreateShipmentConfig) (*models.Fulfillment, *utils.ApplictaionError) {
+	fulfillment, err := s.Retrieve(fulfillmentId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +226,6 @@ func (s *FulfillmentService) CreateShipment(fulfillmentId uuid.UUID, trackingLin
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"models.Fulfillment has been canceled",
-			"500",
 			nil,
 		)
 	}

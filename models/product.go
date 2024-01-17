@@ -47,7 +47,7 @@ type Product struct {
 	Material string `json:"material" gorm:"default:null"`
 
 	// The Manufacturers Identification code that identifies the manufacturer of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	MidCode string `json:"mid_code" gorm:"default:null"`
+	MIdCode uuid.UUID `json:"mid_code" gorm:"default:null"`
 
 	// The Product Options that are defined for the Product. Product Variants of the Product will have a unique combination of Product Option Values. Available if the relation `options` is expanded.
 	Options []ProductOption `json:"options" gorm:"foreignKey:id"`

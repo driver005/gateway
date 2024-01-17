@@ -36,7 +36,7 @@ func (s *SwapService) SetContext(context context.Context) *SwapService {
 	return s
 }
 
-func (s *SwapService) transformQueryForCart(config sql.Options) map[string]sql.Options {
+func (s *SwapService) transformQueryForCart(config *sql.Options) map[string]*sql.Options {
 	selects := config.Selects
 	relations := config.Relations
 	var cartSelects []string
@@ -87,13 +87,13 @@ func (s *SwapService) transformQueryForCart(config sql.Options) map[string]sql.O
 		}
 	}
 
-	res := make(map[string]sql.Options)
+	res := make(map[string]*sql.Options)
 
-	res["swap"] = sql.Options{
+	res["swap"] = &sql.Options{
 		Selects:   selects,
 		Relations: relations,
 	}
-	res["cart"] = sql.Options{
+	res["cart"] = &sql.Options{
 		Selects:   cartSelects,
 		Relations: cartRelations,
 	}
@@ -101,12 +101,11 @@ func (s *SwapService) transformQueryForCart(config sql.Options) map[string]sql.O
 	return res
 }
 
-func (s *SwapService) Retrieve(swapId uuid.UUID, config sql.Options) (*models.Swap, *utils.ApplictaionError) {
+func (s *SwapService) Retrieve(swapId uuid.UUID, config *sql.Options) (*models.Swap, *utils.ApplictaionError) {
 	if swapId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			`"swapId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -119,7 +118,7 @@ func (s *SwapService) Retrieve(swapId uuid.UUID, config sql.Options) (*models.Sw
 	}
 
 	if newConfig["cart"].Selects != nil || newConfig["cart"].Relations != nil {
-		cart, err := s.r.CartService().SetContext(s.ctx).Retrieve(swap.CartId.UUID, sql.Options{
+		cart, err := s.r.CartService().SetContext(s.ctx).Retrieve(swap.CartId.UUID, &sql.Options{
 			Selects:   newConfig["cart"].Selects,
 			Relations: newConfig["cart"].Relations,
 		}, TotalsConfig{})
@@ -134,7 +133,7 @@ func (s *SwapService) Retrieve(swapId uuid.UUID, config sql.Options) (*models.Sw
 
 func (s *SwapService) RetrieveByCartId(cartId uuid.UUID, relations []string) (*models.Swap, *utils.ApplictaionError) {
 	var swap *models.Swap
-	query := sql.BuildQuery(models.Swap{CartId: uuid.NullUUID{UUID: cartId}}, sql.Options{
+	query := sql.BuildQuery(models.Swap{CartId: uuid.NullUUID{UUID: cartId}}, &sql.Options{
 		Relations: relations,
 	})
 	if err := s.r.SwapRepository().FindOne(s.ctx, swap, query); err != nil {
@@ -144,7 +143,7 @@ func (s *SwapService) RetrieveByCartId(cartId uuid.UUID, relations []string) (*m
 	return swap, nil
 }
 
-func (s *SwapService) List(selector models.Swap, config sql.Options) ([]models.Swap, *utils.ApplictaionError) {
+func (s *SwapService) List(selector models.Swap, config *sql.Options) ([]models.Swap, *utils.ApplictaionError) {
 	res, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -153,8 +152,8 @@ func (s *SwapService) List(selector models.Swap, config sql.Options) ([]models.S
 	return res, nil
 }
 
-func (s *SwapService) ListAndCount(selector models.Swap, config sql.Options) ([]models.Swap, *int64, *utils.ApplictaionError) {
-	if reflect.DeepEqual(config, sql.Options{}) {
+func (s *SwapService) ListAndCount(selector models.Swap, config *sql.Options) ([]models.Swap, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -171,17 +170,16 @@ func (s *SwapService) ListAndCount(selector models.Swap, config sql.Options) ([]
 	return res, count, nil
 }
 
-func (s *SwapService) Create(order *models.Order, returnItems []models.ReturnItem, additionalItems []models.LineItem, returnShipping *models.ShippingMethod, custom map[string]interface{}) (*models.Swap, *utils.ApplictaionError) {
+func (s *SwapService) Create(order *models.Order, returnItems []types.OrderReturnItem, additionalItems []models.LineItem, returnShipping *types.CreateClaimReturnShippingInput, custom map[string]interface{}) (*models.Swap, *utils.ApplictaionError) {
 	noNotification, _ := custom["no_notification"].(bool)
 	idempotencyKey, _ := custom["idempotency_key"].(string)
 	allowBackorder, _ := custom["allow_backorder"].(bool)
-	locationId, _ := custom["location_id"].(string)
+	locationId, _ := custom["location_id"].(uuid.UUID)
 
 	if order.PaymentStatus != models.PaymentStatusCaptured {
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Cannot swap an order that has not been captured",
-			"500",
 			nil,
 		)
 	}
@@ -189,7 +187,6 @@ func (s *SwapService) Create(order *models.Order, returnItems []models.ReturnIte
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Cannot swap an order that has not been fulfilled",
-			"500",
 			nil,
 		)
 	}
@@ -199,7 +196,6 @@ func (s *SwapService) Create(order *models.Order, returnItems []models.ReturnIte
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Cannot Create a swap on a canceled item.",
-			"500",
 			nil,
 		)
 	}
@@ -246,9 +242,9 @@ func (s *SwapService) Create(order *models.Order, returnItems []models.ReturnIte
 		return nil, err
 	}
 
-	data := &models.Return{
-		SwapId:         uuid.NullUUID{UUID: res.Id},
-		OrderId:        uuid.NullUUID{UUID: order.Id},
+	data := &types.CreateReturnInput{
+		SwapId:         res.Id,
+		OrderId:        order.Id,
 		Items:          returnItems,
 		ShippingMethod: returnShipping,
 		NoNotification: evaluatedNoNotification,
@@ -263,7 +259,7 @@ func (s *SwapService) Create(order *models.Order, returnItems []models.ReturnIte
 }
 
 func (s *SwapService) ProcessDifference(swapId uuid.UUID) (*models.Swap, *utils.ApplictaionError) {
-	swap, err := s.Retrieve(swapId, sql.Options{
+	swap, err := s.Retrieve(swapId, &sql.Options{
 		Relations: []string{"payment", "order", "order.payments"},
 	})
 	if err != nil {
@@ -274,7 +270,6 @@ func (s *SwapService) ProcessDifference(swapId uuid.UUID) (*models.Swap, *utils.
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Canceled swap cannot be processed",
-			"500",
 			nil,
 		)
 	}
@@ -282,7 +277,6 @@ func (s *SwapService) ProcessDifference(swapId uuid.UUID) (*models.Swap, *utils.
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Cannot process a swap that hasn't been confirmed by the customer",
-			"500",
 			nil,
 		)
 	}
@@ -334,7 +328,7 @@ func (s *SwapService) ProcessDifference(swapId uuid.UUID) (*models.Swap, *utils.
 }
 
 func (s *SwapService) Update(swapId uuid.UUID, Update *models.Swap) (*models.Swap, *utils.ApplictaionError) {
-	swap, err := s.Retrieve(swapId, sql.Options{})
+	swap, err := s.Retrieve(swapId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -353,8 +347,8 @@ func (s *SwapService) Update(swapId uuid.UUID, Update *models.Swap) (*models.Swa
 	return Update, nil
 }
 
-func (s *SwapService) CreateCart(swapId uuid.UUID, customShippingOptions []models.CustomShippingOption, context map[string]interface{}) (*models.Swap, *utils.ApplictaionError) {
-	swap, err := s.Retrieve(swapId, sql.Options{
+func (s *SwapService) CreateCart(swapId uuid.UUID, customShippingOptions []types.CreateCustomShippingOptionInput, context map[string]interface{}) (*models.Swap, *utils.ApplictaionError) {
+	swap, err := s.Retrieve(swapId, &sql.Options{
 		Relations: []string{
 			"order.items.variant.product.profiles",
 			"order.swaps",
@@ -380,7 +374,6 @@ func (s *SwapService) CreateCart(swapId uuid.UUID, customShippingOptions []model
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Canceled swap cannot be used to Create a cart",
-			"500",
 			nil,
 		)
 	}
@@ -388,36 +381,35 @@ func (s *SwapService) CreateCart(swapId uuid.UUID, customShippingOptions []model
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"A cart has already been created for the swap",
-			"500",
 			nil,
 		)
 	}
 
 	order := swap.Order
-	var discounts []models.Discount
+	var discounts []types.Discount
 	if order.Discounts != nil {
 		for _, discount := range order.Discounts {
 			if discount.Rule.Type != "free_shipping" {
-				discounts = append(discounts, discount)
+				discounts = append(discounts, types.Discount{
+					Code: discount.Code,
+				})
 			}
 		}
 	}
 
 	salesChannelId, _ := context["sales_channel_id"].(uuid.UUID)
-	cart, err := s.r.CartService().SetContext(s.ctx).Create(&models.Cart{
-		Model: core.Model{
-			Metadata: core.JSONB{
-				"swap_id":         swap.Id,
-				"parent_order_id": order.Id,
-			},
+	cart, err := s.r.CartService().SetContext(s.ctx).Create(&types.CartCreateProps{
+		Metadata: core.JSONB{
+			"swap_id":         swap.Id,
+			"parent_order_id": order.Id,
 		},
 		Discounts:         discounts,
 		Email:             order.Email,
-		BillingAddressId:  order.BillingAddressId,
-		ShippingAddressId: order.ShippingAddressId,
-		RegionId:          order.RegionId,
-		CustomerId:        order.CustomerId,
-		SalesChannelId:    uuid.NullUUID{UUID: salesChannelId},
+		BillingAddressId:  order.BillingAddressId.UUID,
+		ShippingAddressId: order.ShippingAddressId.UUID,
+		RegionId:          order.RegionId.UUID,
+		CustomerId:        order.CustomerId.UUID,
+		SalesChannelId:    salesChannelId,
 		Type:              models.CartSwap,
 	})
 	if err != nil {
@@ -432,13 +424,13 @@ func (s *SwapService) CreateCart(swapId uuid.UUID, customShippingOptions []model
 	for _, item := range swap.AdditionalItems {
 		_, err := s.r.LineItemService().SetContext(s.ctx).Update(item.Id, nil, &models.LineItem{
 			CartId: uuid.NullUUID{UUID: cart.Id},
-		}, sql.Options{})
+		}, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	c, err := s.r.CartService().SetContext(s.ctx).Retrieve(cart.Id, sql.Options{
+	c, err := s.r.CartService().SetContext(s.ctx).Retrieve(cart.Id, &sql.Options{
 		Relations: []string{
 			"items",
 			"items.variant",
@@ -501,7 +493,7 @@ func (s *SwapService) CreateCart(swapId uuid.UUID, customShippingOptions []model
 }
 
 func (s *SwapService) RegisterCartCompletion(swapId uuid.UUID) (*models.Swap, *utils.ApplictaionError) {
-	swap, err := s.Retrieve(swapId, sql.Options{
+	swap, err := s.Retrieve(swapId, &sql.Options{
 		Selects: []string{
 			"id",
 			"order_id",
@@ -522,11 +514,10 @@ func (s *SwapService) RegisterCartCompletion(swapId uuid.UUID) (*models.Swap, *u
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Cart related to canceled swap cannot be completed",
-			"500",
 			nil,
 		)
 	}
-	cart, err := s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(swap.CartId.UUID, sql.Options{
+	cart, err := s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(swap.CartId.UUID, &sql.Options{
 		Relations: []string{"payment"},
 	}, TotalsConfig{})
 	if err != nil {
@@ -556,9 +547,9 @@ func (s *SwapService) RegisterCartCompletion(swapId uuid.UUID) (*models.Swap, *u
 				nil,
 			)
 		}
-		_, err = s.r.PaymentProviderService().SetContext(s.ctx).UpdatePayment(payment.Id, &models.Payment{
-			SwapId:  uuid.NullUUID{UUID: swapId},
-			OrderId: swap.OrderId,
+		_, err = s.r.PaymentProviderService().SetContext(s.ctx).UpdatePayment(payment.Id, &types.UpdatePaymentInput{
+			SwapId:  swapId,
+			OrderId: swap.OrderId.UUID,
 		})
 		if err != nil {
 			return nil, err
@@ -594,8 +585,8 @@ func (s *SwapService) RegisterCartCompletion(swapId uuid.UUID) (*models.Swap, *u
 	}
 
 	for _, method := range cart.ShippingMethods {
-		m, err := s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(method.Id, &models.ShippingMethod{
-			SwapId: uuid.NullUUID{UUID: swap.Id},
+		m, err := s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(method.Id, &types.ShippingMethodUpdate{
+			SwapId: swap.Id,
 		})
 		if err != nil {
 			return nil, err
@@ -609,7 +600,7 @@ func (s *SwapService) RegisterCartCompletion(swapId uuid.UUID) (*models.Swap, *u
 	// if err != nil {
 	// 	return nil, err
 	// }
-	_, err = s.r.CartService().SetContext(s.ctx).Update(cart.Id, nil, &models.Cart{
+	_, err = s.r.CartService().SetContext(s.ctx).Update(cart.Id, nil, &types.CartUpdateProps{
 		CompletedAt: &now,
 	})
 	if err != nil {
@@ -619,7 +610,7 @@ func (s *SwapService) RegisterCartCompletion(swapId uuid.UUID) (*models.Swap, *u
 }
 
 func (s *SwapService) Cancel(swapId uuid.UUID) (*models.Swap, *utils.ApplictaionError) {
-	swap, err := s.Retrieve(swapId, sql.Options{
+	swap, err := s.Retrieve(swapId, &sql.Options{
 		Relations: []string{"payment", "fulfillments", "return_order"},
 	})
 	if err != nil {
@@ -629,7 +620,6 @@ func (s *SwapService) Cancel(swapId uuid.UUID) (*models.Swap, *utils.Applictaion
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Swap with a refund cannot be canceled",
-			"500",
 			nil,
 		)
 	}
@@ -649,7 +639,6 @@ func (s *SwapService) Cancel(swapId uuid.UUID) (*models.Swap, *utils.Applictaion
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Return must be canceled before the swap can be canceled",
-			"500",
 			nil,
 		)
 	}
@@ -670,10 +659,10 @@ func (s *SwapService) Cancel(swapId uuid.UUID) (*models.Swap, *utils.Applictaion
 
 }
 
-func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *models.Swap, locationId string) (*models.Swap, *utils.ApplictaionError) {
+func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *types.CreateShipmentConfig) (*models.Swap, *utils.ApplictaionError) {
 	metadata := config.Metadata
 	noNotification := config.NoNotification
-	swap, err := s.Retrieve(swapId, sql.Options{
+	swap, err := s.Retrieve(swapId, &sql.Options{
 		Relations: []string{
 			"payment",
 			"shipping_address",
@@ -698,7 +687,6 @@ func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *models.Swap, l
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Canceled swap cannot be fulfilled",
-			"500",
 			nil,
 		)
 	}
@@ -706,7 +694,6 @@ func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *models.Swap, l
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"The swap was already fulfilled",
-			"500",
 			nil,
 		)
 	}
@@ -714,7 +701,6 @@ func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *models.Swap, l
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Cannot fulfill an swap that doesn't have shipping methods",
-			"500",
 			nil,
 		)
 	}
@@ -757,7 +743,7 @@ func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *models.Swap, l
 				Metadata: metadata,
 			},
 			SwapId:     uuid.NullUUID{UUID: swap.Id},
-			LocationId: locationId,
+			LocationId: config.LocationId,
 		},
 	)
 
@@ -780,7 +766,7 @@ func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *models.Swap, l
 			fulfilledQuantity := item.FulfilledQuantity + fulfillmentItem.Quantity
 			_, err = s.r.LineItemService().SetContext(s.ctx).Update(item.Id, nil, &models.LineItem{
 				FulfilledQuantity: fulfilledQuantity,
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
@@ -817,11 +803,10 @@ func (s *SwapService) CancelFulfillment(fulfillmentId uuid.UUID) (*models.Swap, 
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Fufillment not related to a swap",
-			"500",
 			nil,
 		)
 	}
-	swap, err := s.Retrieve(canceled.SwapId.UUID, sql.Options{})
+	swap, err := s.Retrieve(canceled.SwapId.UUID, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -833,10 +818,10 @@ func (s *SwapService) CancelFulfillment(fulfillmentId uuid.UUID) (*models.Swap, 
 
 }
 
-func (s *SwapService) CreateShipment(swapId uuid.UUID, fulfillmentId uuid.UUID, trackingLinks []models.TrackingLink, config *models.Swap) (*models.Swap, *utils.ApplictaionError) {
+func (s *SwapService) CreateShipment(swapId uuid.UUID, fulfillmentId uuid.UUID, trackingLinks []models.TrackingLink, config *types.CreateShipmentConfig) (*models.Swap, *utils.ApplictaionError) {
 	metadata := config.Metadata
 	noNotification := config.NoNotification
-	swap, err := s.Retrieve(swapId, sql.Options{
+	swap, err := s.Retrieve(swapId, &sql.Options{
 		Relations: []string{"additional_items"},
 	})
 	if err != nil {
@@ -846,7 +831,6 @@ func (s *SwapService) CreateShipment(swapId uuid.UUID, fulfillmentId uuid.UUID, 
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Canceled swap cannot be fulfilled as shipped",
-			"500",
 			nil,
 		)
 	}
@@ -854,8 +838,8 @@ func (s *SwapService) CreateShipment(swapId uuid.UUID, fulfillmentId uuid.UUID, 
 	if !evaluatedNoNotification {
 		evaluatedNoNotification = swap.NoNotification
 	}
-	shipment, err := s.r.FulfillmentService().SetContext(s.ctx).CreateShipment(fulfillmentId, trackingLinks, &models.Fulfillment{
-		Model:          core.Model{Metadata: metadata},
+	shipment, err := s.r.FulfillmentService().SetContext(s.ctx).CreateShipment(fulfillmentId, trackingLinks, &types.CreateShipmentConfig{
+		Metadata:       metadata,
 		NoNotification: evaluatedNoNotification,
 	})
 	if err != nil {
@@ -873,7 +857,7 @@ func (s *SwapService) CreateShipment(swapId uuid.UUID, fulfillmentId uuid.UUID, 
 			shippedQty := i.ShippedQuantity + shipped.Quantity
 			_, err = s.r.LineItemService().SetContext(s.ctx).Update(i.Id, nil, &models.LineItem{
 				ShippedQuantity: shippedQty,
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
@@ -907,12 +891,11 @@ func (s *SwapService) DeleteMetadata(swapId string, key string) (*models.Swap, *
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
 
-	query := sql.BuildQuery(swap, sql.Options{})
+	query := sql.BuildQuery(swap, &sql.Options{})
 
 	swap.Id = uuid.Nil
 
@@ -931,7 +914,7 @@ func (s *SwapService) DeleteMetadata(swapId string, key string) (*models.Swap, *
 }
 
 func (s *SwapService) RegisterReceived(id uuid.UUID) (*models.Swap, *utils.ApplictaionError) {
-	swap, err := s.Retrieve(id, sql.Options{
+	swap, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"return_order", "return_order.items"},
 	})
 	if err != nil {
@@ -941,7 +924,6 @@ func (s *SwapService) RegisterReceived(id uuid.UUID) (*models.Swap, *utils.Appli
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Canceled swap cannot be registered as received",
-			"500",
 			nil,
 		)
 	}
@@ -949,11 +931,10 @@ func (s *SwapService) RegisterReceived(id uuid.UUID) (*models.Swap, *utils.Appli
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Swap is not received",
-			"500",
 			nil,
 		)
 	}
-	result, err := s.Retrieve(id, sql.Options{})
+	result, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -968,14 +949,14 @@ func (s *SwapService) RegisterReceived(id uuid.UUID) (*models.Swap, *utils.Appli
 	return result, nil
 }
 
-func (s *SwapService) AreReturnItemsValid(returnItems []models.ReturnItem) (bool, *utils.ApplictaionError) {
+func (s *SwapService) AreReturnItemsValid(returnItems []types.OrderReturnItem) (bool, *utils.ApplictaionError) {
 	var itemId uuid.UUIDs
 
 	for _, item := range returnItems {
-		itemId = append(itemId, item.ItemId.UUID)
+		itemId = append(itemId, item.ItemId)
 	}
 
-	returnItemsEntities, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{}, sql.Options{
+	returnItemsEntities, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{}, &sql.Options{
 		Relations:     []string{"order", "swap", "claim_order"},
 		Specification: []sql.Specification{sql.In("id", itemId)},
 	})

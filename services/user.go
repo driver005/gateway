@@ -38,7 +38,7 @@ func (s *UserService) HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (s *UserService) List(selector types.FilterableUser, config sql.Options) ([]models.User, *utils.ApplictaionError) {
+func (s *UserService) List(selector types.FilterableUser, config *sql.Options) ([]models.User, *utils.ApplictaionError) {
 	var res []models.User
 	query := sql.BuildQuery[types.FilterableUser](selector, config)
 	if err := s.r.UserRepository().Find(s.ctx, res, query); err != nil {
@@ -47,12 +47,11 @@ func (s *UserService) List(selector types.FilterableUser, config sql.Options) ([
 	return res, nil
 }
 
-func (s *UserService) Retrieve(userId uuid.UUID, config sql.Options) (*models.User, *utils.ApplictaionError) {
+func (s *UserService) Retrieve(userId uuid.UUID, config *sql.Options) (*models.User, *utils.ApplictaionError) {
 	if userId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"userId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -75,13 +74,12 @@ func (s *UserService) RetrieveByApiToken(apiToken string, relations []string) (*
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"apiToken" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	var res *models.User
 
-	query := sql.BuildQuery[models.User](models.User{ApiToken: apiToken}, sql.Options{
+	query := sql.BuildQuery[models.User](models.User{ApiToken: apiToken}, &sql.Options{
 		Relations: relations,
 	})
 
@@ -91,12 +89,11 @@ func (s *UserService) RetrieveByApiToken(apiToken string, relations []string) (*
 	return res, nil
 }
 
-func (s *UserService) RetrieveByEmail(email string, config sql.Options) (*models.User, *utils.ApplictaionError) {
+func (s *UserService) RetrieveByEmail(email string, config *sql.Options) (*models.User, *utils.ApplictaionError) {
 	if email == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"email" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -110,18 +107,28 @@ func (s *UserService) RetrieveByEmail(email string, config sql.Options) (*models
 	return res, nil
 }
 
-func (s *UserService) Create(model *models.User) (*models.User, *utils.ApplictaionError) {
-	if err := validator.New().Var(model.Email, "required,email"); err != nil {
+func (s *UserService) Create(data *types.CreateUserInput) (*models.User, *utils.ApplictaionError) {
+	if err := validator.New().Var(data.Email, "required,email"); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
 
-	if model.Password != "" {
-		hashedPassword, err := s.HashPassword(model.Password)
+	model := &models.User{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Email:     data.Email,
+		FirstName: data.FirstName,
+		LastName:  data.LastName,
+		ApiToken:  data.APIToken,
+		Role:      data.Role,
+	}
+
+	if data.Password != "" {
+		hashedPassword, err := s.HashPassword(data.Password)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
@@ -141,21 +148,19 @@ func (s *UserService) Create(model *models.User) (*models.User, *utils.Applictai
 	return model, nil
 }
 
-func (s *UserService) Update(userId uuid.UUID, Update *models.User) (*models.User, *utils.ApplictaionError) {
-	if Update.Email != "" {
+func (s *UserService) Update(userId uuid.UUID, data *types.UpdateUserInput) (*models.User, *utils.ApplictaionError) {
+	if data.Email != "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"You are not allowed to Update email"`,
-			"500",
 			nil,
 		)
 	}
 
-	if Update.PasswordHash != "" || Update.Password != "" {
+	if data.PasswordHash != "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"use dedicated methods, `setPassword`, `generateResetPasswordToken` for password operations",
-			"500",
 			nil,
 		)
 	}
@@ -164,26 +169,32 @@ func (s *UserService) Update(userId uuid.UUID, Update *models.User) (*models.Use
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"userId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 
-	Update.Id = userId
-
-	if err := s.r.UserRepository().FindOne(s.ctx, Update, sql.Query{}); err != nil {
+	user, err := s.Retrieve(userId, &sql.Options{})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := s.r.UserRepository().Upsert(s.ctx, Update); err != nil {
+	user.Email = data.Email
+	user.FirstName = data.FirstName
+	user.LastName = data.LastName
+	user.PasswordHash = data.PasswordHash
+	user.ApiToken = data.APIToken
+	user.Role = data.Role
+	user.Metadata = utils.MergeMaps(user.Metadata, data.Metadata)
+
+	if err := s.r.UserRepository().Update(s.ctx, user); err != nil {
 		return nil, err
 	}
 
-	return Update, nil
+	return user, nil
 }
 
 func (s *UserService) Delete(userId uuid.UUID) *utils.ApplictaionError {
-	data, err := s.Retrieve(userId, sql.Options{})
+	data, err := s.Retrieve(userId, &sql.Options{})
 	if err != nil {
 		return err
 	}

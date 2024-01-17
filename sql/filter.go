@@ -14,8 +14,10 @@ import (
 type queryParams struct {
 	Search         string `query:"q"`
 	Filter         string `query:"filter"`
-	Page           int    `query:"page,default=1"`
-	PageSize       int    `query:"page_size,default=10"`
+	Expand         string `query:"expand"`
+	Fields         string `query:"fields"`
+	Offset         int    `query:"offset,default=1"`
+	Limit          int    `query:"limit,default=10"`
 	All            bool   `query:"all,default=false"`
 	OrderBy        string `query:"order_by,default=id"`
 	OrderDirection string `query:"order_direction,default=desc,oneof=desc asc"`
@@ -47,19 +49,19 @@ func paginate(db *gorm.DB, params queryParams) *gorm.DB {
 		return db
 	}
 
-	if params.Page == 0 {
-		params.Page = 1
+	if params.Offset == 0 {
+		params.Offset = 1
 	}
 
 	switch {
-	case params.PageSize > 100:
-		params.PageSize = 100
-	case params.PageSize <= 0:
-		params.PageSize = 10
+	case params.Limit > 100:
+		params.Limit = 100
+	case params.Limit <= 0:
+		params.Limit = 10
 	}
 
-	offset := (params.Page - 1) * params.PageSize
-	return db.Offset(offset).Limit(params.PageSize)
+	offset := (params.Offset - 1) * params.Limit
+	return db.Offset(offset).Limit(params.Limit)
 }
 
 func getColumnNameForField(field reflect.StructField) string {
@@ -163,6 +165,7 @@ func FilterByQuery(context fiber.Ctx, config int) func(db *gorm.DB) *gorm.DB {
 		}
 
 		model := db.Statement.Model
+
 		modelType := reflect.TypeOf(model)
 		if model != nil && modelType.Kind() == reflect.Ptr && modelType.Elem().Kind() == reflect.Struct {
 			if config&SEARCH > 0 && params.Search != "" {
@@ -171,6 +174,10 @@ func FilterByQuery(context fiber.Ctx, config int) func(db *gorm.DB) *gorm.DB {
 			if config&FILTER > 0 && params.Filter != "" {
 				db = expressionByField(db, params.Filter, modelType.Elem(), filterField, clause.And)
 			}
+		}
+
+		if config&PAGINATE > 0 {
+
 		}
 
 		if config&ORDER_BY > 0 {

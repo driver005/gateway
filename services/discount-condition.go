@@ -6,6 +6,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
@@ -29,18 +30,17 @@ func (s *DiscountConditionService) SetContext(context context.Context) *Discount
 	return s
 }
 
-func (s *DiscountConditionService) Retrieve(conditionId uuid.UUID, config sql.Options) (*models.DiscountCondition, *utils.ApplictaionError) {
+func (s *DiscountConditionService) Retrieve(conditionId uuid.UUID, config *sql.Options) (*models.DiscountCondition, *utils.ApplictaionError) {
 	if conditionId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"conditionId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 
 	var res *models.DiscountCondition
-	query := sql.BuildQuery[models.DiscountCondition](models.DiscountCondition{Model: core.Model{Id: conditionId}}, sql.Options{})
+	query := sql.BuildQuery[models.DiscountCondition](models.DiscountCondition{Model: core.Model{Id: conditionId}}, &sql.Options{})
 
 	if err := s.r.DiscountConditionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -49,29 +49,30 @@ func (s *DiscountConditionService) Retrieve(conditionId uuid.UUID, config sql.Op
 	return res, nil
 }
 
-func (s *DiscountConditionService) ResolveConditionType(data *models.DiscountCondition) (*models.DiscountCondition, *utils.ApplictaionError) {
+func (s *DiscountConditionService) ResolveConditionType(data *types.DiscountConditionInput) (*models.DiscountCondition, *utils.ApplictaionError) {
+	var model *models.DiscountCondition
 	switch {
 	case data.Products != nil:
-		data.Type = models.DiscountConditionTypeRroducts
-		return data, nil
+		model.Type = models.DiscountConditionTypeProducts
+		return model, nil
 	case data.ProductCollections != nil:
-		data.Type = models.DiscountConditionTypeProductCollections
-		return data, nil
+		model.Type = models.DiscountConditionTypeProductCollections
+		return model, nil
 	case data.ProductTypes != nil:
-		data.Type = models.DiscountConditionTypeProductTypes
-		return data, nil
+		model.Type = models.DiscountConditionTypeProductTypes
+		return model, nil
 	case data.ProductTags != nil:
-		data.Type = models.DiscountConditionTypeProductTags
-		return data, nil
+		model.Type = models.DiscountConditionTypeProductTags
+		return model, nil
 	case data.CustomerGroups != nil:
-		data.Type = models.DiscountConditionTypeCustomerGroups
-		return data, nil
+		model.Type = models.DiscountConditionTypeCustomerGroups
+		return model, nil
 	default:
 		return nil, nil
 	}
 }
 
-func (s *DiscountConditionService) UpsertCondition(data *models.DiscountCondition, overrideExisting bool) ([]models.DiscountCondition, *utils.ApplictaionError) {
+func (s *DiscountConditionService) UpsertCondition(data *types.DiscountConditionInput, overrideExisting bool) ([]models.DiscountCondition, *utils.ApplictaionError) {
 	resolvedConditionType, err := s.ResolveConditionType(data)
 	if err != nil {
 		return nil, err
@@ -81,13 +82,12 @@ func (s *DiscountConditionService) UpsertCondition(data *models.DiscountConditio
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Missing one of products, collections, tags, types or customer groups in data`,
-			"500",
 			nil,
 		)
 	}
 
 	if data.Id != uuid.Nil {
-		resolvedCondition, err := s.Retrieve(data.Id, sql.Options{})
+		resolvedCondition, err := s.Retrieve(data.Id, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +108,7 @@ func (s *DiscountConditionService) UpsertCondition(data *models.DiscountConditio
 			Id: data.Id,
 		},
 		Operator: data.Operator,
-		Type:     data.Type,
+		Type:     resolvedConditionType.Type,
 	}
 
 	if err := s.r.DiscountConditionRepository().Save(s.ctx, created); err != nil {
@@ -118,7 +118,7 @@ func (s *DiscountConditionService) UpsertCondition(data *models.DiscountConditio
 	return s.r.DiscountConditionRepository().AddConditionResources(s.ctx, created.Id, resolvedConditionType, overrideExisting)
 }
 
-func (s *DiscountConditionService) RemoveResources(data *models.DiscountCondition) *utils.ApplictaionError {
+func (s *DiscountConditionService) RemoveResources(data *types.DiscountConditionInput) *utils.ApplictaionError {
 	resolvedConditionType, err := s.ResolveConditionType(data)
 	if err != nil {
 		return err
@@ -128,12 +128,11 @@ func (s *DiscountConditionService) RemoveResources(data *models.DiscountConditio
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Missing one of products, collections, tags, types or customer groups in data`,
-			"500",
 			nil,
 		)
 	}
 
-	resolvedCondition, err := s.Retrieve(data.Id, sql.Options{})
+	resolvedCondition, err := s.Retrieve(data.Id, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -149,7 +148,7 @@ func (s *DiscountConditionService) RemoveResources(data *models.DiscountConditio
 }
 
 func (s *DiscountConditionService) Delete(conditionId uuid.UUID) *utils.ApplictaionError {
-	condition, err := s.Retrieve(conditionId, sql.Options{})
+	condition, err := s.Retrieve(conditionId, &sql.Options{})
 	if err != nil {
 		return err
 	}

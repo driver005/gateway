@@ -36,12 +36,11 @@ func (s *ClaimService) SetContext(context context.Context) *ClaimService {
 	return s
 }
 
-func (s *ClaimService) Retrieve(id uuid.UUID, config sql.Options) (*models.ClaimOrder, *utils.ApplictaionError) {
+func (s *ClaimService) Retrieve(id uuid.UUID, config *sql.Options) (*models.ClaimOrder, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -53,10 +52,10 @@ func (s *ClaimService) Retrieve(id uuid.UUID, config sql.Options) (*models.Claim
 	return res, nil
 }
 
-func (s *ClaimService) List(selector models.ClaimOrder, config sql.Options) ([]models.ClaimOrder, *utils.ApplictaionError) {
+func (s *ClaimService) List(selector models.ClaimOrder, config *sql.Options) ([]models.ClaimOrder, *utils.ApplictaionError) {
 	var res []models.ClaimOrder
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -70,8 +69,8 @@ func (s *ClaimService) List(selector models.ClaimOrder, config sql.Options) ([]m
 	return res, nil
 }
 
-func (s *ClaimService) Update(id uuid.UUID, data *models.ClaimOrder) (*models.ClaimOrder, *utils.ApplictaionError) {
-	claim, err := s.Retrieve(id, sql.Options{Relations: []string{"shipping_methods"}})
+func (s *ClaimService) Update(id uuid.UUID, data *types.UpdateClaimInput) (*models.ClaimOrder, *utils.ApplictaionError) {
+	claim, err := s.Retrieve(id, &sql.Options{Relations: []string{"shipping_methods"}})
 	if err != nil {
 		return nil, err
 	}
@@ -79,15 +78,14 @@ func (s *ClaimService) Update(id uuid.UUID, data *models.ClaimOrder) (*models.Cl
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Canceled claim cannot be updated",
-			"500",
 			nil,
 		)
 	}
 
 	if data.ShippingMethods != nil {
 		for _, m := range claim.ShippingMethods {
-			_, err = s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(m.Id, &models.ShippingMethod{
-				ClaimOrderId: uuid.NullUUID{},
+			_, err = s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(m.Id, &types.ShippingMethodUpdate{
+				ClaimOrderId: uuid.UUID{},
 			})
 			if err != nil {
 				return nil, err
@@ -95,16 +93,18 @@ func (s *ClaimService) Update(id uuid.UUID, data *models.ClaimOrder) (*models.Cl
 		}
 		for _, method := range data.ShippingMethods {
 			if method.Id != uuid.Nil {
-				_, err = s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(method.Id, &models.ShippingMethod{
-					ClaimOrderId: uuid.NullUUID{UUID: claim.Id},
+				_, err = s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(method.Id, &types.ShippingMethodUpdate{
+					ClaimOrderId: claim.Id,
 				})
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				_, err = s.r.ShippingOptionService().SetContext(s.ctx).CreateShippingMethod(method.ShippingOptionId.UUID, method.Data, &models.ShippingMethod{
-					ClaimOrderId: uuid.NullUUID{UUID: claim.Id},
-					Price:        method.Price,
+				_, err = s.r.ShippingOptionService().SetContext(s.ctx).CreateShippingMethod(method.OptionId, method.Data, &types.CreateShippingMethodDto{
+					CreateShippingMethod: types.CreateShippingMethod{
+						ClaimOrderId: claim.Id,
+						Price:        method.Price,
+					},
 				})
 				if err != nil {
 					return nil, err
@@ -124,9 +124,15 @@ func (s *ClaimService) Update(id uuid.UUID, data *models.ClaimOrder) (*models.Cl
 		}
 	}
 
-	data.Id = claim.Id
+	if data.NoNotification != claim.NoNotification {
+		claim.NoNotification = data.NoNotification
+	}
 
-	if err := s.r.ClaimRepository().Update(s.ctx, data); err != nil {
+	if data.Metadata != nil {
+		claim.Metadata = utils.MergeMaps(claim.Metadata, data.Metadata)
+	}
+
+	if err := s.r.ClaimRepository().Update(s.ctx, claim); err != nil {
 		return nil, err
 	}
 
@@ -141,12 +147,11 @@ func (s *ClaimService) Update(id uuid.UUID, data *models.ClaimOrder) (*models.Cl
 	return claim, nil
 }
 
-func (s *ClaimService) ValidateCreateClaimInput(data *models.ClaimOrder) *utils.ApplictaionError {
+func (s *ClaimService) ValidateCreateClaimInput(data *types.CreateClaimInput) *utils.ApplictaionError {
 	if data.Type != models.ClaimStatusRefund && data.Type != models.ClaimStatusReplace {
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Claim type must be one of "refund" or "replace".`,
-			"500",
 			nil,
 		)
 	}
@@ -155,7 +160,6 @@ func (s *ClaimService) ValidateCreateClaimInput(data *models.ClaimOrder) *utils.
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Claims with type "replace" must have at least one additional item.`,
-			"500",
 			nil,
 		)
 	}
@@ -164,7 +168,6 @@ func (s *ClaimService) ValidateCreateClaimInput(data *models.ClaimOrder) *utils.
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Claims must have at least one claim item.`,
-			"500",
 			nil,
 		)
 	}
@@ -173,19 +176,18 @@ func (s *ClaimService) ValidateCreateClaimInput(data *models.ClaimOrder) *utils.
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf(`Claim has type %s but must be type "refund" to have a refund_amount.`, data.Type),
-			"500",
 			nil,
 		)
 	}
 
 	var claimIds uuid.UUIDs
 	for _, claimItem := range data.ClaimItems {
-		claimIds = append(claimIds, claimItem.ItemId.UUID)
+		claimIds = append(claimIds, claimItem.ItemId)
 	}
 
 	claimLineItems, err := s.r.LineItemService().SetContext(s.ctx).List(
 		models.LineItem{},
-		sql.Options{
+		&sql.Options{
 			Relations:     []string{"order", "swap", "claim_order", "tax_lines"},
 			Specification: []sql.Specification{sql.In("id", claimIds)},
 		},
@@ -210,13 +212,13 @@ func (s *ClaimService) ValidateCreateClaimInput(data *models.ClaimOrder) *utils.
 	return nil
 }
 
-func (s *ClaimService) GetRefundTotalForClaimLinesOnOrder(order *models.Order, claimItems []models.ClaimItem) (*float64, *utils.ApplictaionError) {
+func (s *ClaimService) GetRefundTotalForClaimLinesOnOrder(order *models.Order, claimItems []types.CreateClaimItemInput) (*float64, *utils.ApplictaionError) {
 	var claimLines []models.LineItem
 	for _, ci := range claimItems {
 		predicate := func(item models.LineItem) bool {
 			return item.ShippedQuantity != 0 &&
 				ci.Quantity <= item.ShippedQuantity &&
-				item.Id == ci.ItemId.UUID
+				item.Id == ci.ItemId
 		}
 		claimLine, ok := lo.Find(order.Items, predicate)
 		if ok {
@@ -270,21 +272,22 @@ func (s *ClaimService) GetRefundTotalForClaimLinesOnOrder(order *models.Order, c
 	return &refundTotal, nil
 }
 
-func (s *ClaimService) Create(data *models.ClaimOrder, locationId string, returnShipping *models.ShippingMethod) (*models.ClaimOrder, *utils.ApplictaionError) {
+func (s *ClaimService) Create(data *types.CreateClaimInput) (*models.ClaimOrder, *utils.ApplictaionError) {
 	err := s.ValidateCreateClaimInput(data)
 	if err != nil {
 		return nil, err
 	}
 
-	if data.ShippingAddress != nil {
+	var claim *models.ClaimOrder
 
-		if err := s.r.AddressRepository().Save(s.ctx, data.ShippingAddress); err != nil {
+	if data.ShippingAddress != nil {
+		if err := s.r.AddressRepository().Save(s.ctx, utils.ToAddress(data.ShippingAddress)); err != nil {
 			return nil, err
 		}
-		data.ShippingAddressId = uuid.NullUUID{UUID: data.ShippingAddress.Id}
+		claim.ShippingAddressId = uuid.NullUUID{UUID: data.ShippingAddressId}
 	}
 
-	if data.Type == models.ClaimStatusRefund && data.RefundAmount == 0 {
+	if data.Type == models.ClaimStatusRefund {
 		toRefund, err := s.GetRefundTotalForClaimLinesOnOrder(data.Order, data.ClaimItems)
 		if err != nil {
 			return nil, err
@@ -295,14 +298,14 @@ func (s *ClaimService) Create(data *models.ClaimOrder, locationId string, return
 	var newItems []models.LineItem
 	if data.AdditionalItems != nil {
 		for _, i := range data.AdditionalItems {
-			newItem, err := s.r.LineItemService().SetContext(s.ctx).Generate(i.VariantId.UUID, nil, data.Order.RegionId.UUID, i.Quantity, types.GenerateLineItemContext{})
+			newItem, err := s.r.LineItemService().SetContext(s.ctx).Generate(i.VariantId, nil, data.Order.RegionId.UUID, i.Quantity, types.GenerateLineItemContext{})
 			if err != nil {
 				return nil, err
 			}
 			newItems = append(newItems, newItem...)
 		}
 
-		for _, newItem := range data.AdditionalItems {
+		for _, newItem := range newItems {
 			if newItem.VariantId.UUID != uuid.Nil {
 				_, err = s.r.ProductVariantInventoryService().SetContext(s.ctx).ReserveQuantity(newItem.VariantId.UUID, newItem.Quantity, ReserveQuantityContext{
 					LineItemId:     newItem.Id,
@@ -320,25 +323,34 @@ func (s *ClaimService) Create(data *models.ClaimOrder, locationId string, return
 		evaluatedNoNotification = data.Order.NoNotification
 	}
 
-	data.AdditionalItems = newItems
-	data.PaymentStatus = models.ClaimPaymentStatusNotRefunded
-	data.NoNotification = evaluatedNoNotification
+	claim.AdditionalItems = newItems
+	claim.PaymentStatus = models.ClaimPaymentStatusNotRefunded
+	claim.NoNotification = evaluatedNoNotification
 
-	if err := s.r.ClaimRepository().Save(s.ctx, data); err != nil {
+	if err := s.r.ClaimRepository().Save(s.ctx, claim); err != nil {
 		return nil, err
 	}
 
 	var lineItemIds uuid.UUIDs
-	for _, lineItem := range data.AdditionalItems {
+	for _, lineItem := range claim.AdditionalItems {
 		lineItemIds = append(lineItemIds, lineItem.Id)
 	}
 
-	if len(data.AdditionalItems) > 0 {
-		calcContext, err := s.r.TotalsService().GetCalculationContext(nil, data.Order, CalculationContextOptions{})
+	if len(claim.AdditionalItems) > 0 {
+		calcContext, err := s.r.TotalsService().GetCalculationContext(types.CalculationContextData{
+			Discounts:       claim.Order.Discounts,
+			Items:           claim.Order.Items,
+			Customer:        claim.Order.Customer,
+			Region:          claim.Order.Region,
+			ShippingAddress: claim.Order.ShippingAddress,
+			Swaps:           claim.Order.Swaps,
+			Claims:          claim.Order.Claims,
+			ShippingMethods: claim.Order.ShippingMethods,
+		}, CalculationContextOptions{})
 		if err != nil {
 			return nil, err
 		}
-		lineItems, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{}, sql.Options{
+		lineItems, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{}, &sql.Options{
 			Relations:     []string{"variant.product.profiles"},
 			Specification: []sql.Specification{sql.In("id", lineItemIds)},
 		})
@@ -354,16 +366,18 @@ func (s *ClaimService) Create(data *models.ClaimOrder, locationId string, return
 	if data.ShippingMethods != nil {
 		for _, method := range data.ShippingMethods {
 			if method.Id != uuid.Nil {
-				_, err = s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(method.Id, &models.ShippingMethod{
-					ClaimOrderId: uuid.NullUUID{UUID: data.Id},
+				_, err = s.r.ShippingOptionService().SetContext(s.ctx).UpdateShippingMethod(method.Id, &types.ShippingMethodUpdate{
+					ClaimOrderId: claim.Id,
 				})
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				_, err = s.r.ShippingOptionService().SetContext(s.ctx).CreateShippingMethod(method.ShippingOptionId.UUID, method.Data, &models.ShippingMethod{
-					ClaimOrderId: uuid.NullUUID{UUID: data.Id},
-					Price:        method.Price,
+				_, err = s.r.ShippingOptionService().SetContext(s.ctx).CreateShippingMethod(method.OptionId, method.Data, &types.CreateShippingMethodDto{
+					CreateShippingMethod: types.CreateShippingMethod{
+						ClaimOrderId: claim.Id,
+						Price:        method.Price,
+					},
 				})
 				if err != nil {
 					return nil, err
@@ -372,30 +386,30 @@ func (s *ClaimService) Create(data *models.ClaimOrder, locationId string, return
 		}
 	}
 
-	var items []models.ReturnItem
+	var items []types.OrderReturnItem
 	for _, ci := range data.ClaimItems {
-		ci.ClaimOrderId = uuid.NullUUID{UUID: data.Id}
+		ci.ClaimOrderId = claim.Id
 		_, err := s.r.ClaimItemService().SetContext(s.ctx).Create(&ci)
 		if err != nil {
 			return nil, err
 		}
 
-		items = append(items, models.ReturnItem{
+		items = append(items, types.OrderReturnItem{
 			ItemId:   ci.ItemId,
 			Quantity: ci.Quantity,
-			Metadata: ci.Metadata,
+			Note:     ci.Note,
 		})
 	}
 
-	if returnShipping != nil {
-		_, err = s.r.ReturnService().Create(&models.Return{
-			RefundAmount:   data.RefundAmount,
-			OrderId:        data.OrderId,
-			ClaimOrderId:   uuid.NullUUID{UUID: data.Id},
+	if data.ReturnShipping != nil {
+		_, err = s.r.ReturnService().Create(&types.CreateReturnInput{
+			RefundAmount:   claim.RefundAmount,
+			OrderId:        data.Order.Id,
+			ClaimOrderId:   claim.Id,
 			Items:          items,
-			ShippingMethod: returnShipping,
+			ShippingMethod: data.ReturnShipping,
 			NoNotification: evaluatedNoNotification,
-			LocationId:     locationId,
+			LocationId:     data.ReturnLocationId,
 		})
 		if err != nil {
 			return nil, err
@@ -410,11 +424,11 @@ func (s *ClaimService) Create(data *models.ClaimOrder, locationId string, return
 	// 	return nil, err
 	// }
 
-	return data, nil
+	return claim, nil
 }
 
-func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, locationId string, metadata map[string]interface{}) (*models.ClaimOrder, *utils.ApplictaionError) {
-	claim, err := s.Retrieve(id, sql.Options{
+func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, locationId uuid.UUID, metadata map[string]interface{}) (*models.ClaimOrder, *utils.ApplictaionError) {
+	claim, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{
 			"additional_items.tax_lines",
 			"additional_items.variant.product.profiles",
@@ -436,7 +450,6 @@ func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, loca
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Canceled claim cannot be fulfilled",
-			"500",
 			nil,
 		)
 	}
@@ -445,7 +458,6 @@ func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, loca
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"The claim has already been fulfilled.",
-			"500",
 			nil,
 		)
 	}
@@ -453,7 +465,6 @@ func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, loca
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf(`Claims with the type %s can not be fulfilled.`, claim.Type),
-			"500",
 			nil,
 		)
 	}
@@ -461,7 +472,6 @@ func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, loca
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Cannot fulfill a claim without a shipping method.",
-			"500",
 			nil,
 		)
 	}
@@ -523,7 +533,7 @@ func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, loca
 			fulfilledQuantity := item.FulfilledQuantity + fulfillmentItem.Quantity
 			_, err = s.r.LineItemService().SetContext(s.ctx).Update(item.Id, nil, &models.LineItem{
 				FulfilledQuantity: fulfilledQuantity,
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
@@ -566,11 +576,10 @@ func (s *ClaimService) CancelFulfillment(fulfillmentId uuid.UUID) (*models.Claim
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			`Fufillment not related to a claim`,
-			"500",
 			nil,
 		)
 	}
-	claim, err := s.Retrieve(canceled.ClaimOrderId.UUID, sql.Options{})
+	claim, err := s.Retrieve(canceled.ClaimOrderId.UUID, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -584,7 +593,7 @@ func (s *ClaimService) CancelFulfillment(fulfillmentId uuid.UUID) (*models.Claim
 }
 
 func (s *ClaimService) ProcessRefund(id uuid.UUID) (*models.ClaimOrder, *utils.ApplictaionError) {
-	claim, err := s.Retrieve(id, sql.Options{
+	claim, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"order", "order.payments"},
 	})
 	if err != nil {
@@ -594,7 +603,6 @@ func (s *ClaimService) ProcessRefund(id uuid.UUID) (*models.ClaimOrder, *utils.A
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Canceled claim cannot be processed",
-			"500",
 			nil,
 		)
 	}
@@ -602,7 +610,6 @@ func (s *ClaimService) ProcessRefund(id uuid.UUID) (*models.ClaimOrder, *utils.A
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			`Claim must have type "refund" to create a refund.`,
-			"500",
 			nil,
 		)
 	}
@@ -629,7 +636,7 @@ func (s *ClaimService) ProcessRefund(id uuid.UUID) (*models.ClaimOrder, *utils.A
 }
 
 func (s *ClaimService) CreateShipment(id uuid.UUID, fulfillmentId uuid.UUID, trackingLinks []models.TrackingLink, noNotification bool, metadata map[string]interface{}) (*models.ClaimOrder, *utils.ApplictaionError) {
-	claim, err := s.Retrieve(id, sql.Options{
+	claim, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"additional_items"},
 	})
 	if err != nil {
@@ -640,7 +647,6 @@ func (s *ClaimService) CreateShipment(id uuid.UUID, fulfillmentId uuid.UUID, tra
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Canceled claim cannot be fulfilled as shipped",
-			"500",
 			nil,
 		)
 	}
@@ -650,8 +656,8 @@ func (s *ClaimService) CreateShipment(id uuid.UUID, fulfillmentId uuid.UUID, tra
 		evaluatedNoNotification = claim.NoNotification
 	}
 
-	shipment, err := s.r.FulfillmentService().SetContext(s.ctx).CreateShipment(fulfillmentId, trackingLinks, &models.Fulfillment{
-		Model:          core.Model{Metadata: metadata},
+	shipment, err := s.r.FulfillmentService().SetContext(s.ctx).CreateShipment(fulfillmentId, trackingLinks, &types.CreateShipmentConfig{
+		Metadata:       metadata,
 		NoNotification: evaluatedNoNotification,
 	})
 	if err != nil {
@@ -668,7 +674,7 @@ func (s *ClaimService) CreateShipment(id uuid.UUID, fulfillmentId uuid.UUID, tra
 			shippedQty := additionalItem.ShippedQuantity + shipped.Quantity
 			_, err := s.r.LineItemService().SetContext(s.ctx).Update(additionalItem.Id, nil, &models.LineItem{
 				ShippedQuantity: shippedQty,
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
@@ -697,7 +703,7 @@ func (s *ClaimService) CreateShipment(id uuid.UUID, fulfillmentId uuid.UUID, tra
 }
 
 func (s *ClaimService) Cancel(id uuid.UUID) (*models.ClaimOrder, *utils.ApplictaionError) {
-	claim, err := s.Retrieve(id, sql.Options{
+	claim, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"return_order", "fulfillments", "order", "order.refunds"},
 	})
 	if err != nil {
@@ -708,7 +714,6 @@ func (s *ClaimService) Cancel(id uuid.UUID) (*models.ClaimOrder, *utils.Applicta
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Claim with a refund cannot be canceled",
-			"500",
 			nil,
 		)
 	}
@@ -730,7 +735,6 @@ func (s *ClaimService) Cancel(id uuid.UUID) (*models.ClaimOrder, *utils.Applicta
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Return must be canceled before the claim can be canceled",
-			"500",
 			nil,
 		)
 	}

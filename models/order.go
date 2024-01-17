@@ -22,7 +22,7 @@ type Order struct {
 	PaymentStatus PaymentStatus `json:"payment_status" gorm:"default:null"`
 
 	// The order's display ID
-	DisplayId string `json:"display_id" gorm:"default:null"`
+	DisplayId int `json:"display_id" gorm:"default:null"`
 
 	// The ID of the cart associated with the order
 	CartId uuid.NullUUID `json:"cart_id" gorm:"default:null"`

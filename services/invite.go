@@ -7,6 +7,7 @@ import (
 
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
@@ -32,12 +33,13 @@ func (s *InviteService) SetContext(context context.Context) *InviteService {
 	return s
 }
 
-func (s *InviteService) List(selector models.Invite, config sql.Options) ([]models.Invite, *utils.ApplictaionError) {
+func (s *InviteService) List(selector models.Invite, config *sql.Options) ([]models.Invite, *utils.ApplictaionError) {
 	var res []models.Invite
 	query := sql.BuildQuery[models.Invite](selector, config)
 	if err := s.r.InviteRepository().Find(s.ctx, res, query); err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
@@ -50,7 +52,6 @@ func (s *InviteService) Create(email string, role models.UserRole, validDuration
 		return utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Can't invite a user with an existing account",
-			"500",
 			nil,
 		)
 	}
@@ -78,7 +79,6 @@ func (s *InviteService) Create(email string, role models.UserRole, validDuration
 		return utils.NewApplictaionError(
 			utils.CONFLICT,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -114,7 +114,6 @@ func (s *InviteService) Accept(token string, user models.User) (*models.User, *u
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			er.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -128,7 +127,6 @@ func (s *InviteService) Accept(token string, user models.User) (*models.User, *u
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Invalid invite",
-			"500",
 			nil,
 		)
 	}
@@ -137,12 +135,11 @@ func (s *InviteService) Accept(token string, user models.User) (*models.User, *u
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"User already joined",
-			"500",
 			nil,
 		)
 	}
 
-	res, err := s.r.UserService().SetContext(s.ctx).Create(&models.User{
+	res, err := s.r.UserService().SetContext(s.ctx).Create(&types.CreateUserInput{
 		Email:     invite.UserEmail,
 		Role:      invite.Role,
 		FirstName: user.FirstName,
@@ -177,7 +174,6 @@ func (s *InviteService) Resend(id uuid.UUID) *utils.ApplictaionError {
 		return utils.NewApplictaionError(
 			utils.CONFLICT,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}

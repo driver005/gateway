@@ -7,6 +7,7 @@ import (
 
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/icza/gox/gox"
 )
@@ -35,13 +36,12 @@ func (s *CurrencyService) RetrieveByCode(code string) (*models.Currency, *utils.
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"code" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	var res *models.Currency
 
-	query := sql.BuildQuery[models.Currency](models.Currency{Code: strings.ToLower(code)}, sql.Options{})
+	query := sql.BuildQuery[models.Currency](models.Currency{Code: strings.ToLower(code)}, &sql.Options{})
 
 	if err := s.r.CurrencyRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -49,10 +49,10 @@ func (s *CurrencyService) RetrieveByCode(code string) (*models.Currency, *utils.
 	return res, nil
 }
 
-func (s *CurrencyService) ListAndCount(selector models.Currency, config sql.Options) ([]models.Currency, *int64, *utils.ApplictaionError) {
+func (s *CurrencyService) ListAndCount(selector models.Currency, config *sql.Options) ([]models.Currency, *int64, *utils.ApplictaionError) {
 	var res []models.Currency
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(20)
 	}
@@ -65,12 +65,11 @@ func (s *CurrencyService) ListAndCount(selector models.Currency, config sql.Opti
 	return res, count, nil
 }
 
-func (s *CurrencyService) Update(code string, IncludesTax bool) (*models.Currency, *utils.ApplictaionError) {
+func (s *CurrencyService) Update(code string, data types.UpdateCurrencyInput) (*models.Currency, *utils.ApplictaionError) {
 	if code == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"code" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -80,7 +79,7 @@ func (s *CurrencyService) Update(code string, IncludesTax bool) (*models.Currenc
 		return nil, err
 	}
 
-	currency.IncludesTax = IncludesTax
+	currency.IncludesTax = data.IncludesTax
 
 	if err := s.r.CurrencyRepository().Upsert(s.ctx, currency); err != nil {
 		return nil, err

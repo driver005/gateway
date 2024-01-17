@@ -16,6 +16,11 @@ func ProductTypeRepository(db *gorm.DB) *ProductTypeRepo {
 	return &ProductTypeRepo{*sql.NewRepository[models.ProductType](db)}
 }
 
+type UpsertTypeInput struct {
+	Id    uuid.UUID `json:"id,omitempty" validate:"omitempty"`
+	Value string    `json:"value"`
+}
+
 func (r *ProductTypeRepo) UpsertType(t *models.ProductType) (*models.ProductType, *utils.ApplictaionError) {
 	if t == nil {
 		return nil, nil

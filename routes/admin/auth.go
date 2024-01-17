@@ -1,11 +1,10 @@
 package admin
 
 import (
-	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
-	"github.com/google/uuid"
 )
 
 type AdminPostAuthReq struct {
@@ -77,15 +76,9 @@ func (m *Auth) DeleteSession(context fiber.Ctx) error {
 }
 
 func (m *Auth) GetSession(context fiber.Ctx) error {
-	var userId uuid.UUID
-	user, ok := context.Locals("user").(*models.User)
-	if !ok {
-		userId = context.Locals("user_id").(uuid.UUID)
-	} else {
-		userId = user.Id
-	}
+	userId := utils.GetUser(context)
 
-	user, err := m.r.UserService().SetContext(context.Context()).Retrieve(userId, sql.Options{})
+	user, err := m.r.UserService().SetContext(context.Context()).Retrieve(userId, &sql.Options{})
 	if err != nil {
 		return err
 	}

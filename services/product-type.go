@@ -31,12 +31,11 @@ func (s *ProductTypeService) SetContext(context context.Context) *ProductTypeSer
 	return s
 }
 
-func (s *ProductTypeService) Retrieve(id uuid.UUID, config sql.Options) (*models.ProductType, error) {
+func (s *ProductTypeService) Retrieve(id uuid.UUID, config *sql.Options) (*models.ProductType, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -52,7 +51,7 @@ func (s *ProductTypeService) Retrieve(id uuid.UUID, config sql.Options) (*models
 	return res, nil
 }
 
-func (s *ProductTypeService) List(selector models.ProductType, config sql.Options, q *string) ([]models.ProductType, error) {
+func (s *ProductTypeService) List(selector models.ProductType, config *sql.Options, q *string) ([]models.ProductType, *utils.ApplictaionError) {
 	productTypes, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -60,10 +59,10 @@ func (s *ProductTypeService) List(selector models.ProductType, config sql.Option
 	return productTypes, nil
 }
 
-func (s *ProductTypeService) ListAndCount(selector models.ProductType, config sql.Options, q *string) ([]models.ProductType, *int64, error) {
+func (s *ProductTypeService) ListAndCount(selector models.ProductType, config *sql.Options, q *string) ([]models.ProductType, *int64, *utils.ApplictaionError) {
 	var res []models.ProductType
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(20)
 	}

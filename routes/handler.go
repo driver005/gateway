@@ -13,4 +13,8 @@ func New(r Registry) *Routes {
 func (r Routes) SetAdminRoutes() {
 	route := r.r.AdminRouter()
 	r.r.AdminAuth().SetRoutes(route)
+
+	r.r.AdminUpload().SetRoutes(route)
+	r.r.AdminUser().SetRoutes(route)
+	r.r.AdminVariant().SetRoutes(route)
 }

@@ -30,23 +30,22 @@ func (s *TaxRateService) SetContext(context context.Context) *TaxRateService {
 	return s
 }
 
-func (s *TaxRateService) List(selector types.FilterableTaxRate, config sql.Options) ([]models.TaxRate, *utils.ApplictaionError) {
+func (s *TaxRateService) List(selector types.FilterableTaxRate, config *sql.Options) ([]models.TaxRate, *utils.ApplictaionError) {
 	query := sql.BuildQuery[types.FilterableTaxRate](selector, config)
 	return s.r.TaxRateRepository().FindWithResolution(query)
 }
 
-func (s *TaxRateService) ListAndCount(selector types.FilterableTaxRate, config sql.Options) ([]models.TaxRate, int64, *utils.ApplictaionError) {
+func (s *TaxRateService) ListAndCount(selector types.FilterableTaxRate, config *sql.Options) ([]models.TaxRate, int64, *utils.ApplictaionError) {
 	query := sql.BuildQuery[types.FilterableTaxRate](selector, config)
 	taxRates, count, err := s.r.TaxRateRepository().FindAndCountWithResolution(query)
 	return taxRates, *count, err
 }
 
-func (s *TaxRateService) Retrieve(taxRateId uuid.UUID, config sql.Options) (*models.TaxRate, *utils.ApplictaionError) {
+func (s *TaxRateService) Retrieve(taxRateId uuid.UUID, config *sql.Options) (*models.TaxRate, *utils.ApplictaionError) {
 	if taxRateId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"taxRateId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -59,21 +58,26 @@ func (s *TaxRateService) Retrieve(taxRateId uuid.UUID, config sql.Options) (*mod
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`TaxRate with `+taxRateId.String()+` was not found`,
-			"500",
 			nil,
 		)
 	}
 	return taxRate, nil
 }
 
-func (s *TaxRateService) Create(model *models.TaxRate) (*models.TaxRate, *utils.ApplictaionError) {
-	if model.RegionId.UUID == uuid.Nil {
+func (s *TaxRateService) Create(data *types.CreateTaxRateInput) (*models.TaxRate, *utils.ApplictaionError) {
+	if data.RegionId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"TaxRates must belong to a Region",
-			"500",
 			nil,
 		)
+	}
+
+	model := &models.TaxRate{
+		RegionId: uuid.NullUUID{UUID: data.RegionId},
+		Code:     data.Code,
+		Name:     data.Name,
+		Rate:     data.Rate,
 	}
 
 	if err := s.r.TaxRateRepository().Save(s.ctx, model); err != nil {
@@ -84,7 +88,7 @@ func (s *TaxRateService) Create(model *models.TaxRate) (*models.TaxRate, *utils.
 }
 
 func (s *TaxRateService) Update(id uuid.UUID, data types.UpdateTaxRateInput) (*models.TaxRate, *utils.ApplictaionError) {
-	taxRate, err := s.Retrieve(id, sql.Options{})
+	taxRate, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -126,11 +130,11 @@ func (s *TaxRateService) AddToProductType(id uuid.UUID, productTypeIds uuid.UUID
 }
 
 func (s *TaxRateService) AddToShippingOption(id uuid.UUID, optionIds uuid.UUIDs, replace bool) ([]models.ShippingTaxRate, *utils.ApplictaionError) {
-	taxRate, err := s.Retrieve(id, sql.Options{Selects: []string{"id", "region_id"}})
+	taxRate, err := s.Retrieve(id, &sql.Options{Selects: []string{"id", "region_id"}})
 	if err != nil {
 		return nil, err
 	}
-	options, err := s.r.ShippingOptionService().SetContext(s.ctx).List(models.ShippingOption{Model: core.Model{Id: id}}, sql.Options{Selects: []string{"id", "region_id"}})
+	options, err := s.r.ShippingOptionService().SetContext(s.ctx).List(models.ShippingOption{Model: core.Model{Id: id}}, &sql.Options{Selects: []string{"id", "region_id"}})
 	if err != nil {
 		return nil, err
 	}

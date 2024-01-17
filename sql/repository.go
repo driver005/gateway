@@ -259,7 +259,6 @@ func (r *Repository[M]) HandleOneError(res *gorm.DB) *utils.ApplictaionError {
 		return utils.NewApplictaionError(
 			utils.DB_ERROR,
 			gorm.ErrRecordNotFound.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -272,7 +271,6 @@ func (r *Repository[M]) HandleError(res *gorm.DB) *utils.ApplictaionError {
 		return utils.NewApplictaionError(
 			utils.DB_ERROR,
 			res.Error.Error(),
-			"500",
 			nil,
 		)
 	}

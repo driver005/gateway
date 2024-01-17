@@ -128,7 +128,31 @@ func (s *TotalsService) GetSwapTotal(order *models.Order) float64 {
 }
 
 func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMethod, cart *models.Cart, order *models.Order, opts GetShippingMethodTotalsOptions) (*ShippingMethodTotals, *utils.ApplictaionError) {
-	calculationContext, err := s.GetCalculationContext(cart, order, CalculationContextOptions{ExcludeShipping: true})
+	var calculationContextData types.CalculationContextData
+	if cart != nil {
+		calculationContextData = types.CalculationContextData{
+			Discounts:       cart.Discounts,
+			Items:           cart.Items,
+			Customer:        cart.Customer,
+			Region:          cart.Region,
+			ShippingAddress: cart.ShippingAddress,
+			ShippingMethods: cart.ShippingMethods,
+		}
+	}
+	if order != nil {
+		calculationContextData = types.CalculationContextData{
+			Discounts:       order.Discounts,
+			Items:           order.Items,
+			Customer:        order.Customer,
+			Region:          order.Region,
+			ShippingAddress: order.ShippingAddress,
+			Swaps:           order.Swaps,
+			Claims:          order.Claims,
+			ShippingMethods: order.ShippingMethods,
+		}
+	}
+
+	calculationContext, err := s.GetCalculationContext(calculationContextData, CalculationContextOptions{ExcludeShipping: true})
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +315,30 @@ func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forc
 	if cart != nil && !forceTaxes && !cart.Region.AutomaticTaxes {
 		return 0, nil
 	}
-	calculationContext, err := s.GetCalculationContext(cart, order, CalculationContextOptions{})
+	var calculationContextData types.CalculationContextData
+	if cart != nil {
+		calculationContextData = types.CalculationContextData{
+			Discounts:       cart.Discounts,
+			Items:           cart.Items,
+			Customer:        cart.Customer,
+			Region:          cart.Region,
+			ShippingAddress: cart.ShippingAddress,
+			ShippingMethods: cart.ShippingMethods,
+		}
+	}
+	if order != nil {
+		calculationContextData = types.CalculationContextData{
+			Discounts:       order.Discounts,
+			Items:           order.Items,
+			Customer:        order.Customer,
+			Region:          order.Region,
+			ShippingAddress: order.ShippingAddress,
+			Swaps:           order.Swaps,
+			Claims:          order.Claims,
+			ShippingMethods: order.ShippingMethods,
+		}
+	}
+	calculationContext, err := s.GetCalculationContext(calculationContextData, CalculationContextOptions{})
 	if err != nil {
 		return 0, err
 	}
@@ -388,29 +435,19 @@ func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forc
 	return s.Rounded(toReturn), nil
 }
 
-func (s *TotalsService) GetAllocationMap(cart *models.Cart, order *models.Order, options AllocationMapOptions) (types.LineAllocationsMap, *utils.ApplictaionError) {
+func (s *TotalsService) GetAllocationMap(calculationContextData types.CalculationContextData, options AllocationMapOptions) (types.LineAllocationsMap, *utils.ApplictaionError) {
 	allocationMap := make(types.LineAllocationsMap)
 	if !options.ExcludeDiscounts {
 		var discount models.Discount
-		if cart != nil {
-			for _, d := range cart.Discounts {
-				if d.Rule.Type != models.DiscountRuleFreeShipping {
-					discount = d
-					break
-				}
-			}
 
-		}
-		if order != nil {
-			for _, d := range order.Discounts {
-				if d.Rule.Type != models.DiscountRuleFreeShipping {
-					discount = d
-					break
-				}
+		for _, d := range calculationContextData.Discounts {
+			if d.Rule.Type != models.DiscountRuleFreeShipping {
+				discount = d
+				break
 			}
 		}
 
-		lineDiscounts := s.GetLineDiscounts(cart, order, discount)
+		lineDiscounts := s.GetLineDiscounts(calculationContextData, discount)
 		for _, ld := range lineDiscounts {
 			adjustmentAmount := ld.Amount + ld.CustomAdjustmentsAmount
 			if entity, ok := allocationMap[ld.Item.Id]; ok {
@@ -421,10 +458,7 @@ func (s *TotalsService) GetAllocationMap(cart *models.Cart, order *models.Order,
 
 				allocationMap[ld.Item.Id] = entity
 			} else {
-				allocationMap[ld.Item.Id] = struct {
-					GiftCard *types.GiftCardAllocation `json:"gift_card,omitempty"`
-					Discount *types.DiscountAllocation `json:"discount,omitempty"`
-				}{
+				allocationMap[ld.Item.Id] = types.LineAllocations{
 					Discount: &types.DiscountAllocation{
 						Amount:     adjustmentAmount,
 						UnitAmount: adjustmentAmount / float64(ld.Item.Quantity),
@@ -449,7 +483,16 @@ func (s *TotalsService) GetRefundedTotal(order *models.Order) float64 {
 }
 
 func (s *TotalsService) GetLineItemRefund(order *models.Order, lineItem models.LineItem) (float64, *utils.ApplictaionError) {
-	allocationMap, err := s.GetAllocationMap(nil, order, AllocationMapOptions{})
+	allocationMap, err := s.GetAllocationMap(types.CalculationContextData{
+		Discounts:       order.Discounts,
+		Items:           order.Items,
+		Customer:        order.Customer,
+		Region:          order.Region,
+		ShippingAddress: order.ShippingAddress,
+		Swaps:           order.Swaps,
+		Claims:          order.Claims,
+		ShippingMethods: order.ShippingMethods,
+	}, AllocationMapOptions{})
 	if err != nil {
 		return 0, err
 	}
@@ -469,7 +512,6 @@ func (s *TotalsService) GetLineItemRefund(order *models.Order, lineItem models.L
 		return 0, utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Tax calculation did not receive tax_lines",
-			"500",
 			nil,
 		)
 	}
@@ -535,20 +577,20 @@ func (s *TotalsService) GetRefundTotal(order *models.Order, lineItems []models.L
 func (s *TotalsService) CalculateDiscount(lineItem models.LineItem, variant uuid.UUID, variantPrice float64, value float64, discountType models.DiscountRuleType) types.LineDiscount {
 	if !lineItem.AllowDiscounts {
 		return types.LineDiscount{
-			LineItem: lineItem,
+			LineItem: &lineItem,
 			Variant:  variant,
 			Amount:   0,
 		}
 	}
 	if discountType == models.DiscountRulePersentage {
 		return types.LineDiscount{
-			LineItem: lineItem,
+			LineItem: &lineItem,
 			Variant:  variant,
 			Amount:   ((variantPrice * float64(lineItem.Quantity)) / 100) * value,
 		}
 	} else {
 		return types.LineDiscount{
-			LineItem: lineItem,
+			LineItem: &lineItem,
 			Variant:  variant,
 			Amount:   math.Min(value*float64(lineItem.Quantity), variantPrice*float64(lineItem.Quantity)),
 		}
@@ -559,7 +601,7 @@ func (s *TotalsService) GetAllocationItemDiscounts(discount models.Discount, car
 	discounts := []types.LineDiscount{}
 	for _, item := range cart.Items {
 		discounts = append(discounts, types.LineDiscount{
-			LineItem: item,
+			LineItem: &item,
 			Variant:  item.Variant.Id,
 			Amount:   s.GetLineItemDiscountAdjustment(item, discount),
 		})
@@ -608,23 +650,21 @@ func (s *TotalsService) GetLineItemAdjustmentsTotal(cart *models.Cart, order *mo
 	return total
 }
 
-func (s *TotalsService) GetLineDiscounts(cart *models.Cart, order *models.Order, discount models.Discount) []types.LineDiscountAmount {
-	merged := append([]models.LineItem{}, cart.Items...)
-	if order.Items != nil {
-		merged = append(merged, order.Items...)
+func (s *TotalsService) GetLineDiscounts(calculationContextData types.CalculationContextData, discount models.Discount) []types.LineDiscountAmount {
+	merged := append([]models.LineItem{}, calculationContextData.Items...)
+	if calculationContextData.Items != nil {
+		merged = append(merged, calculationContextData.Items...)
 	}
 
-	if order != nil {
-		if order.Swaps != nil {
-			for _, swap := range order.Swaps {
-				merged = append(merged, swap.AdditionalItems...)
+	if calculationContextData.Swaps != nil {
+		for _, swap := range calculationContextData.Swaps {
+			merged = append(merged, swap.AdditionalItems...)
+		}
+		if calculationContextData.Claims != nil {
+			for _, claim := range calculationContextData.Claims {
+				merged = append(merged, claim.AdditionalItems...)
 			}
-			if order.Claims != nil {
-				for _, claim := range order.Claims {
-					merged = append(merged, claim.AdditionalItems...)
-				}
 
-			}
 		}
 	}
 
@@ -652,7 +692,7 @@ func (s *TotalsService) GetLineDiscounts(cart *models.Cart, order *models.Order,
 			customAdjustmentsAmount += adjustment.Amount
 		}
 		lineDiscounts = append(lineDiscounts, types.LineDiscountAmount{
-			Item:                    item,
+			Item:                    &item,
 			Amount:                  amount,
 			CustomAdjustmentsAmount: customAdjustmentsAmount,
 		})
@@ -664,7 +704,30 @@ func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models
 	var err *utils.ApplictaionError
 	calculationContext := options.CalculationContext
 	if calculationContext == nil {
-		calculationContext, err = s.GetCalculationContext(cart, order, CalculationContextOptions{
+		var calculationContextData types.CalculationContextData
+		if cart != nil {
+			calculationContextData = types.CalculationContextData{
+				Discounts:       cart.Discounts,
+				Items:           cart.Items,
+				Customer:        cart.Customer,
+				Region:          cart.Region,
+				ShippingAddress: cart.ShippingAddress,
+				ShippingMethods: cart.ShippingMethods,
+			}
+		}
+		if order != nil {
+			calculationContextData = types.CalculationContextData{
+				Discounts:       order.Discounts,
+				Items:           order.Items,
+				Customer:        order.Customer,
+				Region:          order.Region,
+				ShippingAddress: order.ShippingAddress,
+				Swaps:           order.Swaps,
+				Claims:          order.Claims,
+				ShippingMethods: order.ShippingMethods,
+			}
+		}
+		calculationContext, err = s.GetCalculationContext(calculationContextData, CalculationContextOptions{
 			ExcludeShipping:  true,
 			ExcludeGiftCards: options.ExcludeGiftCards,
 		})
@@ -856,8 +919,8 @@ func (s *TotalsService) GetDiscountTotal(cart *models.Cart, order *models.Order)
 	return s.Rounded(math.Min(float64(subtotal), float64(discountTotal))), nil
 }
 
-func (s *TotalsService) GetCalculationContext(cart *models.Cart, order *models.Order, options CalculationContextOptions) (*interfaces.TaxCalculationContext, *utils.ApplictaionError) {
-	allocationMap, err := s.GetAllocationMap(cart, order, AllocationMapOptions{
+func (s *TotalsService) GetCalculationContext(calculationContextData types.CalculationContextData, options CalculationContextOptions) (*interfaces.TaxCalculationContext, *utils.ApplictaionError) {
+	allocationMap, err := s.GetAllocationMap(calculationContextData, AllocationMapOptions{
 		ExcludeGiftCards: options.ExcludeGiftCards,
 		ExcludeDiscounts: options.ExcludeDiscounts,
 	})
@@ -865,36 +928,19 @@ func (s *TotalsService) GetCalculationContext(cart *models.Cart, order *models.O
 		return nil, err
 	}
 	var shippingMethods []models.ShippingMethod
-	var res *interfaces.TaxCalculationContext
 	if !options.ExcludeShipping {
-		if cart != nil {
-			shippingMethods = cart.ShippingMethods
-		}
-		if order != nil {
-			shippingMethods = order.ShippingMethods
-		}
+		shippingMethods = calculationContextData.ShippingMethods
 	}
-	if cart != nil {
-		res = &interfaces.TaxCalculationContext{
-			ShippingAddress: *cart.ShippingAddress,
-			ShippingMethods: shippingMethods,
-			Customer:        *cart.Customer,
-			Region:          *cart.Region,
-			IsReturn:        options.IsReturn,
-			AllocationMap:   allocationMap,
-		}
+	model := &interfaces.TaxCalculationContext{
+		ShippingAddress: *calculationContextData.ShippingAddress,
+		ShippingMethods: shippingMethods,
+		Customer:        *calculationContextData.Customer,
+		Region:          *calculationContextData.Region,
+		IsReturn:        options.IsReturn,
+		AllocationMap:   allocationMap,
 	}
-	if order != nil {
-		res = &interfaces.TaxCalculationContext{
-			ShippingAddress: *order.ShippingAddress,
-			ShippingMethods: shippingMethods,
-			Customer:        *order.Customer,
-			Region:          *order.Region,
-			IsReturn:        options.IsReturn,
-			AllocationMap:   allocationMap,
-		}
-	}
-	return res, nil
+
+	return model, nil
 }
 
 func (s *TotalsService) Rounded(value float64) float64 {

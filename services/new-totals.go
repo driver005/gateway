@@ -211,7 +211,6 @@ func (s *NewTotalsService) GetLineItemRefund(lineItem models.LineItem, calculati
 		return 0, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Cannot compute line item refund amount, tax lines are missing from the line item",
-			"500",
 			nil,
 		)
 	}
@@ -253,7 +252,6 @@ func (s *NewTotalsService) GetGiftCardTotals(giftCardableAmount float64, giftCar
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Cannot calculate the gift cart totals. Neither the gift cards or gift card transactions have been provided",
-			"500",
 			nil,
 		)
 	}

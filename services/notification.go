@@ -66,7 +66,7 @@ func (s *NotificationService) RegisterInstalledProviders(providers uuid.UUIDs) *
 	return nil
 }
 
-func (s *NotificationService) List(selector *models.Notification, config sql.Options) ([]models.Notification, *utils.ApplictaionError) {
+func (s *NotificationService) List(selector *models.Notification, config *sql.Options) ([]models.Notification, *utils.ApplictaionError) {
 	notifications, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -74,8 +74,8 @@ func (s *NotificationService) List(selector *models.Notification, config sql.Opt
 	return notifications, nil
 }
 
-func (s *NotificationService) ListAndCount(selector *models.Notification, config sql.Options) ([]models.Notification, *int64, *utils.ApplictaionError) {
-	if reflect.DeepEqual(config, sql.Options{}) {
+func (s *NotificationService) ListAndCount(selector *models.Notification, config *sql.Options) ([]models.Notification, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -92,7 +92,7 @@ func (s *NotificationService) ListAndCount(selector *models.Notification, config
 	return res, count, nil
 }
 
-func (s *NotificationService) Retrieve(id uuid.UUID, config sql.Options) (*models.Notification, *utils.ApplictaionError) {
+func (s *NotificationService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Notification, *utils.ApplictaionError) {
 	var res *models.Notification
 	query := sql.BuildQuery(&models.Notification{Model: core.Model{Id: id}}, config)
 	if err := s.r.NotificationRepository().FindOne(s.ctx, res, query); err != nil {
@@ -107,7 +107,6 @@ func (s *NotificationService) Subscribe(eventName string, providerId uuid.UUID) 
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"providerId must be a string",
-			"500",
 			nil,
 		)
 	}
@@ -126,7 +125,6 @@ func (s *NotificationService) RetrieveProvider(id uuid.UUID) (interfaces.INotifi
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("Could not find a notification provider with id: %s.", id),
-			"500",
 			nil,
 		)
 	}
@@ -161,12 +159,7 @@ func (s *NotificationService) Send(event string, eventData map[string]interface{
 	}
 	result, er := provider.SendNotification(event, eventData, s.attachmentGenerator)
 	if er != nil {
-		return nil, utils.NewApplictaionError(
-			utils.CONFLICT,
-			err.Error(),
-			"500",
-			nil,
-		)
+		return nil, err
 	}
 	if result == nil {
 		return nil, err
@@ -190,7 +183,7 @@ func (s *NotificationService) Send(event string, eventData map[string]interface{
 	return res, nil
 }
 
-func (s *NotificationService) Resend(id uuid.UUID, config sql.Options) (*models.Notification, *utils.ApplictaionError) {
+func (s *NotificationService) Resend(id uuid.UUID, config *sql.Options) (*models.Notification, *utils.ApplictaionError) {
 	notification, err := s.Retrieve(id, config)
 	if err != nil {
 		return nil, err
@@ -201,12 +194,7 @@ func (s *NotificationService) Resend(id uuid.UUID, config sql.Options) (*models.
 	}
 	result, er := provider.ResendNotification(notification, config, s.attachmentGenerator)
 	if er != nil {
-		return nil, utils.NewApplictaionError(
-			utils.CONFLICT,
-			err.Error(),
-			"500",
-			nil,
-		)
+		return nil, err
 	}
 
 	notification.To = result.To

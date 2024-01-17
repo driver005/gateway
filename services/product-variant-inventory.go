@@ -51,12 +51,11 @@ func (s *ProductVariantInventoryService) ConfirmInventory(variantId uuid.UUID, q
 		return false, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"variantId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 
-	productVariant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, sql.Options{
+	productVariant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, &sql.Options{
 		Selects: []string{
 			"id",
 			"allow_backorder",
@@ -87,12 +86,12 @@ func (s *ProductVariantInventoryService) ConfirmInventory(variantId uuid.UUID, q
 
 	var locationIds uuid.UUIDs
 	if context["salesChannelId"] != nil {
-		locationIds, err = s.r.SalesChannelLocationService().SetContext(s.ctx).ListLocationIds(context["salesChannelId"].(uuid.UUID))
+		locationIds, err = s.r.SalesChannelLocationService().SetContext(s.ctx).ListLocationIds(uuid.UUIDs{context["salesChannelId"].(uuid.UUID)})
 		if err != nil {
 			return false, err
 		}
 	} else {
-		stockLocations, err := s.r.StockLocationService().List(s.ctx, interfaces.FilterableStockLocation{}, sql.Options{
+		stockLocations, err := s.r.StockLocationService().List(s.ctx, interfaces.FilterableStockLocation{}, &sql.Options{
 			Selects: []string{"id"},
 		})
 		if err != nil {
@@ -128,7 +127,7 @@ func (s *ProductVariantInventoryService) ConfirmInventory(variantId uuid.UUID, q
 func (s *ProductVariantInventoryService) Retrieve(inventoryItemId uuid.UUID, variantId uuid.UUID) (*models.ProductVariantInventoryItem, *utils.ApplictaionError) {
 	var res *models.ProductVariantInventoryItem
 
-	query := sql.BuildQuery(models.ProductVariantInventoryItem{InventoryItemId: uuid.NullUUID{UUID: inventoryItemId}, VariantId: uuid.NullUUID{UUID: variantId}}, sql.Options{})
+	query := sql.BuildQuery(models.ProductVariantInventoryItem{InventoryItemId: uuid.NullUUID{UUID: inventoryItemId}, VariantId: uuid.NullUUID{UUID: variantId}}, &sql.Options{})
 
 	if err := s.r.ProductVariantInventoryItemRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -139,7 +138,7 @@ func (s *ProductVariantInventoryService) Retrieve(inventoryItemId uuid.UUID, var
 func (s *ProductVariantInventoryService) ListByItem(itemIds uuid.UUIDs) ([]models.ProductVariantInventoryItem, *utils.ApplictaionError) {
 	var res []models.ProductVariantInventoryItem
 
-	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, sql.Options{
+	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, &sql.Options{
 		Specification: []sql.Specification{sql.In("inventory_item_id", itemIds)},
 	})
 
@@ -152,7 +151,7 @@ func (s *ProductVariantInventoryService) ListByItem(itemIds uuid.UUIDs) ([]model
 func (s *ProductVariantInventoryService) ListByVariant(variantIds uuid.UUIDs) ([]models.ProductVariantInventoryItem, *utils.ApplictaionError) {
 	var res []models.ProductVariantInventoryItem
 
-	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, sql.Options{
+	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, &sql.Options{
 		Specification: []sql.Specification{sql.In("variant_id", variantIds)},
 	})
 
@@ -178,7 +177,7 @@ func (s *ProductVariantInventoryService) ListVariantsByItem(itemId uuid.UUID) ([
 		ids = append(ids, variantInventory.Id)
 	}
 
-	items, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, sql.Options{Specification: []sql.Specification{sql.In("id", ids)}}, nil)
+	items, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, &sql.Options{Specification: []sql.Specification{sql.In("id", ids)}}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +200,7 @@ func (s *ProductVariantInventoryService) ListInventoryItemsByVariant(variantId u
 		ids = append(ids, variantInventory.Id)
 	}
 
-	items, _, err := s.r.InventoryService().ListInventoryItems(s.ctx, interfaces.FilterableInventoryItemProps{}, sql.Options{Specification: []sql.Specification{sql.In("id", ids)}})
+	items, _, err := s.r.InventoryService().ListInventoryItems(s.ctx, interfaces.FilterableInventoryItemProps{}, &sql.Options{Specification: []sql.Specification{sql.In("id", ids)}})
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +220,6 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("\"requiredQuantity\" must be greater than 0, the following entries are invalid: %v", invalidDataEntries),
-			"500",
 			nil,
 		)
 	}
@@ -232,7 +230,7 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		variantIds = append(variantIds, d.VariantId.UUID)
 	}
 
-	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, sql.Options{Selects: []string{"id"}, Specification: []sql.Specification{sql.In("id", variantIds)}}, nil)
+	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, &sql.Options{Selects: []string{"id"}, Specification: []sql.Specification{sql.In("id", variantIds)}}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +250,6 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("Variants not found for the following ids: %v", difference),
-			"500",
 			nil,
 		)
 	}
@@ -263,7 +260,7 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		itemIds = append(itemIds, d.InventoryItemId.UUID)
 	}
 
-	inventoryItems, _, err := s.r.InventoryService().ListInventoryItems(s.ctx, interfaces.FilterableInventoryItemProps{}, sql.Options{Selects: []string{"id"}, Specification: []sql.Specification{sql.In("id", itemIds)}})
+	inventoryItems, _, err := s.r.InventoryService().ListInventoryItems(s.ctx, interfaces.FilterableInventoryItemProps{}, &sql.Options{Selects: []string{"id"}, Specification: []sql.Specification{sql.In("id", itemIds)}})
 	if err != nil {
 		return nil, err
 	}
@@ -283,14 +280,13 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("Inventory items not found for the following ids: %v", difference),
-			"500",
 			nil,
 		)
 	}
 
 	var existingAttachments []models.ProductVariantInventoryItem
 
-	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, sql.Options{
+	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, &sql.Options{
 		Specification: []sql.Specification{sql.In("inventory_item_id", itemIds), sql.In("variant_id", variantIds)},
 	})
 
@@ -333,7 +329,7 @@ func (s *ProductVariantInventoryService) DetachInventoryItem(inventoryItemId uui
 		selector.VariantId = uuid.NullUUID{UUID: variantId}
 	}
 
-	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, sql.Options{
+	query := sql.BuildQuery(models.ProductVariantInventoryItem{}, &sql.Options{
 		Specification: []sql.Specification{sql.In("variant_id", uuid.UUIDs{variantId})},
 	})
 
@@ -352,14 +348,14 @@ func (s *ProductVariantInventoryService) DetachInventoryItem(inventoryItemId uui
 
 func (s *ProductVariantInventoryService) ReserveQuantity(variantId uuid.UUID, quantity int, context ReserveQuantityContext) ([]interfaces.ReservationItemDTO, *utils.ApplictaionError) {
 	if s.r.InventoryService() == nil {
-		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, sql.Options{
+		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, &sql.Options{
 			Selects: []string{"id", "inventory_quantity"},
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, &models.ProductVariant{
+		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, nil, &types.UpdateProductVariantInput{
 			InventoryQuantity: variant.InventoryQuantity - quantity,
 		})
 		if err != nil {
@@ -379,7 +375,7 @@ func (s *ProductVariantInventoryService) ReserveQuantity(variantId uuid.UUID, qu
 	locationId := context.LocationId
 
 	if locationId == uuid.Nil && context.SalesChannelId == uuid.Nil {
-		locationIds, err := s.r.SalesChannelLocationService().SetContext(s.ctx).ListLocationIds(context.SalesChannelId)
+		locationIds, err := s.r.SalesChannelLocationService().SetContext(s.ctx).ListLocationIds(uuid.UUIDs{context.SalesChannelId})
 		if err != nil {
 			return nil, err
 		}
@@ -393,7 +389,7 @@ func (s *ProductVariantInventoryService) ReserveQuantity(variantId uuid.UUID, qu
 			)
 		}
 
-		locations, count, err := s.r.InventoryService().ListInventoryLevels(s.ctx, interfaces.FilterableInventoryLevelProps{LocationId: locationIds, InventoryItemId: uuid.UUIDs{variantInventory[0].InventoryItemId.UUID}}, sql.Options{})
+		locations, count, err := s.r.InventoryService().ListInventoryLevels(s.ctx, interfaces.FilterableInventoryLevelProps{LocationId: locationIds, InventoryItemId: uuid.UUIDs{variantInventory[0].InventoryItemId.UUID}}, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -433,7 +429,7 @@ func (s *ProductVariantInventoryService) ReserveQuantity(variantId uuid.UUID, qu
 
 func (s *ProductVariantInventoryService) AdjustReservationsQuantityByLineItem(lineItemId uuid.UUID, variantId uuid.UUID, locationId uuid.UUID, quantity int) *utils.ApplictaionError {
 	if s.r.InventoryService() == nil {
-		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, sql.Options{
+		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, &sql.Options{
 			Selects: []string{"id", "inventory_quantity", "manage_inventory"},
 		})
 		if err != nil {
@@ -444,7 +440,7 @@ func (s *ProductVariantInventoryService) AdjustReservationsQuantityByLineItem(li
 			return nil
 		}
 
-		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, &models.ProductVariant{
+		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, nil, &types.UpdateProductVariantInput{
 			InventoryQuantity: variant.InventoryQuantity - quantity,
 		})
 		if err != nil {
@@ -456,12 +452,11 @@ func (s *ProductVariantInventoryService) AdjustReservationsQuantityByLineItem(li
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"You can only reduce reservation quantities using AdjustReservationsQuantityByLineItem. If you wish to reserve more use Update or Create.",
-			"500",
 			nil,
 		)
 	}
 
-	reservations, reservationCount, err := s.r.InventoryService().ListReservationItems(s.ctx, interfaces.FilterableReservationItemProps{LineItemId: lineItemId}, sql.Options{Order: gox.NewString("created_at DESC")})
+	reservations, reservationCount, err := s.r.InventoryService().ListReservationItems(s.ctx, interfaces.FilterableReservationItemProps{LineItemId: lineItemId}, &sql.Options{Order: gox.NewString("created_at DESC")})
 	if err != nil {
 		return err
 	}
@@ -560,7 +555,7 @@ func (s *ProductVariantInventoryService) ValidateInventoryAtLocation(items []mod
 			ids = append(ids, variantInventory.InventoryItemId.UUID)
 		}
 
-		inventoryLevels, inventoryLevelCount, err := s.r.InventoryService().ListInventoryLevels(s.ctx, interfaces.FilterableInventoryLevelProps{LocationId: uuid.UUIDs{locationId}}, sql.Options{Specification: []sql.Specification{sql.In("inventory_item_id", ids)}})
+		inventoryLevels, inventoryLevelCount, err := s.r.InventoryService().ListInventoryLevels(s.ctx, interfaces.FilterableInventoryLevelProps{LocationId: uuid.UUIDs{locationId}}, &sql.Options{Specification: []sql.Specification{sql.In("inventory_item_id", ids)}})
 		if err != nil {
 			return err
 		}
@@ -597,7 +592,7 @@ func (s *ProductVariantInventoryService) ValidateInventoryAtLocation(items []mod
 
 func (s *ProductVariantInventoryService) DeleteReservationsByLineItem(lineItemId uuid.UUID, variantId uuid.UUID, quantity int) *utils.ApplictaionError {
 	if s.r.InventoryService() == nil {
-		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, sql.Options{
+		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, &sql.Options{
 			Selects: []string{"id", "inventory_quantity", "manage_inventory"},
 		})
 		if err != nil {
@@ -608,7 +603,7 @@ func (s *ProductVariantInventoryService) DeleteReservationsByLineItem(lineItemId
 			return nil
 		}
 
-		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, &models.ProductVariant{
+		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, nil, &types.UpdateProductVariantInput{
 			InventoryQuantity: variant.InventoryQuantity - quantity,
 		})
 		if err != nil {
@@ -625,7 +620,7 @@ func (s *ProductVariantInventoryService) DeleteReservationsByLineItem(lineItemId
 
 func (s *ProductVariantInventoryService) AdjustInventory(variantId uuid.UUID, locationId string, quantity int) *utils.ApplictaionError {
 	if s.r.InventoryService() == nil {
-		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, sql.Options{
+		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, &sql.Options{
 			Selects: []string{"id", "inventory_quantity", "manage_inventory"},
 		})
 		if err != nil {
@@ -636,7 +631,7 @@ func (s *ProductVariantInventoryService) AdjustInventory(variantId uuid.UUID, lo
 			return nil
 		}
 
-		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, &models.ProductVariant{
+		_, err = s.r.ProductVariantService().SetContext(s.ctx).Update(variant.Id, nil, &types.UpdateProductVariantInput{
 			InventoryQuantity: variant.InventoryQuantity - quantity,
 		})
 		if err != nil {
@@ -670,7 +665,7 @@ func (s *ProductVariantInventoryService) AdjustInventory(variantId uuid.UUID, lo
 	return nil
 }
 
-func (s *ProductVariantInventoryService) SetVariantAvailability(variants []models.ProductVariant, salesChannelId uuid.UUID, availabilityContext *AvailabilityContext) ([]models.ProductVariant, *utils.ApplictaionError) {
+func (s *ProductVariantInventoryService) SetVariantAvailability(variants []models.ProductVariant, salesChannelId uuid.UUIDs, availabilityContext *AvailabilityContext) ([]models.ProductVariant, *utils.ApplictaionError) {
 	if s.r.InventoryService() == nil {
 		return variants, nil
 	}
@@ -695,7 +690,7 @@ func (s *ProductVariantInventoryService) SetVariantAvailability(variants []model
 			variants[i] = variant
 			continue
 		}
-		if salesChannelId == uuid.Nil {
+		if salesChannelId == nil {
 			variant.InventoryQuantity = 0
 			variant.Purchasable = false
 			variants[i] = variant
@@ -715,7 +710,7 @@ func (s *ProductVariantInventoryService) SetVariantAvailability(variants []model
 	return variants, nil
 }
 
-func (s *ProductVariantInventoryService) GetAvailabilityContext(variants []models.ProductVariant, salesChannelId uuid.UUID, existingContext *AvailabilityContext) (*AvailabilityContext, *utils.ApplictaionError) {
+func (s *ProductVariantInventoryService) GetAvailabilityContext(variants []models.ProductVariant, salesChannelId uuid.UUIDs, existingContext *AvailabilityContext) (*AvailabilityContext, *utils.ApplictaionError) {
 	variantInventoryMap := existingContext.variantInventoryMap
 	inventoryLocationMap := existingContext.inventoryLocationMap
 	if variantInventoryMap != nil {
@@ -738,7 +733,7 @@ func (s *ProductVariantInventoryService) GetAvailabilityContext(variants []model
 		}
 	}
 	var locationIds uuid.UUIDs
-	if salesChannelId != uuid.Nil {
+	if salesChannelId != nil {
 		if inventoryLocationMap == nil {
 			inventoryLocationMap = make(map[uuid.UUID][]interfaces.InventoryLevelDTO)
 		}
@@ -758,7 +753,7 @@ func (s *ProductVariantInventoryService) GetAvailabilityContext(variants []model
 				variantIds = append(variantIds, v.InventoryItemId.UUID)
 			}
 		}
-		locationLevels, _, err := s.r.InventoryService().ListInventoryLevels(s.ctx, interfaces.FilterableInventoryLevelProps{}, sql.Options{
+		locationLevels, _, err := s.r.InventoryService().ListInventoryLevels(s.ctx, interfaces.FilterableInventoryLevelProps{}, &sql.Options{
 			Specification: []sql.Specification{
 				sql.In("location_id", locationIds),
 				sql.In("inventory_item_id", variantIds),
@@ -780,7 +775,7 @@ func (s *ProductVariantInventoryService) GetAvailabilityContext(variants []model
 	}, nil
 }
 
-func (s *ProductVariantInventoryService) SetProductAvailability(products []models.Product, salesChannelId uuid.UUID) ([]models.Product, *utils.ApplictaionError) {
+func (s *ProductVariantInventoryService) SetProductAvailability(products []models.Product, salesChannelId uuid.UUIDs) ([]models.Product, *utils.ApplictaionError) {
 	if s.r.InventoryService() == nil {
 		return products, nil
 	}
@@ -833,7 +828,6 @@ func (s *ProductVariantInventoryService) GetVariantQuantityFromVariantInventoryI
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"All variant inventory items must belong to the same variant",
-			"500",
 			nil,
 		)
 	}

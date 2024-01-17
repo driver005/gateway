@@ -43,8 +43,8 @@ type Discount struct {
 	Regions []Region `json:"regions" gorm:"foreignKey:id"`
 
 	// The maximum number of times that a discount can be used.
-	UsageLimit int32 `json:"usage_limit" gorm:"default:null"`
+	UsageLimit int `json:"usage_limit" gorm:"default:null"`
 
 	// The number of times a discount has been used.
-	UsageCount int32 `json:"usage_count" gorm:"default:null"`
+	UsageCount int `json:"usage_count" gorm:"default:null"`
 }

@@ -18,19 +18,26 @@ type TaxServiceRate struct {
 }
 
 type ProviderLineItemTaxLine struct {
-	Rate             float64
-	Name             string
-	Code             *string
-	ItemID           uuid.UUID
-	ShippingMethodID uuid.UUID
-	Metadata         core.JSONB
+	Rate     float64    `json:"rate"`
+	Name     string     `json:"name"`
+	Code     string     `json:"code"`
+	ItemId   uuid.UUID  `json:"item_id"`
+	Metadata core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
+}
+
+type ProviderShippingMethodTaxLine struct {
+	Rate             float64    `json:"rate"`
+	Name             string     `json:"name"`
+	Code             string     `json:"code"`
+	ShippingMethodId uuid.UUID  `json:"shipping_method_id"`
+	Metadata         core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
 }
 
 type ProviderTaxLine struct {
-	Rate             float64
-	Name             string
-	Code             string
-	ItemID           uuid.UUID
-	ShippingMethodID uuid.UUID
-	Metadata         core.JSONB
+	Rate             float64    `json:"rate"`
+	Name             string     `json:"name"`
+	Code             string     `json:"code"`
+	ItemId           uuid.UUID  `json:"item_id"`
+	ShippingMethodId uuid.UUID  `json:"shipping_method_id"`
+	Metadata         core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
 }

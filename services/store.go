@@ -6,6 +6,7 @@ import (
 
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/icza/gox/gox"
 )
@@ -30,7 +31,7 @@ func (s *StoreService) SetContext(context context.Context) *StoreService {
 }
 
 func (s *StoreService) Create() (*models.Store, *utils.ApplictaionError) {
-	store, err := s.Retrieve(sql.Options{})
+	store, err := s.Retrieve(&sql.Options{})
 	if err == nil {
 		return store, nil
 	}
@@ -38,7 +39,7 @@ func (s *StoreService) Create() (*models.Store, *utils.ApplictaionError) {
 	var model *models.Store
 	var usd *models.Currency
 
-	query := sql.BuildQuery(models.Currency{Code: "usd"}, sql.Options{})
+	query := sql.BuildQuery(models.Currency{Code: "usd"}, &sql.Options{})
 	if err := s.r.CurrencyRepository().FindOne(s.ctx, usd, query); err != nil {
 		return nil, err
 	}
@@ -52,7 +53,7 @@ func (s *StoreService) Create() (*models.Store, *utils.ApplictaionError) {
 	return model, nil
 }
 
-func (s *StoreService) Retrieve(config sql.Options) (*models.Store, *utils.ApplictaionError) {
+func (s *StoreService) Retrieve(config *sql.Options) (*models.Store, *utils.ApplictaionError) {
 	var stores []models.Store
 	if err := s.r.StoreRepository().Find(s.ctx, stores, sql.Query{Where: gox.NewString("NOT id = null")}); err != nil {
 		return nil, err
@@ -61,7 +62,6 @@ func (s *StoreService) Retrieve(config sql.Options) (*models.Store, *utils.Appli
 		return nil, utils.NewApplictaionError(
 			utils.DB_ERROR,
 			"Store does not exist",
-			"500",
 			nil,
 		)
 	}
@@ -78,22 +78,22 @@ func (s *StoreService) GetDefaultCurrency(code string) *models.Currency {
 	}
 }
 
-func (s *StoreService) Update(Update *models.Store) (*models.Store, *utils.ApplictaionError) {
-	store, err := s.Retrieve(sql.Options{
+func (s *StoreService) Update(data *types.UpdateStoreInput) (*models.Store, *utils.ApplictaionError) {
+	store, err := s.Retrieve(&sql.Options{
 		Relations: []string{"currencies"},
 	})
 	if err == nil {
 		return store, nil
 	}
 
-	if Update.Currencies != nil {
-		defaultCurr := Update.DefaultCurrencyCode
-		if Update.DefaultCurrencyCode == "" {
+	if data.Currencies != nil {
+		defaultCurr := store.DefaultCurrencyCode
+		if data.DefaultCurrencyCode == "" {
 			defaultCurr = store.DefaultCurrencyCode
 		}
 		hasDefCurrency := false
-		for _, c := range Update.Currencies {
-			if strings.EqualFold(c.Code, defaultCurr) {
+		for _, c := range data.Currencies {
+			if strings.EqualFold(c, defaultCurr) {
 				hasDefCurrency = true
 				break
 			}
@@ -107,16 +107,15 @@ func (s *StoreService) Update(Update *models.Store) (*models.Store, *utils.Appli
 			)
 		}
 		var currencies []models.Currency
-		for _, curr := range Update.Currencies {
-			var currency *models.Currency
-			query := sql.BuildQuery(models.Currency{Code: strings.ToLower(curr.Code)}, sql.Options{})
-			if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
+		for _, curr := range data.Currencies {
+			currency, err := s.r.CurrencyService().RetrieveByCode(curr)
+			if err != nil {
 				return nil, err
 			}
 			if currency == nil {
 				return nil, utils.NewApplictaionError(
 					utils.INVALID_DATA,
-					"Currency with code "+curr.Code+" does not exist",
+					"Currency with code "+curr+" does not exist",
 					"500",
 					nil,
 				)
@@ -125,10 +124,10 @@ func (s *StoreService) Update(Update *models.Store) (*models.Store, *utils.Appli
 		}
 		store.Currencies = currencies
 	}
-	if Update.DefaultCurrencyCode != "" {
+	if data.DefaultCurrencyCode != "" {
 		hasDefCurrency := false
 		for _, c := range store.Currencies {
-			if strings.EqualFold(c.Code, Update.DefaultCurrencyCode) {
+			if strings.EqualFold(c.Code, data.DefaultCurrencyCode) {
 				hasDefCurrency = true
 				break
 			}
@@ -136,14 +135,14 @@ func (s *StoreService) Update(Update *models.Store) (*models.Store, *utils.Appli
 		if !hasDefCurrency {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
-				"Store does not have currency: "+Update.DefaultCurrencyCode,
+				"Store does not have currency: "+data.DefaultCurrencyCode,
 				"500",
 				nil,
 			)
 		}
-		var currency *models.Currency
-		query := sql.BuildQuery(models.Currency{Code: strings.ToLower(Update.DefaultCurrencyCode)}, sql.Options{})
-		if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
+
+		currency, err := s.r.CurrencyService().RetrieveByCode(data.DefaultCurrencyCode)
+		if err != nil {
 			return nil, err
 		}
 
@@ -151,7 +150,13 @@ func (s *StoreService) Update(Update *models.Store) (*models.Store, *utils.Appli
 		store.DefaultCurrencyCode = currency.Code
 	}
 
-	if err := s.r.StoreRepository().Upsert(s.ctx, store); err != nil {
+	store.Name = data.Name
+	store.SwapLinkTemplate = data.SwapLinkTemplate
+	store.PaymentLinkTemplate = data.PaymentLinkTemplate
+	store.InviteLinkTemplate = data.InviteLinkTemplate
+	store.Metadata = utils.MergeMaps(store.Metadata, data.Metadata)
+
+	if err := s.r.StoreRepository().Update(s.ctx, store); err != nil {
 		return nil, err
 	}
 
@@ -160,7 +165,7 @@ func (s *StoreService) Update(Update *models.Store) (*models.Store, *utils.Appli
 
 func (s *StoreService) AddCurrency(code string) (*models.Store, *utils.ApplictaionError) {
 	var currency *models.Currency
-	query := sql.BuildQuery(models.Currency{Code: strings.ToLower(code)}, sql.Options{})
+	query := sql.BuildQuery(models.Currency{Code: strings.ToLower(code)}, &sql.Options{})
 	if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
 		return nil, err
 	}
@@ -168,11 +173,10 @@ func (s *StoreService) AddCurrency(code string) (*models.Store, *utils.Applictai
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Currency "+code+" not found",
-			"500",
 			nil,
 		)
 	}
-	store, err := s.Retrieve(sql.Options{
+	store, err := s.Retrieve(&sql.Options{
 		Relations: []string{"currencies"},
 	})
 	if err != nil {
@@ -189,7 +193,6 @@ func (s *StoreService) AddCurrency(code string) (*models.Store, *utils.Applictai
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Currency already added",
-			"500",
 			nil,
 		)
 	}
@@ -201,7 +204,7 @@ func (s *StoreService) AddCurrency(code string) (*models.Store, *utils.Applictai
 }
 
 func (s *StoreService) RemoveCurrency(code string) (*models.Store, *utils.ApplictaionError) {
-	store, err := s.Retrieve(sql.Options{
+	store, err := s.Retrieve(&sql.Options{
 		Relations: []string{"currencies"},
 	})
 	if err != nil {

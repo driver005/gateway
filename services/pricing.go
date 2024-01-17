@@ -42,7 +42,7 @@ func (s *PricingService) collectPricingContext(context *interfaces.PricingContex
 
 	if context.RegionId != uuid.Nil {
 		var err *utils.ApplictaionError
-		region, err = s.r.RegionService().SetContext(s.ctx).Retrieve(context.RegionId, sql.Options{
+		region, err = s.r.RegionService().SetContext(s.ctx).Retrieve(context.RegionId, &sql.Options{
 			Selects: []string{"id", "currency_code", "automatic_taxes", "tax_rate"},
 		})
 		if err != nil {
@@ -104,7 +104,7 @@ func (s *PricingService) calculateTaxes(variantPricing types.ProductVariantPrici
 // 			"fields": []string{"variant_id", "price_set_id"},
 // 		},
 // 	}
-// 	variantPriceSets, err := s.r.ProductVariantService().SetContext(s.ctx).List(variantPriceData[0].VariantId, sql.Options{Selects: []string{"variant_id", "price_set_id"}})
+// 	variantPriceSets, err := s.r.ProductVariantService().SetContext(s.ctx).List(variantPriceData[0].VariantId, &sql.Options{Selects: []string{"variant_id", "price_set_id"}})
 // 	if err != nil {
 // 		return nil, err
 // 	}
@@ -118,7 +118,7 @@ func (s *PricingService) calculateTaxes(variantPricing types.ProductVariantPrici
 // 	}
 
 // 	if context.CustomerId != uuid.Nil {
-// 		customer, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(context.CustomerId, sql.Options{
+// 		customer, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(context.CustomerId, &sql.Options{
 // 			Relations: []string{"groups"},
 // 		})
 // 		if err != nil {
@@ -234,7 +234,7 @@ func (s *PricingService) GetProductVariantPricingById(variantId uuid.UUID, conte
 	}
 	var productRates []types.TaxServiceRate
 	if pricingContext.AutomaticTaxes && pricingContext.RegionId != uuid.Nil {
-		product, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, sql.Options{
+		product, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, &sql.Options{
 			Selects: []string{"id", "product_id"},
 		})
 		if err != nil {
@@ -288,7 +288,7 @@ func (s *PricingService) GetProductVariantsPricing(data []interfaces.Pricing, co
 	}
 	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{
 		FilterModel: core.FilterModel{Id: variantIds},
-	}, sql.Options{
+	}, &sql.Options{
 		Selects: []string{"id", "product_id"},
 	}, nil)
 	if err != nil {
@@ -454,7 +454,7 @@ func (s *PricingService) GetProductPricingById(productId uuid.UUID, context *int
 	}
 	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{
 		ProductId: uuid.UUIDs{productId},
-	}, sql.Options{
+	}, &sql.Options{
 		Selects: []string{"id"},
 	}, nil)
 	if err != nil {
@@ -475,122 +475,124 @@ func (s *PricingService) GetProductPricingById(productId uuid.UUID, context *int
 	return variantsPricingMap, nil
 }
 
-// func (s *PricingService) getPricingModuleVariantMoneyAmounts(variantIds []uuid.UUID) (map[uuid.UUID][]models.MoneyAmount, *utils.ApplictaionError) {
-// 	variables := map[string]interface{}{
-// 		"variant_id": variantIds,
-// 		"take":       nil,
-// 	}
-// 	query := map[string]interface{}{
-// 		"product_variant_price_set": map[string]interface{}{
-// 			"__args": variables,
-// 			"fields": []string{"variant_id", "price_set_id"},
-// 		},
-// 	}
-// 	variantPriceSets, err := s.remoteQuery(query)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	priceSetIdToVariantIdMap := make(map[string]uuid.UUID)
-// 	for _, variantPriceSet := range variantPriceSets {
-// 		priceSetIdToVariantIdMap[variantPriceSet.price_set_id] = variantPriceSet.variant_id
-// 	}
-// 	var priceSetIds uuid.UUIDs
-// 	for i, variantPriceSet := range variantPriceSets {
-// 		priceSetIds[i] = variantPriceSet.price_set_id
-// 	}
-// 	priceSetMoneyAmounts, err := s.pricingModuleService.ListPriceSetMoneyAmounts(s.ctx, nil, interfaces.PriceSetMoneyAmount{
-// 		PriceSetId: priceSetIds,
-// 	}, sql.Options{
-// 		Take:      nil,
-// 		Relations: []string{"money_amount", "price_list", "price_set", "price_rules", "price_rules.rule_type"},
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	variantIdMoneyAmountMap := make(map[uuid.UUID][]models.MoneyAmount)
-// 	for _, priceSetMoneyAmount := range priceSetMoneyAmounts {
-// 		variantId := priceSetIdToVariantIdMap[priceSetMoneyAmount.PriceSet.id]
-// 		if variantId == uuid.Nil {
-// 			continue
-// 		}
-// 		var regionId uuid.UUID
-// 		for _, pr := range priceSetMoneyAmount.PriceRules {
-// 			if pr.RuleType.RuleAttribute == "region_id" {
-// 				regionId = pr.Value
-// 				break
-// 			}
-// 		}
-// 		priceSetMoneyAmount.PriceSet.MoneyAmounts = nil
-// 		moneyAmount := models.MoneyAmount{
-// 			Amount:       priceSetMoneyAmount.MoneyAmount.Amount,
-// 			CurrencyCode: priceSetMoneyAmount.MoneyAmount.CurrencyCode,
-// 			PriceListId:  uuid.NullUUID{UUID: priceSetMoneyAmount.PriceList.Id},
-// 			PriceList:    &priceSetMoneyAmount.PriceList,
-// 		}
-// 		if regionId != uuid.Nil {
-// 			moneyAmount.RegionId = uuid.NullUUID{UUID: regionId}
-// 		}
-// 		if _, ok := variantIdMoneyAmountMap[variantId]; ok {
-// 			variantIdMoneyAmountMap[variantId] = append(variantIdMoneyAmountMap[variantId], moneyAmount)
-// 		} else {
-// 			variantIdMoneyAmountMap[variantId] = []models.MoneyAmount{moneyAmount}
-// 		}
-// 	}
-// 	return variantIdMoneyAmountMap, nil
-// }
+func (s *PricingService) getPricingModuleVariantMoneyAmounts(variantIds []uuid.UUID) (map[uuid.UUID][]models.MoneyAmount, *utils.ApplictaionError) {
+	// variables := map[string]interface{}{
+	// 	"variant_id": variantIds,
+	// 	"take":       nil,
+	// }
+	// query := map[string]interface{}{
+	// 	"product_variant_price_set": map[string]interface{}{
+	// 		"__args": variables,
+	// 		"fields": []string{"variant_id", "price_set_id"},
+	// 	},
+	// }
+	// variantPriceSets, err := s.remoteQuery(query)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// priceSetIdToVariantIdMap := make(map[uuid.UUID]uuid.UUID)
+	// for _, variantPriceSet := range variantPriceSets {
+	// 	priceSetIdToVariantIdMap[variantPriceSet.price_set_id] = variantPriceSet.variant_id
+	// }
+	// var priceSetIds uuid.UUIDs
+	// for i, variantPriceSet := range variantPriceSets {
+	// 	priceSetIds[i] = variantPriceSet.price_set_id
+	// }
+	// priceSetMoneyAmounts, err := s.r.PricingModuleService().ListPriceSetMoneyAmounts(s.ctx, nil, interfaces.PriceSetMoneyAmount{
+	// 	PriceSetId: priceSetIds,
+	// }, &sql.Options{
+	// 	Take:      nil,
+	// 	Relations: []string{"money_amount", "price_list", "price_set", "price_rules", "price_rules.rule_type"},
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// variantIdMoneyAmountMap := make(map[uuid.UUID][]models.MoneyAmount)
+	// for _, priceSetMoneyAmount := range priceSetMoneyAmounts {
+	// 	variantId := priceSetIdToVariantIdMap[priceSetMoneyAmount.PriceSet.Id]
+	// 	if variantId == uuid.Nil {
+	// 		continue
+	// 	}
+	// 	var regionId uuid.UUID
+	// 	for _, pr := range priceSetMoneyAmount.PriceRules {
+	// 		if pr.RuleType.RuleAttribute == "region_id" {
+	// 			regionId = pr.Value
+	// 			break
+	// 		}
+	// 	}
+	// 	priceSetMoneyAmount.PriceSet.MoneyAmounts = nil
+	// 	moneyAmount := models.MoneyAmount{
+	// 		Amount:       priceSetMoneyAmount.MoneyAmount.Amount,
+	// 		CurrencyCode: priceSetMoneyAmount.MoneyAmount.CurrencyCode,
+	// 		PriceListId:  uuid.NullUUID{UUID: priceSetMoneyAmount.PriceList.Id},
+	// 		PriceList:    &priceSetMoneyAmount.PriceList,
+	// 	}
+	// 	if regionId != uuid.Nil {
+	// 		moneyAmount.RegionId = uuid.NullUUID{UUID: regionId}
+	// 	}
+	// 	if _, ok := variantIdMoneyAmountMap[variantId]; ok {
+	// 		variantIdMoneyAmountMap[variantId] = append(variantIdMoneyAmountMap[variantId], moneyAmount)
+	// 	} else {
+	// 		variantIdMoneyAmountMap[variantId] = []models.MoneyAmount{moneyAmount}
+	// 	}
+	// }
+	// return variantIdMoneyAmountMap, nil
 
-// func (s *PricingService) setAdminVariantPricing(variants []models.ProductVariant, context *interfaces.PricingContext) ([]models.ProductVariant, *utils.ApplictaionError) {
-// 	feature := true
-// 	if feature {
-// 		return s.setVariantPrices(variants, context)
-// 	}
-// 	var variantIds uuid.UUIDs
-// 	for _, variant := range variants {
-// 		variantIds = append(variantIds, variant.Id)
-// 	}
-// 	variantIdMoneyAmountMap, err := s.getPricingModuleVariantMoneyAmounts(variantIds)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	pricedVariants := make([]models.ProductVariant, len(variants))
-// 	for i, variant := range variants {
-// 		variant.Prices = variantIdMoneyAmountMap[variant.Id]
-// 		pricedVariants[i] = variant
-// 	}
-// 	return pricedVariants, nil
-// }
+	return nil, nil
+}
 
-// func (s *PricingService) setAdminProductPricing(products []models.Product) ([]models.Product, *utils.ApplictaionError) {
-// 	feature := true
-// 	if !feature {
-// 		return s.setProductPrices(products, &interfaces.PricingContext{})
-// 	}
-// 	var variantIds uuid.UUIDs
-// 	for _, product := range products {
-// 		for _, variant := range product.Variants {
-// 			variantIds = append(variantIds, variant.Id)
-// 		}
-// 	}
-// 	variantIdMoneyAmountMap, err := s.getPricingModuleVariantMoneyAmounts(variantIds)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	pricedProducts := make([]models.Product, len(products))
-// 	for i, product := range products {
-// 		if len(product.Variants) == 0 {
-// 			pricedProducts[i] = product
-// 			continue
-// 		}
-// 		pricedVariants := make([]models.ProductVariant, len(product.Variants))
-// 		for j, productVariant := range product.Variants {
-// 			productVariant.Prices = variantIdMoneyAmountMap[productVariant.Id]
-// 			pricedVariants[j] = productVariant
-// 		}
-// 		product.Variants = pricedVariants
-// 		pricedProducts[i] = product
-// 	}
-// 	return pricedProducts, nil
-// }
+func (s *PricingService) SetAdminVariantPricing(variants []models.ProductVariant, context *interfaces.PricingContext) ([]models.ProductVariant, *utils.ApplictaionError) {
+	feature := true
+	if feature {
+		return s.SetVariantPrices(variants, context)
+	}
+	var variantIds uuid.UUIDs
+	for _, variant := range variants {
+		variantIds = append(variantIds, variant.Id)
+	}
+	variantIdMoneyAmountMap, err := s.getPricingModuleVariantMoneyAmounts(variantIds)
+	if err != nil {
+		return nil, err
+	}
+	pricedVariants := make([]models.ProductVariant, len(variants))
+	for i, variant := range variants {
+		variant.Prices = variantIdMoneyAmountMap[variant.Id]
+		pricedVariants[i] = variant
+	}
+	return pricedVariants, nil
+}
+
+func (s *PricingService) SetAdminProductPricing(products []models.Product) ([]models.Product, *utils.ApplictaionError) {
+	feature := true
+	if !feature {
+		return s.SetProductPrices(products, &interfaces.PricingContext{})
+	}
+	var variantIds uuid.UUIDs
+	for _, product := range products {
+		for _, variant := range product.Variants {
+			variantIds = append(variantIds, variant.Id)
+		}
+	}
+	variantIdMoneyAmountMap, err := s.getPricingModuleVariantMoneyAmounts(variantIds)
+	if err != nil {
+		return nil, err
+	}
+	pricedProducts := make([]models.Product, len(products))
+	for i, product := range products {
+		if len(product.Variants) == 0 {
+			pricedProducts[i] = product
+			continue
+		}
+		pricedVariants := make([]models.ProductVariant, len(product.Variants))
+		for j, productVariant := range product.Variants {
+			productVariant.Prices = variantIdMoneyAmountMap[productVariant.Id]
+			pricedVariants[j] = productVariant
+		}
+		product.Variants = pricedVariants
+		pricedProducts[i] = product
+	}
+	return pricedProducts, nil
+}
 
 func (s *PricingService) GetShippingOptionPricing(shippingOption *models.ShippingOption, context *interfaces.PricingContext) (*types.PricedShippingOption, *utils.ApplictaionError) {
 	if context != nil {
@@ -625,7 +627,7 @@ func (s *PricingService) GetShippingOptionPricing(shippingOption *models.Shippin
 	}
 
 	return &types.PricedShippingOption{
-		ShippingOption: *shippingOption,
+		ShippingOption: shippingOption,
 		PriceInclTax:   totalInclTax,
 		TaxRates:       shippingOptionRates,
 		TaxAmount:      taxAmount,

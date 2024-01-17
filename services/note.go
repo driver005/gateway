@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -31,7 +32,7 @@ func (s *NoteService) SetContext(context context.Context) *NoteService {
 	return s
 }
 
-func (s *NoteService) Retrieve(id uuid.UUID, config sql.Options) (*models.Note, *utils.ApplictaionError) {
+func (s *NoteService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Note, *utils.ApplictaionError) {
 	var res *models.Note
 	query := sql.BuildQuery(&models.Note{Model: core.Model{Id: id}}, config)
 	if err := s.r.NoteRepository().FindOne(s.ctx, res, query); err != nil {
@@ -41,7 +42,7 @@ func (s *NoteService) Retrieve(id uuid.UUID, config sql.Options) (*models.Note, 
 	return res, nil
 }
 
-func (s *NoteService) List(selector *models.Note, config sql.Options) ([]models.Note, *utils.ApplictaionError) {
+func (s *NoteService) List(selector *models.Note, config *sql.Options) ([]models.Note, *utils.ApplictaionError) {
 	result, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -49,8 +50,8 @@ func (s *NoteService) List(selector *models.Note, config sql.Options) ([]models.
 	return result, nil
 }
 
-func (s *NoteService) ListAndCount(selector *models.Note, config sql.Options) ([]models.Note, *int64, *utils.ApplictaionError) {
-	if reflect.DeepEqual(config, sql.Options{}) {
+func (s *NoteService) ListAndCount(selector *models.Note, config *sql.Options) ([]models.Note, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -67,19 +68,30 @@ func (s *NoteService) ListAndCount(selector *models.Note, config sql.Options) ([
 	return res, count, nil
 }
 
-func (s *NoteService) Create(data *models.Note, config map[string]interface{}) (*models.Note, *utils.ApplictaionError) {
-	data.Metadata = config
+func (s *NoteService) Create(data *types.CreateNoteInput, config map[string]interface{}) (*models.Note, *utils.ApplictaionError) {
+	model := &models.Note{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Value:        data.Value,
+		ResourceType: data.ResourceType,
+		ResourceId:   uuid.NullUUID{UUID: data.ResourceId},
+		AuthorId:     uuid.NullUUID{UUID: data.AuthorId},
+		Author:       data.Author,
+	}
+
+	model.Metadata = utils.MergeMaps(model.Metadata, config)
 
 	// s.eventBus_.withTransaction(manager).emit(NoteService.Events.CREATED, map[string]interface{}{"id": result.id})
 
-	if err := s.r.NoteRepository().Save(s.ctx, data); err != nil {
+	if err := s.r.NoteRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
-	return data, nil
+	return model, nil
 }
 
 func (s *NoteService) Update(id uuid.UUID, value string) (*models.Note, *utils.ApplictaionError) {
-	note, err := s.Retrieve(id, sql.Options{})
+	note, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +106,7 @@ func (s *NoteService) Update(id uuid.UUID, value string) (*models.Note, *utils.A
 }
 
 func (s *NoteService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	note, err := s.Retrieve(id, sql.Options{})
+	note, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return err
 	}

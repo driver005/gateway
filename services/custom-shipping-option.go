@@ -6,6 +6,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
@@ -29,12 +30,11 @@ func (s *CustomShippingOptionService) SetContext(context context.Context) *Custo
 	return s
 }
 
-func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config sql.Options) (*models.CustomShippingOption, *utils.ApplictaionError) {
+func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config *sql.Options) (*models.CustomShippingOption, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -46,7 +46,7 @@ func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config sql.Options)
 	return res, nil
 }
 
-func (s *CustomShippingOptionService) List(selector models.CustomShippingOption, config sql.Options) ([]models.CustomShippingOption, *utils.ApplictaionError) {
+func (s *CustomShippingOptionService) List(selector models.CustomShippingOption, config *sql.Options) ([]models.CustomShippingOption, *utils.ApplictaionError) {
 	var res []models.CustomShippingOption
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.CustomShippingOptionRepository().Find(s.ctx, res, query); err != nil {
@@ -55,10 +55,21 @@ func (s *CustomShippingOptionService) List(selector models.CustomShippingOption,
 	return res, nil
 }
 
-func (s *CustomShippingOptionService) Create(data []models.CustomShippingOption) ([]models.CustomShippingOption, *utils.ApplictaionError) {
-	if err := s.r.CustomShippingOptionRepository().SaveSlice(s.ctx, data); err != nil {
+func (s *CustomShippingOptionService) Create(data []types.CreateCustomShippingOptionInput) ([]models.CustomShippingOption, *utils.ApplictaionError) {
+	var model []models.CustomShippingOption
+	for _, d := range data {
+		model = append(model, models.CustomShippingOption{
+			Model: core.Model{
+				Metadata: d.Metadata,
+			},
+			Price:            d.Price,
+			CartId:           uuid.NullUUID{UUID: d.CartId},
+			ShippingOptionId: uuid.NullUUID{UUID: d.ShippingOptionId},
+		})
+	}
+	if err := s.r.CustomShippingOptionRepository().SaveSlice(s.ctx, model); err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	return model, nil
 }

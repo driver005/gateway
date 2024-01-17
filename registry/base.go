@@ -10,11 +10,13 @@ import (
 	"github.com/driver005/gateway/config"
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/middlewares"
+	"github.com/driver005/gateway/migrations"
 	"github.com/driver005/gateway/repository"
 	"github.com/driver005/gateway/routes"
 	"github.com/driver005/gateway/routes/admin"
 	"github.com/driver005/gateway/services"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/utils"
 	"github.com/sarulabs/di"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -52,6 +54,7 @@ type Base struct {
 	storeRouter  fiber.Router
 	router       *fiber.App
 	routes       *routes.Routes
+	migrations   *migrations.Handler
 
 	//Interfaces
 	priceSelectionStrategy interfaces.IPriceSelectionStrategy
@@ -59,6 +62,9 @@ type Base struct {
 	inventoryService       interfaces.IInventoryService
 	stockLocationService   interfaces.IStockLocationService
 	cacheService           interfaces.ICacheService
+	pricingModuleService   interfaces.IPricingModuleService
+	fileService            interfaces.IFileService
+	batchJobStrategy       interfaces.IBatchJobStrategy
 
 	//Repository
 	addressRepo                       *repository.AddressRepo
@@ -150,7 +156,7 @@ type Base struct {
 	discountService                *services.DiscountService
 	draftOrderService              *services.DraftOrderService
 	eventBusService                *services.Bus
-	fileService                    *services.DefaultFileService
+	defaultFileService             *services.DefaultFileService
 	fulfillmentProviderService     *services.FulfillmentProviderService
 	fulfillmentService             *services.FulfillmentService
 	giftCardService                *services.GiftCardService
@@ -200,9 +206,46 @@ type Base struct {
 	tockenService                  *services.TockenService
 	totalsService                  *services.TotalsService
 	userService                    *services.UserService
+	flagRouter                     *services.FlagRouter
 
 	//Routes
-	adminAuth *admin.Auth
+	adminAuth              *admin.Auth
+	adminBatch             *admin.Batch
+	adminCollection        *admin.Collection
+	adminCurrencie         *admin.Currencie
+	adminCustomerGroup     *admin.CustomerGroup
+	adminCustomer          *admin.Customer
+	adminDiscount          *admin.Discount
+	adminDraftOrder        *admin.DraftOrder
+	adminGiftCard          *admin.GiftCard
+	adminInventoryItem     *admin.InventoryItem
+	adminInvite            *admin.Invite
+	adminNote              *admin.Note
+	adminNotification      *admin.Notification
+	adminOrderEdit         *admin.OrderEdit
+	adminOrder             *admin.Order
+	adminPaymentCollection *admin.PaymentCollection
+	adminPayment           *admin.Payment
+	adminPriceList         *admin.PriceList
+	adminProductCategory   *admin.ProductCategory
+	adminProductTag        *admin.ProductTag
+	adminProductType       *admin.ProductType
+	adminProduct           *admin.Product
+	adminPublishableApiKey *admin.PublishableApiKey
+	adminRegion            *admin.Region
+	adminReservation       *admin.Reservation
+	adminReturnReason      *admin.ReturnReason
+	adminReturn            *admin.Return
+	adminSalesChannel      *admin.SalesChannel
+	adminShippingOption    *admin.ShippingOption
+	adminShippingProfile   *admin.ShippingProfile
+	adminStockLocation     *admin.StockLocation
+	adminStore             *admin.Store
+	adminSwap              *admin.Swap
+	adminTaxRate           *admin.TaxRate
+	adminUpload            *admin.Upload
+	adminUser              *admin.User
+	adminVariant           *admin.Variant
 }
 
 func NewRegistry() *Base {
@@ -382,6 +425,13 @@ func (m *Base) Manager(ctx context.Context) *gorm.DB {
 	return m.database.DB(ctx)
 }
 
+func (m *Base) Migration() *migrations.Handler {
+	if m.migrations == nil {
+		m.migrations = migrations.New(m)
+	}
+	return m.migrations
+}
+
 func (m *Base) Session() *session.Store {
 	if m.session == nil {
 		m.session = session.New()
@@ -437,6 +487,7 @@ func (m *Base) Setup() {
 		ReadTimeout:    time.Duration(m.Config().Server.Timeout) * time.Second,
 		StrictRouting:  true,
 		ReadBufferSize: m.Config().Server.RequestBodyLimit,
+		ErrorHandler:   utils.ErrorHandler,
 	})
 
 	c := make(chan os.Signal, 1)

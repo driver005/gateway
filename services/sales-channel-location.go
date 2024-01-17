@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 )
 
 type SalesChannelLocationService struct {
@@ -35,7 +36,7 @@ func (s *SalesChannelLocationService) RemoveLocation(locationId uuid.UUID, sales
 			SalesChannelId: uuid.NullUUID{UUID: salesChannelId},
 			LocationId:     uuid.NullUUID{UUID: locationId},
 		},
-		sql.Options{},
+		&sql.Options{},
 	)
 	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, res, query); err != nil {
 		return err
@@ -50,12 +51,12 @@ func (s *SalesChannelLocationService) RemoveLocation(locationId uuid.UUID, sales
 }
 
 func (s *SalesChannelLocationService) AssociateLocation(salesChannelId uuid.UUID, locationId uuid.UUID) *utils.ApplictaionError {
-	salesChannel, err := s.r.SalesChannelService().SetContext(s.ctx).RetrieveById(salesChannelId, sql.Options{})
+	salesChannel, err := s.r.SalesChannelService().SetContext(s.ctx).RetrieveById(salesChannelId, &sql.Options{})
 	if err != nil {
 		return err
 	}
 	if s.r.StockLocationService() != nil {
-		_, err = s.r.StockLocationService().Retrieve(s.ctx, locationId, sql.Options{})
+		_, err = s.r.StockLocationService().Retrieve(s.ctx, locationId, &sql.Options{})
 		if err != nil {
 			return err
 		}
@@ -71,9 +72,10 @@ func (s *SalesChannelLocationService) AssociateLocation(salesChannelId uuid.UUID
 	return nil
 }
 
-func (s *SalesChannelLocationService) ListLocationIds(salesChannelId uuid.UUID) (uuid.UUIDs, *utils.ApplictaionError) {
-	salesChannels, err := s.r.SalesChannelService().SetContext(s.ctx).RetrieveById(salesChannelId, sql.Options{
-		Selects: []string{"id"},
+func (s *SalesChannelLocationService) ListLocationIds(salesChannelId uuid.UUIDs) (uuid.UUIDs, *utils.ApplictaionError) {
+	salesChannels, err := s.r.SalesChannelService().SetContext(s.ctx).List(models.SalesChannel{}, &sql.Options{
+		Selects:       []string{"id"},
+		Specification: []sql.Specification{sql.In("id", salesChannelId)},
 	})
 	if err != nil {
 		return nil, err
@@ -81,11 +83,12 @@ func (s *SalesChannelLocationService) ListLocationIds(salesChannelId uuid.UUID) 
 
 	var locations []models.SalesChannelLocation
 	query := sql.BuildQuery(
-		models.SalesChannelLocation{
-			SalesChannelId: uuid.NullUUID{UUID: salesChannels.Id},
-		},
-		sql.Options{
+		models.SalesChannelLocation{},
+		&sql.Options{
 			Selects: []string{"location_id"},
+			Specification: []sql.Specification{sql.In("sales_channel_id", lo.Map(salesChannels, func(salesChannel models.SalesChannel, index int) uuid.UUID {
+				return salesChannel.Id
+			}))},
 		},
 	)
 	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, locations, query); err != nil {
@@ -100,7 +103,7 @@ func (s *SalesChannelLocationService) ListLocationIds(salesChannelId uuid.UUID) 
 }
 
 func (s *SalesChannelLocationService) ListSalesChannelIds(locationId uuid.UUID) (uuid.UUIDs, *utils.ApplictaionError) {
-	location, err := s.r.StockLocationService().Retrieve(s.ctx, locationId, sql.Options{})
+	location, err := s.r.StockLocationService().Retrieve(s.ctx, locationId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +112,7 @@ func (s *SalesChannelLocationService) ListSalesChannelIds(locationId uuid.UUID) 
 		models.SalesChannelLocation{
 			LocationId: uuid.NullUUID{UUID: location.Id},
 		},
-		sql.Options{
+		&sql.Options{
 			Selects: []string{"sales_channel_id"},
 		},
 	)

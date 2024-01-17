@@ -33,7 +33,7 @@ func (s *ProductVariantService) SetContext(context context.Context) *ProductVari
 	return s
 }
 
-func (s *ProductVariantService) Retrieve(id uuid.UUID, config sql.Options) (*models.ProductVariant, *utils.ApplictaionError) {
+func (s *ProductVariantService) Retrieve(id uuid.UUID, config *sql.Options) (*models.ProductVariant, *utils.ApplictaionError) {
 	var res *models.ProductVariant
 
 	query := sql.BuildQuery(models.ProductVariant{Model: core.Model{Id: id}}, config)
@@ -44,7 +44,7 @@ func (s *ProductVariantService) Retrieve(id uuid.UUID, config sql.Options) (*mod
 	return res, nil
 }
 
-func (s *ProductVariantService) RetrieveBySKU(sku string, config sql.Options) (*models.ProductVariant, *utils.ApplictaionError) {
+func (s *ProductVariantService) RetrieveBySKU(sku string, config *sql.Options) (*models.ProductVariant, *utils.ApplictaionError) {
 	priceIndex := -1
 	if config.Relations != nil {
 		for i, relation := range config.Relations {
@@ -67,9 +67,9 @@ func (s *ProductVariantService) RetrieveBySKU(sku string, config sql.Options) (*
 	return res, nil
 }
 
-func (s *ProductVariantService) Create(productId uuid.UUID, product *models.Product, variants []models.ProductVariant) ([]models.ProductVariant, *utils.ApplictaionError) {
+func (s *ProductVariantService) Create(productId uuid.UUID, product *models.Product, variants []types.CreateProductVariantInput) ([]models.ProductVariant, *utils.ApplictaionError) {
 	if productId != uuid.Nil {
-		p, err := s.r.ProductService().SetContext(s.ctx).RetrieveById(productId, sql.Options{Relations: []string{"variants", "variants.options", "options"}})
+		p, err := s.r.ProductService().SetContext(s.ctx).RetrieveById(productId, &sql.Options{Relations: []string{"variants", "variants.options", "options"}})
 		if err != nil {
 			return nil, err
 		}
@@ -79,7 +79,6 @@ func (s *ProductVariantService) Create(productId uuid.UUID, product *models.Prod
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Product id missing",
-			"500",
 			nil,
 		)
 	}
@@ -89,20 +88,47 @@ func (s *ProductVariantService) Create(productId uuid.UUID, product *models.Prod
 	}
 
 	computedRank := len(product.Variants)
-	var variantPricesToUpdate []models.MoneyAmount
+	var variantPricesToUpdate []types.UpdateVariantPricesData
 	var results []models.ProductVariant
-	for _, variant := range variants {
-		variant.VariantRank = computedRank
-		variant.ProductId = uuid.NullUUID{UUID: product.Id}
+	for _, data := range variants {
+		data.VariantRank = computedRank
+		data.ProductId = product.Id
 
-		if err := s.r.ProductVariantRepository().Save(s.ctx, &variant); err != nil {
+		model := &models.ProductVariant{
+			Model: core.Model{
+				Metadata: data.Metadata,
+			},
+			Title:             data.Title,
+			ProductId:         uuid.NullUUID{UUID: data.ProductId},
+			Sku:               data.SKU,
+			Barcode:           data.Barcode,
+			Ean:               data.EAN,
+			Upc:               data.UPC,
+			VariantRank:       data.VariantRank,
+			InventoryQuantity: data.InventoryQuantity,
+			AllowBackorder:    data.AllowBackorder,
+			ManageInventory:   data.ManageInventory,
+			HsCode:            data.HSCode,
+			OriginCountry:     data.OriginCountry,
+			MIdCode:           data.MIdCode,
+			Material:          data.Material,
+			Weight:            data.Weight,
+			Length:            data.Length,
+			Height:            data.Height,
+			Width:             data.Width,
+		}
+
+		if err := s.r.ProductVariantRepository().Save(s.ctx, model); err != nil {
 			return nil, err
 		}
 
-		if len(variant.Prices) > 0 {
-			variantPricesToUpdate = append(variantPricesToUpdate, variant.Prices...)
+		if len(data.Prices) > 0 {
+			variantPricesToUpdate = append(variantPricesToUpdate, types.UpdateVariantPricesData{
+				VariantId: model.Id,
+				Prices:    data.Prices,
+			})
 		}
-		results = append(results, variant)
+		results = append(results, *model)
 		computedRank++
 	}
 	if len(variantPricesToUpdate) > 0 {
@@ -134,49 +160,52 @@ func (s *ProductVariantService) Create(productId uuid.UUID, product *models.Prod
 	return results, nil
 }
 
-func (s *ProductVariantService) Update(id uuid.UUID, update *models.ProductVariant) (*models.ProductVariant, *utils.ApplictaionError) {
-	variant, err := s.Retrieve(id, sql.Options{})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(update.Prices) > 0 {
-		s.UpdateVariantPrices(update.Prices)
-	}
-
-	for _, option := range update.Options {
-		s.UpdateOptionValue(variant.Id, option.OptionId.UUID, option.Value)
-	}
-
-	update.Id = variant.Id
-
-	if err := s.r.ProductVariantRepository().Update(s.ctx, update); err != nil {
-		return nil, err
-	}
-
-	return update, nil
-}
-
-func (s *ProductVariantService) UpdateBatch(ids uuid.UUIDs, variants []models.ProductVariant) ([]models.ProductVariant, *utils.ApplictaionError) {
-	if len(ids) != len(variants) {
-		return nil, utils.NewApplictaionError(
-			utils.CONFLICT,
-			"length of `ids` and `variants` needs to be the same",
-			"500",
-			nil,
-		)
-	}
-
+func (s *ProductVariantService) UpdateBatch(data []types.UpdateProductVariantData) ([]models.ProductVariant, *utils.ApplictaionError) {
 	var res []models.ProductVariant
+	var prices []types.UpdateVariantPricesData
+	for _, d := range data {
+		prices = append(prices, types.UpdateVariantPricesData{
+			VariantId: d.Variant.Id,
+			Prices:    d.UpdateData.Prices,
+		})
+	}
 
-	for i, variant := range variants {
-		v, err := s.Update(ids[i], &variant)
-		if err != nil {
+	if len(prices) > 0 {
+		s.UpdateVariantPrices(prices)
+	}
+
+	for _, d := range data {
+		for _, option := range d.UpdateData.Options {
+			s.UpdateOptionValue(d.Variant.Id, option.OptionId, option.Value)
+		}
+
+		d.Variant.Metadata = utils.MergeMaps(d.Variant.Metadata, d.UpdateData.Metadata)
+		d.Variant.Title = d.UpdateData.Title
+		d.Variant.ProductId = uuid.NullUUID{UUID: d.UpdateData.ProductId}
+		d.Variant.Sku = d.UpdateData.SKU
+		d.Variant.Barcode = d.UpdateData.Barcode
+		d.Variant.Ean = d.UpdateData.EAN
+		d.Variant.Upc = d.UpdateData.UPC
+		d.Variant.VariantRank = d.UpdateData.VariantRank
+		d.Variant.InventoryQuantity = d.UpdateData.InventoryQuantity
+		d.Variant.AllowBackorder = d.UpdateData.AllowBackorder
+		d.Variant.ManageInventory = d.UpdateData.ManageInventory
+		d.Variant.HsCode = d.UpdateData.HSCode
+		d.Variant.OriginCountry = d.UpdateData.OriginCountry
+		d.Variant.MIdCode = d.UpdateData.MIdCode
+		d.Variant.Material = d.UpdateData.Material
+		d.Variant.Weight = d.UpdateData.Weight
+		d.Variant.Length = d.UpdateData.Length
+		d.Variant.Height = d.UpdateData.Height
+		d.Variant.Width = d.UpdateData.Width
+
+		if err := s.r.ProductVariantRepository().Update(s.ctx, d.Variant); err != nil {
 			return nil, err
 		}
 
-		res = append(res, *v)
+		res = append(res, *d.Variant)
 	}
+
 	// events := make([]struct {
 	// 	EventName string
 	// 	Data      struct {
@@ -202,27 +231,73 @@ func (s *ProductVariantService) UpdateBatch(ids uuid.UUIDs, variants []models.Pr
 	// if len(events) > 0 {
 	// 	s.eventBus_.emit(events)
 	// }
-	// return results.map(func(result struct {
-	// 	Variant models.ProductVariant
-	// 	UpdateData UpdateProductVariantInput
-	// 	ShouldEmitUpdateEvent bool
-	// }) models.ProductVariant {
-	// 	return result.Variant
-	// })
 
 	return res, nil
 }
 
-func (s *ProductVariantService) UpdateVariantPrices(data []models.MoneyAmount) *utils.ApplictaionError {
-	s.r.MoneyAmountRepository().DeleteVariantPricesNotIn(uuid.Nil, data)
-	var regionIds uuid.UUIDs
-	for _, d := range data {
-		if d.RegionId.UUID != uuid.Nil {
-			regionIds = append(regionIds, d.RegionId.UUID)
+func (s *ProductVariantService) Update(id uuid.UUID, variant *models.ProductVariant, data *types.UpdateProductVariantInput) (*models.ProductVariant, *utils.ApplictaionError) {
+	model := variant
+	if id == uuid.Nil {
+		mod, err := s.Retrieve(id, &sql.Options{})
+		if err != nil {
+			return nil, err
+		}
+		model = mod
+	}
+
+	var update []types.UpdateProductVariantData
+
+	if data != nil {
+		if model.Id == uuid.Nil {
+			return nil, utils.NewApplictaionError(
+				utils.INVALID_DATA,
+				"Variant id missing",
+				nil,
+			)
+		}
+
+		update = []types.UpdateProductVariantData{
+			{
+				Variant:    model,
+				UpdateData: data,
+			},
 		}
 	}
 
-	regions, err := s.r.RegionService().SetContext(s.ctx).List(models.Region{}, sql.Options{
+	res, err := s.UpdateBatch(update)
+	if err != nil {
+		return nil, err
+	}
+	return &res[0], nil
+}
+
+// func (s *ProductVariantService) UpdateVariantPrices(id uuid.UUID, variant types.UpdateVariantPricesData, data []types.ProductVariantPrice) *utils.ApplictaionError {
+// 	return nil
+// }
+
+func (s *ProductVariantService) UpdateVariantPrices(data []types.UpdateVariantPricesData) *utils.ApplictaionError {
+	var prices []models.MoneyAmount
+	var regionIds uuid.UUIDs
+	for _, d := range data {
+		for _, p := range d.Prices {
+			prices = append(prices, models.MoneyAmount{
+				Model: core.Model{
+					Id: p.Id,
+				},
+				CurrencyCode: p.CurrencyCode,
+				RegionId:     uuid.NullUUID{UUID: p.RegionId},
+				Amount:       p.Amount,
+				MinQuantity:  p.MinQuantity,
+				MaxQuantity:  p.MaxQuantity,
+			})
+			if p.RegionId != uuid.Nil {
+				regionIds = append(regionIds, p.RegionId)
+			}
+		}
+	}
+	s.r.MoneyAmountRepository().DeleteVariantPricesNotIn(uuid.Nil, prices)
+
+	regions, err := s.r.RegionService().SetContext(s.ctx).List(models.Region{}, &sql.Options{
 		Selects:       []string{"id", "currency_code"},
 		Specification: []sql.Specification{sql.In("id", regionIds)},
 	})
@@ -233,23 +308,29 @@ func (s *ProductVariantService) UpdateVariantPrices(data []models.MoneyAmount) *
 	for _, region := range regions {
 		regionsMap[region.Id] = region
 	}
-	var dataRegionPrices []models.MoneyAmount
-	var dataCurrencyPrices []models.MoneyAmount
+	var dataRegionPrices []types.UpdateVariantRegionPriceData
+	var dataCurrencyPrices []types.UpdateVariantCurrencyPriceData
 	for _, d := range data {
-		if d.RegionId.UUID != uuid.Nil {
-			region := regionsMap[d.RegionId.UUID]
-			dataRegionPrices = append(dataRegionPrices, models.MoneyAmount{
-				VariantId:    d.VariantId,
-				CurrencyCode: region.CurrencyCode,
-				RegionId:     d.RegionId,
-				Amount:       d.Amount,
-			})
-		} else {
-			dataCurrencyPrices = append(dataCurrencyPrices, models.MoneyAmount{
-				VariantId:    d.VariantId,
-				CurrencyCode: d.CurrencyCode,
-				Amount:       d.Amount,
-			})
+		for _, p := range d.Prices {
+			if p.RegionId != uuid.Nil {
+				region := regionsMap[p.RegionId]
+				dataRegionPrices = append(dataRegionPrices, types.UpdateVariantRegionPriceData{
+					VariantId: d.VariantId,
+					Price: &types.ProductVariantPrice{
+						CurrencyCode: region.CurrencyCode,
+						RegionId:     p.RegionId,
+						Amount:       p.Amount,
+					},
+				})
+			} else {
+				dataCurrencyPrices = append(dataCurrencyPrices, types.UpdateVariantCurrencyPriceData{
+					VariantId: d.VariantId,
+					Price: &types.ProductVariantPrice{
+						CurrencyCode: p.CurrencyCode,
+						Amount:       p.Amount,
+					},
+				})
+			}
 		}
 
 	}
@@ -262,12 +343,12 @@ func (s *ProductVariantService) UpdateVariantPrices(data []models.MoneyAmount) *
 	return nil
 }
 
-func (s *ProductVariantService) UpsertRegionPrices(data []models.MoneyAmount) *utils.ApplictaionError {
+func (s *ProductVariantService) UpsertRegionPrices(data []types.UpdateVariantRegionPriceData) *utils.ApplictaionError {
 	var where []models.MoneyAmount
 	for _, d := range data {
 		where = append(where, models.MoneyAmount{
-			VariantId: d.VariantId,
-			RegionId:  d.RegionId,
+			VariantId: uuid.NullUUID{UUID: d.VariantId},
+			RegionId:  uuid.NullUUID{UUID: d.Price.RegionId},
 		})
 	}
 	moneyAmounts, err := s.r.MoneyAmountRepository().FindRegionMoneyAmounts(where)
@@ -283,29 +364,39 @@ func (s *ProductVariantService) UpsertRegionPrices(data []models.MoneyAmount) *u
 	var dataToCreate []models.MoneyAmount
 	var dataToUpdate []models.MoneyAmount
 	for _, d := range data {
-		variantMoneyAmounts := moneyAmountsMapToVariantId[d.VariantId.UUID]
+		variantMoneyAmounts := moneyAmountsMapToVariantId[d.VariantId]
 		var moneyAmount *models.MoneyAmount
 		for _, ma := range variantMoneyAmounts {
-			if ma.RegionId == d.RegionId {
+			if ma.RegionId.UUID == d.Price.RegionId {
 				moneyAmount = &ma
 				break
 			}
 		}
 		if moneyAmount != nil {
-			if moneyAmount.Amount != d.Amount {
+			if moneyAmount.Amount != d.Price.Amount {
 				dataToUpdate = append(dataToUpdate, models.MoneyAmount{
 					Model: core.Model{
 						Id: moneyAmount.Id,
 					},
-					Amount: d.Amount,
+					Amount: d.Price.Amount,
 				})
 			}
 		} else {
-			if err := s.r.MoneyAmountRepository().Create(s.ctx, &d); err != nil {
+			model := &models.MoneyAmount{
+				Model: core.Model{
+					Id: d.Price.Id,
+				},
+				CurrencyCode: d.Price.CurrencyCode,
+				RegionId:     uuid.NullUUID{UUID: d.Price.RegionId},
+				Amount:       d.Price.Amount,
+				MinQuantity:  d.Price.MinQuantity,
+				MaxQuantity:  d.Price.MaxQuantity,
+			}
+			if err := s.r.MoneyAmountRepository().Create(s.ctx, model); err != nil {
 				return err
 			}
-			d.Variant = &models.ProductVariant{Model: core.Model{Id: d.VariantId.UUID}}
-			dataToCreate = append(dataToCreate, d)
+			model.Variant = &models.ProductVariant{Model: core.Model{Id: d.VariantId}}
+			dataToCreate = append(dataToCreate, *model)
 		}
 	}
 	if len(dataToCreate) > 0 {
@@ -324,19 +415,19 @@ func (s *ProductVariantService) UpsertRegionPrices(data []models.MoneyAmount) *u
 	if len(dataToCreate) > 0 || len(dataToUpdate) > 0 {
 		var variantIds uuid.UUIDs
 		for _, d := range data {
-			variantIds = append(variantIds, d.VariantId.UUID)
+			variantIds = append(variantIds, d.VariantId)
 		}
 		s.r.PriceSelectionStrategy().OnVariantsPricesUpdate(variantIds)
 	}
 	return nil
 }
 
-func (s *ProductVariantService) UpsertCurrencyPrices(data []models.MoneyAmount) *utils.ApplictaionError {
+func (s *ProductVariantService) UpsertCurrencyPrices(data []types.UpdateVariantCurrencyPriceData) *utils.ApplictaionError {
 	var where []models.MoneyAmount
 	for _, d := range data {
 		where = append(where, models.MoneyAmount{
-			VariantId:    d.VariantId,
-			CurrencyCode: d.CurrencyCode,
+			VariantId:    uuid.NullUUID{UUID: d.VariantId},
+			CurrencyCode: d.Price.CurrencyCode,
 		})
 	}
 	moneyAmounts, err := s.r.MoneyAmountRepository().FindCurrencyMoneyAmounts(where)
@@ -352,29 +443,39 @@ func (s *ProductVariantService) UpsertCurrencyPrices(data []models.MoneyAmount) 
 	var dataToCreate []models.MoneyAmount
 	var dataToUpdate []models.MoneyAmount
 	for _, d := range data {
-		variantMoneyAmounts := moneyAmountsMapToVariantId[d.VariantId.UUID]
+		variantMoneyAmounts := moneyAmountsMapToVariantId[d.VariantId]
 		var moneyAmount *models.MoneyAmount
 		for _, ma := range variantMoneyAmounts {
-			if ma.CurrencyCode == d.CurrencyCode {
+			if ma.CurrencyCode == d.Price.CurrencyCode {
 				moneyAmount = &ma
 				break
 			}
 		}
 		if moneyAmount != nil {
-			if moneyAmount.Amount != d.Amount {
+			if moneyAmount.Amount != d.Price.Amount {
 				dataToUpdate = append(dataToUpdate, models.MoneyAmount{
 					Model: core.Model{
 						Id: moneyAmount.Id,
 					},
-					Amount: d.Amount,
+					Amount: d.Price.Amount,
 				})
 			}
 		} else {
-			if err := s.r.MoneyAmountRepository().Create(s.ctx, &d); err != nil {
+			model := &models.MoneyAmount{
+				Model: core.Model{
+					Id: d.Price.Id,
+				},
+				CurrencyCode: d.Price.CurrencyCode,
+				RegionId:     uuid.NullUUID{UUID: d.Price.RegionId},
+				Amount:       d.Price.Amount,
+				MinQuantity:  d.Price.MinQuantity,
+				MaxQuantity:  d.Price.MaxQuantity,
+			}
+			if err := s.r.MoneyAmountRepository().Create(s.ctx, model); err != nil {
 				return err
 			}
-			d.Variant = &models.ProductVariant{Model: core.Model{Id: d.VariantId.UUID}}
-			dataToCreate = append(dataToCreate, d)
+			model.Variant = &models.ProductVariant{Model: core.Model{Id: d.VariantId}}
+			dataToCreate = append(dataToCreate, *model)
 		}
 	}
 	if len(dataToCreate) > 0 {
@@ -393,7 +494,7 @@ func (s *ProductVariantService) UpsertCurrencyPrices(data []models.MoneyAmount) 
 	if len(dataToCreate) > 0 || len(dataToUpdate) > 0 {
 		var variantIds uuid.UUIDs
 		for _, d := range data {
-			variantIds = append(variantIds, d.VariantId.UUID)
+			variantIds = append(variantIds, d.VariantId)
 		}
 		s.r.PriceSelectionStrategy().OnVariantsPricesUpdate(variantIds)
 	}
@@ -401,8 +502,8 @@ func (s *ProductVariantService) UpsertCurrencyPrices(data []models.MoneyAmount) 
 }
 
 // getRegionPrice gets the price specific to a region
-func (s *ProductVariantService) GetRegionPrice(id uuid.UUID, data *interfaces.PricingContext) (*float64, *utils.ApplictaionError) {
-	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(id, sql.Options{})
+func (s *ProductVariantService) GetRegionPrice(id uuid.UUID, data *types.GetRegionPriceContext) (*float64, *utils.ApplictaionError) {
+	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -416,9 +517,9 @@ func (s *ProductVariantService) GetRegionPrice(id uuid.UUID, data *interfaces.Pr
 }
 
 // setRegionPrice sets the default price of a specific region
-func (s *ProductVariantService) SetRegionPrice(id uuid.UUID, price models.MoneyAmount) (*models.MoneyAmount, *utils.ApplictaionError) {
+func (s *ProductVariantService) SetRegionPrice(id uuid.UUID, price types.ProductVariantPrice) (*models.MoneyAmount, *utils.ApplictaionError) {
 	var data *models.MoneyAmount
-	moneyAmount, err := s.r.MoneyAmountRepository().GetPricesForVariantInRegion(id, price.RegionId.UUID)
+	moneyAmount, err := s.r.MoneyAmountRepository().GetPricesForVariantInRegion(id, price.RegionId)
 	if err != nil {
 		return nil, err
 	}
@@ -444,15 +545,24 @@ func (s *ProductVariantService) SetRegionPrice(id uuid.UUID, price models.MoneyA
 }
 
 // setCurrencyPrice sets the default price for the given currency
-func (s *ProductVariantService) SetCurrencyPrice(id uuid.UUID, price models.MoneyAmount) (*models.MoneyAmount, *utils.ApplictaionError) {
-	return s.r.MoneyAmountRepository().UpsertVariantCurrencyPrice(id, price)
+func (s *ProductVariantService) SetCurrencyPrice(id uuid.UUID, data types.ProductVariantPrice) (*models.MoneyAmount, *utils.ApplictaionError) {
+	return s.r.MoneyAmountRepository().UpsertVariantCurrencyPrice(id, models.MoneyAmount{
+		Model: core.Model{
+			Id: data.Id,
+		},
+		CurrencyCode: data.CurrencyCode,
+		RegionId:     uuid.NullUUID{UUID: data.RegionId},
+		Amount:       data.Amount,
+		MinQuantity:  data.MinQuantity,
+		MaxQuantity:  data.MaxQuantity,
+	})
 }
 
 // updateOptionValue updates variant's option value
 func (s *ProductVariantService) UpdateOptionValue(id uuid.UUID, optionId uuid.UUID, optionValue string) (*models.ProductOptionValue, *utils.ApplictaionError) {
 	var res *models.ProductOptionValue
 
-	query := sql.BuildQuery(models.ProductOptionValue{VariantId: uuid.NullUUID{UUID: id}, OptionId: uuid.NullUUID{UUID: optionId}}, sql.Options{})
+	query := sql.BuildQuery(models.ProductOptionValue{VariantId: uuid.NullUUID{UUID: id}, OptionId: uuid.NullUUID{UUID: optionId}}, &sql.Options{})
 
 	if err := s.r.ProductOptionValueRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -485,7 +595,7 @@ func (s *ProductVariantService) AddOptionValue(id uuid.UUID, optionId uuid.UUID,
 func (s *ProductVariantService) DeleteOptionValue(id uuid.UUID, optionId uuid.UUID) *utils.ApplictaionError {
 	var res *models.ProductOptionValue
 
-	query := sql.BuildQuery(models.ProductOptionValue{VariantId: uuid.NullUUID{UUID: id}, OptionId: uuid.NullUUID{UUID: optionId}}, sql.Options{})
+	query := sql.BuildQuery(models.ProductOptionValue{VariantId: uuid.NullUUID{UUID: id}, OptionId: uuid.NullUUID{UUID: optionId}}, &sql.Options{})
 
 	if err := s.r.ProductOptionValueRepository().FindOne(s.ctx, res, query); err != nil {
 		return err
@@ -500,7 +610,7 @@ func (s *ProductVariantService) DeleteOptionValue(id uuid.UUID, optionId uuid.UU
 }
 
 // ListAndCount lists and counts the variants
-func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVariant, config sql.Options, q *string) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
+func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVariant, config *sql.Options, q *string) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
 	var res []models.ProductVariant
 
 	if q != nil {
@@ -520,7 +630,7 @@ func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVar
 }
 
 // list lists the variants
-func (s *ProductVariantService) List(selector types.FilterableProductVariant, config sql.Options, q *string) ([]models.ProductVariant, *utils.ApplictaionError) {
+func (s *ProductVariantService) List(selector types.FilterableProductVariant, config *sql.Options, q *string) ([]models.ProductVariant, *utils.ApplictaionError) {
 	variant, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -532,7 +642,7 @@ func (s *ProductVariantService) List(selector types.FilterableProductVariant, co
 func (s *ProductVariantService) Delete(variantIds uuid.UUIDs) *utils.ApplictaionError {
 	// events := []map[string]interface{}{}
 	for _, id := range variantIds {
-		variant, err := s.Retrieve(id, sql.Options{})
+		variant, err := s.Retrieve(id, &sql.Options{})
 		if err != nil {
 			return nil
 		}
@@ -563,7 +673,7 @@ func (s *ProductVariantService) Delete(variantIds uuid.UUIDs) *utils.Applictaion
 
 // IsVariantInSalesChannels checks if the variant is assigned to at least one of the provided sales channels
 func (s *ProductVariantService) IsVariantInSalesChannels(id uuid.UUID, salesChannelIds uuid.UUIDs) (bool, *utils.ApplictaionError) {
-	variant, err := s.Retrieve(id, sql.Options{
+	variant, err := s.Retrieve(id, &sql.Options{
 		Selects: []string{"product", "product.sales_channels"},
 	})
 	if err != nil {
@@ -601,7 +711,7 @@ func (s *ProductVariantService) IsVariantInSalesChannels(id uuid.UUID, salesChan
 // }
 
 // ValidateVariantsToCreate validates the variants to Create
-func (s *ProductVariantService) ValidateVariantsToCreate(product *models.Product, variants []models.ProductVariant) *utils.ApplictaionError {
+func (s *ProductVariantService) ValidateVariantsToCreate(product *models.Product, variants []types.CreateProductVariantInput) *utils.ApplictaionError {
 	for _, variant := range variants {
 		if len(product.Options) != len(variant.Options) {
 			return utils.NewApplictaionError(
@@ -612,8 +722,8 @@ func (s *ProductVariantService) ValidateVariantsToCreate(product *models.Product
 			)
 		}
 		for _, option := range product.Options {
-			if !slices.ContainsFunc(variant.Options, func(v models.ProductOptionValue) bool {
-				return option.Id == v.OptionId.UUID
+			if !slices.ContainsFunc(variant.Options, func(v types.ProductVariantOption) bool {
+				return option.Id == v.OptionId
 			}) {
 				return utils.NewApplictaionError(
 					utils.INVALID_DATA,
@@ -629,8 +739,11 @@ func (s *ProductVariantService) ValidateVariantsToCreate(product *models.Product
 			for _, option := range v.Options {
 				var variantOption models.ProductOptionValue
 				for _, o := range variant.Options {
-					if option.Id == o.Id {
-						variantOption = o
+					if option.Id == o.OptionId {
+						variantOption = models.ProductOptionValue{
+							OptionId: uuid.NullUUID{UUID: o.OptionId},
+							Value:    o.Value,
+						}
 						break
 					}
 				}

@@ -20,7 +20,7 @@ func SalesChannelRepository(db *gorm.DB) *SalesChannelRepo {
 	return &SalesChannelRepo{*sql.NewRepository[models.SalesChannel](db)}
 }
 
-func (r *SalesChannelRepo) GetFreeTextSearchResults(ctx context.Context, q *string, options sql.Options) ([]models.SalesChannel, *int64, error) {
+func (r *SalesChannelRepo) GetFreeTextSearchResults(ctx context.Context, q *string, config *sql.Options) ([]models.SalesChannel, *int64, error) {
 	var selector models.SalesChannel
 	var res []models.SalesChannel
 
@@ -30,7 +30,7 @@ func (r *SalesChannelRepo) GetFreeTextSearchResults(ctx context.Context, q *stri
 		selector.Description = v
 	}
 
-	query := sql.BuildQuery(selector, options)
+	query := sql.BuildQuery(selector, config)
 
 	count, err := r.FindAndCount(ctx, res, query)
 	if err != nil {

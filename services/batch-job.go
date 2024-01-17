@@ -54,7 +54,7 @@ func (s *BatchJobService) Retrive(batchJobId uuid.UUID) (*models.BatchJob, *util
 		models.BatchJob{
 			Model: core.Model{Id: batchJobId},
 		},
-		sql.Options{},
+		&sql.Options{},
 	)); err != nil {
 		return nil, err
 	}
@@ -62,10 +62,10 @@ func (s *BatchJobService) Retrive(batchJobId uuid.UUID) (*models.BatchJob, *util
 	return model, nil
 }
 
-func (s *BatchJobService) ListAndCount(selector types.FilterableBatchJob, config sql.Options) ([]models.BatchJob, *int64, *utils.ApplictaionError) {
+func (s *BatchJobService) ListAndCount(selector types.FilterableBatchJob, config *sql.Options) ([]models.BatchJob, *int64, *utils.ApplictaionError) {
 	var res []models.BatchJob
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(20)
 	}
@@ -78,7 +78,14 @@ func (s *BatchJobService) ListAndCount(selector types.FilterableBatchJob, config
 	return res, count, nil
 }
 
-func (s *BatchJobService) Create(model *models.BatchJob) (*models.BatchJob, *utils.ApplictaionError) {
+func (s *BatchJobService) Create(data *types.BatchJobCreateProps) (*models.BatchJob, *utils.ApplictaionError) {
+	model := &models.BatchJob{
+		Type:      data.Type,
+		Status:    models.BatchJobStatusCreated,
+		Context:   data.Context,
+		CreatedBy: data.CreatedBy,
+		DryRun:    data.DryRun,
+	}
 	if err := s.r.BatchJobRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
@@ -86,16 +93,25 @@ func (s *BatchJobService) Create(model *models.BatchJob) (*models.BatchJob, *uti
 	return model, nil
 }
 
-func (s *BatchJobService) Update(batchJobId uuid.UUID, model *models.BatchJob) (*models.BatchJob, *utils.ApplictaionError) {
+func (s *BatchJobService) Update(batchJobId uuid.UUID, model *models.BatchJob, data *types.BatchJobUpdateProps) (*models.BatchJob, *utils.ApplictaionError) {
 	if batchJobId != uuid.Nil {
-		model.Id = batchJobId
-
-		if err := s.r.BatchJobRepository().FindOne(s.ctx, model, sql.Query{}); err != nil {
+		batch, err := s.Retrive(batchJobId)
+		if err != nil {
 			return nil, err
 		}
+
+		model = batch
 	}
 
-	if err := s.r.BatchJobRepository().Upsert(s.ctx, model); err != nil {
+	if data.Context != nil {
+		model.Context = utils.MergeMaps(model.Context, data.Context)
+	}
+
+	if data.Result != nil {
+		model.Result = data.Result
+	}
+
+	if err := s.r.BatchJobRepository().Update(s.ctx, model); err != nil {
 		return nil, err
 	}
 
@@ -115,7 +131,6 @@ func (s *BatchJobService) Confirm(batchJobId uuid.UUID, model *models.BatchJob) 
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			`cannot confirm processing for a batch job that is not pre processed`,
-			"500",
 			nil,
 		)
 	}
@@ -136,7 +151,6 @@ func (s *BatchJobService) Complete(batchJobId uuid.UUID, model *models.BatchJob)
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			`cannot complete a batch job with status "${batchJob.status}". the batch job must be processing`,
-			"500",
 			nil,
 		)
 	}
@@ -157,7 +171,6 @@ func (s *BatchJobService) Cancel(batchJobId uuid.UUID, model *models.BatchJob) (
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			`cannot cancel completed batch job`,
-			"500",
 			nil,
 		)
 	}
@@ -182,7 +195,6 @@ func (s *BatchJobService) SetPreProcessingDone(batchJobId uuid.UUID, model *mode
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			`cannot mark a batch job as pre processed if it is not in created status`,
-			"500",
 			nil,
 		)
 	}
@@ -208,7 +220,6 @@ func (s *BatchJobService) SetProcessing(batchJobId uuid.UUID, model *models.Batc
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			`cannot mark a batch job as processing if the status is different that confirmed`,
-			"500",
 			nil,
 		)
 	}
@@ -216,7 +227,7 @@ func (s *BatchJobService) SetProcessing(batchJobId uuid.UUID, model *models.Batc
 	return s.UpdateStatus(uuid.Nil, model, models.BatchJobStatusProcessing)
 }
 
-func (s *BatchJobService) SetFailed(batchJobId uuid.UUID, model *models.BatchJob, errorMessage models.BatchJobResultErrors) (*models.BatchJob, *utils.ApplictaionError) {
+func (s *BatchJobService) SetFailed(batchJobId uuid.UUID, model *models.BatchJob, errorMessage types.BatchJobResultError) (*models.BatchJob, *utils.ApplictaionError) {
 	if batchJobId != uuid.Nil {
 		model.Id = batchJobId
 
@@ -225,11 +236,14 @@ func (s *BatchJobService) SetFailed(batchJobId uuid.UUID, model *models.BatchJob
 		}
 	}
 
-	model.Result = models.BatchJobResult{
-		Errors: errorMessage,
-	}
-
-	res, err := s.Update(uuid.Nil, model)
+	res, err := s.Update(uuid.Nil, model, &types.BatchJobUpdateProps{
+		Result: &models.BatchJobResult{
+			Errors: &models.BatchJobResultErrors{
+				Message: errorMessage.Message,
+				Code:    errorMessage.Code,
+			},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -237,8 +251,8 @@ func (s *BatchJobService) SetFailed(batchJobId uuid.UUID, model *models.BatchJob
 	return s.UpdateStatus(uuid.Nil, res, models.BatchJobStatusFailed)
 }
 
-func (s *BatchJobService) PrepareBatchJobForProcessing(data interface{}) (*models.BatchJob, *utils.ApplictaionError) {
-
+func (s *BatchJobService) PrepareBatchJobForProcessing(data *types.CreateBatchJobInput) (*types.CreateBatchJobInput, *utils.ApplictaionError) {
+	// s.r.BatchJobStrategy().PrepareBatchJobForProcessing()
 	return nil, nil
 }
 

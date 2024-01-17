@@ -40,7 +40,7 @@ func (s *OrderService) SetContext(context context.Context) *OrderService {
 	return s
 }
 
-func (s *OrderService) List(selector models.Order, config sql.Options, q *string) ([]models.Order, *utils.ApplictaionError) {
+func (s *OrderService) List(selector models.Order, config *sql.Options, q *string) ([]models.Order, *utils.ApplictaionError) {
 	orders, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -48,10 +48,10 @@ func (s *OrderService) List(selector models.Order, config sql.Options, q *string
 	return orders, nil
 }
 
-func (s *OrderService) ListAndCount(selector models.Order, config sql.Options, q *string) ([]models.Order, *int64, *utils.ApplictaionError) {
+func (s *OrderService) ListAndCount(selector models.Order, config *sql.Options, q *string) ([]models.Order, *int64, *utils.ApplictaionError) {
 	var res []models.Order
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -68,9 +68,9 @@ func (s *OrderService) ListAndCount(selector models.Order, config sql.Options, q
 
 		specification = append(specification, sql.Not(sql.IsNull("customer.id")))
 		specification = append(specification, sql.Not(sql.IsNull("shipping_address.id")))
+		specification = append(specification, sql.Like("display_id", v))
 
 		selector.Email = v
-		selector.DisplayId = v
 		selector.ShippingAddress.FirstName = v
 		selector.Customer.FirstName = v
 		selector.Customer.LastName = v
@@ -101,7 +101,7 @@ func (s *OrderService) ListAndCount(selector models.Order, config sql.Options, q
 	return orders, count, nil
 }
 
-func (s *OrderService) Retrieve(selector models.Order, config sql.Options) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) Retrieve(selector models.Order, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
 	var res *models.Order
 	query := sql.BuildQuery(selector, config)
 
@@ -111,7 +111,7 @@ func (s *OrderService) Retrieve(selector models.Order, config sql.Options) (*mod
 	return res, nil
 }
 
-func (s *OrderService) RetrieveWithTotals(selector models.Order, config sql.Options, context types.TotalsContext) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) RetrieveWithTotals(selector models.Order, config *sql.Options, context types.TotalsContext) (*models.Order, *utils.ApplictaionError) {
 	var res *models.Order
 	query := sql.BuildQuery(selector, config)
 
@@ -125,12 +125,11 @@ func (s *OrderService) RetrieveWithTotals(selector models.Order, config sql.Opti
 	return s.decorateTotals(res, totalsToSelect, context)
 }
 
-func (s *OrderService) RetrieveById(id uuid.UUID, config sql.Options) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) RetrieveById(id uuid.UUID, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -138,7 +137,7 @@ func (s *OrderService) RetrieveById(id uuid.UUID, config sql.Options) (*models.O
 	return s.Retrieve(models.Order{Model: core.Model{Id: id}}, config)
 }
 
-func (s *OrderService) RetrieveLegacy(id uuid.UUID, selector models.Order, config sql.Options) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) RetrieveLegacy(id uuid.UUID, selector models.Order, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
 	if id != uuid.Nil {
 		selector.Id = id
 	}
@@ -146,12 +145,11 @@ func (s *OrderService) RetrieveLegacy(id uuid.UUID, selector models.Order, confi
 	return s.Retrieve(selector, config)
 }
 
-func (s *OrderService) RetrieveByIdWithTotals(id uuid.UUID, config sql.Options, context types.TotalsContext) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) RetrieveByIdWithTotals(id uuid.UUID, config *sql.Options, context types.TotalsContext) (*models.Order, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -159,36 +157,33 @@ func (s *OrderService) RetrieveByIdWithTotals(id uuid.UUID, config sql.Options, 
 	return s.RetrieveWithTotals(models.Order{Model: core.Model{Id: id}}, config, context)
 }
 
-func (s *OrderService) RetrieveByCartId(cartId uuid.UUID, config sql.Options) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) RetrieveByCartId(cartId uuid.UUID, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
 	if cartId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"cartId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.Retrieve(models.Order{CartId: uuid.NullUUID{UUID: cartId}}, config)
 }
 
-func (s *OrderService) RetrieveByCartIdWithTotals(cartId uuid.UUID, config sql.Options) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) RetrieveByCartIdWithTotals(cartId uuid.UUID, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
 	if cartId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"cartId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.RetrieveWithTotals(models.Order{CartId: uuid.NullUUID{UUID: cartId}}, config, types.TotalsContext{})
 }
 
-func (s *OrderService) RetrieveByExternalId(externalId uuid.UUID, config sql.Options) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) RetrieveByExternalId(externalId uuid.UUID, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
 	if externalId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"externalId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -197,7 +192,7 @@ func (s *OrderService) RetrieveByExternalId(externalId uuid.UUID, config sql.Opt
 }
 
 func (s *OrderService) CompleteOrder(id uuid.UUID) (*models.Order, *utils.ApplictaionError) {
-	order, err := s.RetrieveById(id, sql.Options{})
+	order, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +200,6 @@ func (s *OrderService) CompleteOrder(id uuid.UUID) (*models.Order, *utils.Applic
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"A canceled order cannot be completed",
-			"500",
 			nil,
 		)
 	}
@@ -221,14 +215,14 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 	if id != uuid.Nil {
 		data.Id = id
 	}
-	_, err := s.RetrieveByCartId(id, sql.Options{Selects: []string{"id"}})
+	_, err := s.RetrieveByCartId(id, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return nil, err
 	}
 
 	var cart *models.Cart
 	if id != uuid.Nil {
-		cart, err = s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(id, sql.Options{Relations: []string{"region", "payment", "items"}}, TotalsConfig{})
+		cart, err = s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(id, &sql.Options{Relations: []string{"region", "payment", "items"}}, TotalsConfig{})
 		if err != nil {
 			return nil, err
 		}
@@ -239,7 +233,6 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Cannot create order from empty cart",
-			"500",
 			nil,
 		)
 	}
@@ -247,7 +240,6 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Cannot create an order from the cart without a customer",
-			"500",
 			nil,
 		)
 	}
@@ -303,7 +295,7 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 		order.SalesChannelId = cart.SalesChannelId
 	}
 	if cart.Type == models.CartDraftOrder {
-		draft, err := s.r.DraftOrderService().SetContext(s.ctx).RetrieveByCartId(cart.Id, sql.Options{})
+		draft, err := s.r.DraftOrderService().SetContext(s.ctx).RetrieveByCartId(cart.Id, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -321,7 +313,7 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 	// }
 	// }
 	if total != 0 && payment != nil {
-		_, err = s.r.PaymentProviderService().SetContext(s.ctx).UpdatePayment(payment.Id, &models.Payment{OrderId: uuid.NullUUID{UUID: order.Id}})
+		_, err = s.r.PaymentProviderService().SetContext(s.ctx).UpdatePayment(payment.Id, &types.UpdatePaymentInput{OrderId: order.Id})
 		if err != nil {
 			return nil, err
 		}
@@ -330,7 +322,6 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Unable to compute gift cardable amount during order creation from cart. The cart is missing the subtotal and/or discount_total",
-			"500",
 			nil,
 		)
 	}
@@ -356,12 +347,12 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 	for _, giftCard := range orderedGiftCards {
 		newGiftCardBalance := math.Max(0, giftCard.Balance-giftCardableAmountBalance)
 		giftCardBalanceUsed := giftCard.Balance - newGiftCardBalance
-		_, err := s.r.GiftCardService().SetContext(s.ctx).Update(giftCard.Id, &models.GiftCard{Balance: newGiftCardBalance, IsDisabled: newGiftCardBalance == 0})
+		_, err := s.r.GiftCardService().SetContext(s.ctx).Update(giftCard.Id, &types.UpdateGiftCardInput{Balance: newGiftCardBalance, IsDisabled: newGiftCardBalance == 0})
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = s.r.GiftCardService().SetContext(s.ctx).CreateTransaction(&models.GiftCardTransaction{GiftCardId: uuid.NullUUID{UUID: giftCard.Id}, OrderId: uuid.NullUUID{UUID: order.Id}, Amount: giftCardBalanceUsed, IsTaxable: giftCard.TaxRate != 0, TaxRate: giftCard.TaxRate})
+		_, err = s.r.GiftCardService().SetContext(s.ctx).CreateTransaction(&types.CreateGiftCardTransactionInput{GiftCardId: giftCard.Id, OrderId: order.Id, Amount: giftCardBalanceUsed, IsTaxable: giftCard.TaxRate != 0, TaxRate: giftCard.TaxRate})
 		if err != nil {
 			return nil, err
 		}
@@ -372,7 +363,7 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 	}
 
 	for _, lineItem := range cart.Items {
-		_, err := s.r.LineItemService().SetContext(s.ctx).Update(lineItem.Id, nil, &models.LineItem{OrderId: uuid.NullUUID{UUID: order.Id}}, sql.Options{})
+		_, err := s.r.LineItemService().SetContext(s.ctx).Update(lineItem.Id, nil, &models.LineItem{OrderId: uuid.NullUUID{UUID: order.Id}}, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
@@ -386,7 +377,7 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 	}
 	for _, method := range cart.ShippingMethods {
 		method.TaxLines = []models.ShippingMethodTaxLine{}
-		_, err = s.r.ShippingOptionService().UpdateShippingMethod(method.Id, &models.ShippingMethod{OrderId: uuid.NullUUID{UUID: order.Id}})
+		_, err = s.r.ShippingOptionService().UpdateShippingMethod(method.Id, &types.ShippingMethodUpdate{OrderId: order.Id})
 		if err != nil {
 			return nil, err
 		}
@@ -396,7 +387,7 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 	// 	return nil, err
 	// }
 	now := time.Now()
-	_, err = s.r.CartService().SetContext(s.ctx).Update(cart.Id, nil, &models.Cart{CompletedAt: &now})
+	_, err = s.r.CartService().SetContext(s.ctx).Update(cart.Id, nil, &types.CartUpdateProps{CompletedAt: &now})
 	if err != nil {
 		return nil, err
 	}
@@ -415,12 +406,10 @@ func (s *OrderService) createGiftCardsFromLineItem(order *models.Order, lineItem
 	}
 
 	for qty := 0; qty < lineItem.Quantity; qty++ {
-		res, err := s.r.GiftCardService().SetContext(s.ctx).Create(&models.GiftCard{
-			Model: core.Model{
-				Metadata: lineItem.Metadata,
-			},
-			RegionId: order.RegionId,
-			OrderId:  uuid.NullUUID{UUID: order.Id},
+		res, err := s.r.GiftCardService().SetContext(s.ctx).Create(&types.CreateGiftCardInput{
+			Metadata: lineItem.Metadata,
+			RegionId: order.RegionId.UUID,
+			OrderId:  order.Id,
 			Value:    taxExclusivePrice,
 			Balance:  taxExclusivePrice,
 			TaxRate:  giftCardTaxRate,
@@ -447,13 +436,13 @@ func (s *OrderService) CreateShipment(
 	metadata := config.Metadata
 	noNotification := config.NoNotification
 
-	order, err := s.RetrieveById(orderId, sql.Options{
+	order, err := s.RetrieveById(orderId, &sql.Options{
 		Relations: []string{"items"},
 	})
 	if err != nil {
 		return nil, err
 	}
-	shipment, err := s.r.FulfillmentService().SetContext(s.ctx).Retrieve(fulfillmentId, sql.Options{})
+	shipment, err := s.r.FulfillmentService().SetContext(s.ctx).Retrieve(fulfillmentId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +450,6 @@ func (s *OrderService) CreateShipment(
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"A canceled order cannot be fulfilled as shipped",
-			"500",
 			nil,
 		)
 	}
@@ -469,7 +457,6 @@ func (s *OrderService) CreateShipment(
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			"Could not find fulfillment",
-			"500",
 			nil,
 		)
 	}
@@ -477,10 +464,8 @@ func (s *OrderService) CreateShipment(
 	if !noNotification {
 		evaluatedNoNotification = shipment.NoNotification
 	}
-	shipmentRes, err := s.r.FulfillmentService().SetContext(s.ctx).CreateShipment(fulfillmentId, trackingLinks, &models.Fulfillment{
-		Model: core.Model{
-			Metadata: metadata,
-		},
+	shipmentRes, err := s.r.FulfillmentService().SetContext(s.ctx).CreateShipment(fulfillmentId, trackingLinks, &types.CreateShipmentConfig{
+		Metadata:       metadata,
 		NoNotification: evaluatedNoNotification,
 	})
 	if err != nil {
@@ -499,7 +484,7 @@ func (s *OrderService) CreateShipment(
 			}
 			_, err := s.r.LineItemService().SetContext(s.ctx).Update(item.Id, nil, &models.LineItem{
 				ShippedQuantity: shippedQty,
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
@@ -537,7 +522,7 @@ func (s *OrderService) UpdateBillingAddress(
 		address.CountryCode = countryCode
 	}
 
-	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(order.RegionId.UUID, sql.Options{
+	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(order.RegionId.UUID, &sql.Options{
 		Relations: []string{"countries"},
 	})
 	if err != nil {
@@ -554,13 +539,12 @@ func (s *OrderService) UpdateBillingAddress(
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Shipping country must be in the order region",
-			"500",
 			nil,
 		)
 	}
 	var addr *models.Address
 	if order.BillingAddressId.UUID != uuid.Nil {
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: order.BillingAddressId.UUID}}, sql.Options{})
+		query := sql.BuildQuery(models.Address{Model: core.Model{Id: order.BillingAddressId.UUID}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -586,7 +570,7 @@ func (s *OrderService) UpdateShippingAddress(
 		address.CountryCode = countryCode
 	}
 
-	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(order.RegionId.UUID, sql.Options{
+	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(order.RegionId.UUID, &sql.Options{
 		Relations: []string{"countries"},
 	})
 	if err != nil {
@@ -603,13 +587,12 @@ func (s *OrderService) UpdateShippingAddress(
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Shipping country must be in the order region",
-			"500",
 			nil,
 		)
 	}
 	var addr *models.Address
 	if order.ShippingAddressId.UUID != uuid.Nil {
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: order.ShippingAddressId.UUID}}, sql.Options{})
+		query := sql.BuildQuery(models.Address{Model: core.Model{Id: order.ShippingAddressId.UUID}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -630,11 +613,11 @@ func (s *OrderService) AddShippingMethod(
 	orderId uuid.UUID,
 	optionId uuid.UUID,
 	data map[string]interface{},
-	config *models.ShippingMethod,
+	config *types.CreateShippingMethodDto,
 ) (*models.Order, *utils.ApplictaionError) {
 	order, err := s.RetrieveByIdWithTotals(
 		orderId,
-		sql.Options{
+		&sql.Options{
 			Relations: []string{
 				"shipping_methods",
 				"shipping_methods.shipping_option",
@@ -650,7 +633,6 @@ func (s *OrderService) AddShippingMethod(
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"A shipping method cannot be added to a canceled order",
-			"500",
 			nil,
 		)
 	}
@@ -674,7 +656,7 @@ func (s *OrderService) AddShippingMethod(
 			}
 		}
 	}
-	result, err := s.RetrieveById(orderId, sql.Options{})
+	result, err := s.RetrieveById(orderId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -689,8 +671,8 @@ func (s *OrderService) AddShippingMethod(
 	return result, nil
 }
 
-func (s *OrderService) Update(orderId uuid.UUID, update *models.Order) (*models.Order, *utils.ApplictaionError) {
-	order, err := s.RetrieveById(orderId, sql.Options{})
+func (s *OrderService) Update(orderId uuid.UUID, update *types.UpdateOrderInput) (*models.Order, *utils.ApplictaionError) {
+	order, err := s.RetrieveById(orderId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -698,35 +680,32 @@ func (s *OrderService) Update(orderId uuid.UUID, update *models.Order) (*models.
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"A canceled order cannot be updated",
-			"500",
 			nil,
 		)
 	}
-	if (update.Payments != nil || update.Items != nil) && (order.FulfillmentStatus != "not_fulfilled" || order.PaymentStatus != "awaiting" || order.Status != "pending") {
+	if (update.Payment != nil || update.Items != nil) && (order.FulfillmentStatus != models.FulfillmentStatusNotFulfilled || order.PaymentStatus != models.PaymentStatusAwaiting || order.Status != models.OrderStatusPending) {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Can't update shipping, billing, items and payment method when order is processed",
-			"500",
 			nil,
 		)
 	}
-	if update.Status != "null" || update.FulfillmentStatus != "null" || update.PaymentStatus != "null" {
+	if update.Status != "" || update.FulfillmentStatus != "" || update.PaymentStatus != "" {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Can't update order statuses. This will happen automatically. Use metadata in order for additional statuses",
-			"500",
 			nil,
 		)
 	}
 
 	if update.ShippingAddress != nil {
-		err := s.UpdateShippingAddress(order, update.ShippingAddress)
+		err := s.UpdateShippingAddress(order, utils.ToAddress(update.ShippingAddress))
 		if err != nil {
 			return nil, err
 		}
 	}
 	if update.BillingAddress != nil {
-		err := s.UpdateBillingAddress(order, update.BillingAddress)
+		err := s.UpdateBillingAddress(order, utils.ToAddress(update.BillingAddress))
 		if err != nil {
 			return nil, err
 		}
@@ -742,9 +721,44 @@ func (s *OrderService) Update(orderId uuid.UUID, update *models.Order) (*models.
 		}
 	}
 
-	update.Id = order.Id
+	if update.NoNotification {
+		order.NoNotification = update.NoNotification
+	}
 
-	if err := s.r.OrderRepository().Update(s.ctx, update); err != nil {
+	if update.Metadata != nil {
+		order.Metadata = utils.MergeMaps(order.Metadata, update.Metadata)
+	}
+
+	if update.ShippingMethod != nil {
+		for _, method := range update.ShippingMethod {
+			order.ShippingMethods = append(order.ShippingMethods, models.ShippingMethod{
+				ShippingOption: &models.ShippingOption{
+					ProviderId: uuid.NullUUID{UUID: method.ProviderId},
+					ProfileId:  uuid.NullUUID{UUID: method.ProfileId},
+				},
+				// Items: method.Items,
+				Order: order,
+				Price: method.Price,
+				Data:  method.Data,
+			})
+		}
+
+	}
+
+	order.Email = update.Email
+	order.Items = update.Items
+	order.Region = &models.Region{Name: update.Region}
+	order.Discounts = update.Discounts
+	order.CustomerId = uuid.NullUUID{UUID: update.CustomerId}
+	// order.PaymentMethod = update.PaymentMethod
+	order.NoNotification = update.NoNotification
+	order.Payments = []models.Payment{*update.Payment}
+	order.Status = update.Status
+	order.FulfillmentStatus = update.FulfillmentStatus
+	order.PaymentStatus = update.PaymentStatus
+	order.Metadata = update.Metadata
+
+	if err := s.r.OrderRepository().Update(s.ctx, order); err != nil {
 		return nil, err
 	}
 	// err = s.eventBus_.Emit(OrderService_Events_UPDATED, &struct {
@@ -757,11 +771,11 @@ func (s *OrderService) Update(orderId uuid.UUID, update *models.Order) (*models.
 	// if err != nil {
 	// 	return nil, err
 	// }
-	return update, nil
+	return order, nil
 }
 
 func (s *OrderService) Cancel(orderId uuid.UUID) (*models.Order, *utils.ApplictaionError) {
-	order, err := s.RetrieveById(orderId, sql.Options{
+	order, err := s.RetrieveById(orderId, &sql.Options{
 		Relations: []string{
 			"refunds",
 			"fulfillments",
@@ -779,7 +793,6 @@ func (s *OrderService) Cancel(orderId uuid.UUID) (*models.Order, *utils.Applicta
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"models.Order with refund(s) cannot be canceled",
-			"500",
 			nil,
 		)
 	}
@@ -856,7 +869,7 @@ func (s *OrderService) Cancel(orderId uuid.UUID) (*models.Order, *utils.Applicta
 }
 
 func (s *OrderService) CapturePayment(orderId uuid.UUID) (*models.Order, *utils.ApplictaionError) {
-	order, err := s.RetrieveById(orderId, sql.Options{
+	order, err := s.RetrieveById(orderId, &sql.Options{
 		Relations: []string{"payments"},
 	})
 	if err != nil {
@@ -866,7 +879,6 @@ func (s *OrderService) CapturePayment(orderId uuid.UUID) (*models.Order, *utils.
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"A canceled order cannot capture payment",
-			"500",
 			nil,
 		)
 	}
@@ -933,7 +945,6 @@ func (s *OrderService) ValidateFulfillmentLineItem(
 		panic(utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Cannot fulfill more items than have been purchased",
-			"500",
 			nil,
 		))
 	}
@@ -955,9 +966,9 @@ func paymentsAreCaptured(payments []models.Payment) bool {
 func (s *OrderService) CreateFulfillment(id uuid.UUID, itemsToFulfill []types.FulFillmentItemType, config map[string]interface{}) (*models.Order, *utils.ApplictaionError) {
 	metadata := config["metadata"].(map[string]interface{})
 	no_notification := config["no_notification"].(bool)
-	location_id := config["location_id"].(string)
+	location_id := config["location_id"].(uuid.UUID)
 
-	order, err := s.RetrieveById(id, sql.Options{
+	order, err := s.RetrieveById(id, &sql.Options{
 		Selects: []string{
 			"subtotal",
 			"shipping_total",
@@ -988,7 +999,6 @@ func (s *OrderService) CreateFulfillment(id uuid.UUID, itemsToFulfill []types.Fu
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"A canceled order cannot be fulfilled",
-			"500",
 			nil,
 		)
 	}
@@ -997,7 +1007,6 @@ func (s *OrderService) CreateFulfillment(id uuid.UUID, itemsToFulfill []types.Fu
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Cannot fulfill an order that lacks shipping methods",
-			"500",
 			nil,
 		)
 	}
@@ -1037,7 +1046,7 @@ func (s *OrderService) CreateFulfillment(id uuid.UUID, itemsToFulfill []types.Fu
 			fulfilledQuantity := item.FulfilledQuantity + fulfillmentItem.Quantity
 			_, err := s.r.LineItemService().SetContext(s.ctx).Update(item.Id, nil, &models.LineItem{
 				FulfilledQuantity: fulfilledQuantity,
-			}, sql.Options{})
+			}, &sql.Options{})
 			if err != nil {
 				return nil, err
 			}
@@ -1093,12 +1102,11 @@ func (s *OrderService) CancelFulfillment(fulfillmentId uuid.UUID) (*models.Order
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Fufillment not related to an order",
-			"500",
 			nil,
 		)
 	}
 
-	order, err := s.RetrieveById(canceled.OrderId.UUID, sql.Options{})
+	order, err := s.RetrieveById(canceled.OrderId.UUID, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -1138,7 +1146,7 @@ func (s *OrderService) GetFulfillmentItems(order models.Order, items []types.Ful
 }
 
 func (s *OrderService) Archive(id uuid.UUID) (*models.Order, *utils.ApplictaionError) {
-	order, err := s.RetrieveById(id, sql.Options{})
+	order, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -1147,7 +1155,6 @@ func (s *OrderService) Archive(id uuid.UUID) (*models.Order, *utils.ApplictaionE
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Can't archive an unprocessed order",
-			"500",
 			nil,
 		)
 	}
@@ -1162,7 +1169,7 @@ func (s *OrderService) Archive(id uuid.UUID) (*models.Order, *utils.ApplictaionE
 }
 
 func (s *OrderService) CreateRefund(id uuid.UUID, refundAmount float64, reason string, note *string, noNotification *bool) (*models.Order, *utils.ApplictaionError) {
-	order, err := s.RetrieveById(id, sql.Options{
+	order, err := s.RetrieveById(id, &sql.Options{
 		Selects: []string{
 			"refundable_amount",
 			"total",
@@ -1180,7 +1187,6 @@ func (s *OrderService) CreateRefund(id uuid.UUID, refundAmount float64, reason s
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"A canceled order cannot be refunded",
-			"500",
 			nil,
 		)
 	}
@@ -1189,7 +1195,6 @@ func (s *OrderService) CreateRefund(id uuid.UUID, refundAmount float64, reason s
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Cannot refund more than the original order amount",
-			"500",
 			nil,
 		)
 	}
@@ -1199,7 +1204,7 @@ func (s *OrderService) CreateRefund(id uuid.UUID, refundAmount float64, reason s
 		return nil, err
 	}
 
-	result, err := s.RetrieveByIdWithTotals(id, sql.Options{
+	result, err := s.RetrieveByIdWithTotals(id, &sql.Options{
 		Relations: []string{
 			"payments",
 		},
@@ -1238,7 +1243,16 @@ func (s *OrderService) CreateRefund(id uuid.UUID, refundAmount float64, reason s
 
 func (s *OrderService) decorateTotalsLegacy(order *models.Order, totalsFields []string) (*models.Order, *utils.ApplictaionError) {
 	if slices.Contains(totalsFields, "subtotal") || slices.Contains(totalsFields, "total") {
-		calculationContext, err := s.r.TotalsService().GetCalculationContext(nil, order, CalculationContextOptions{ExcludeShipping: true})
+		calculationContext, err := s.r.TotalsService().GetCalculationContext(types.CalculationContextData{
+			Discounts:       order.Discounts,
+			Items:           order.Items,
+			Customer:        order.Customer,
+			Region:          order.Region,
+			ShippingAddress: order.ShippingAddress,
+			Swaps:           order.Swaps,
+			Claims:          order.Claims,
+			ShippingMethods: order.ShippingMethods,
+		}, CalculationContextOptions{ExcludeShipping: true})
 		if err != nil {
 			return nil, err
 		}
@@ -1350,7 +1364,16 @@ func (s *OrderService) decorateTotals(order *models.Order, totalsFields []string
 		return s.decorateTotalsLegacy(order, totalsFields)
 	}
 
-	calculationContext, err := s.r.TotalsService().GetCalculationContext(nil, order, CalculationContextOptions{})
+	calculationContext, err := s.r.TotalsService().GetCalculationContext(types.CalculationContextData{
+		Discounts:       order.Discounts,
+		Items:           order.Items,
+		Customer:        order.Customer,
+		Region:          order.Region,
+		ShippingAddress: order.ShippingAddress,
+		Swaps:           order.Swaps,
+		Claims:          order.Claims,
+		ShippingMethods: order.ShippingMethods,
+	}, CalculationContextOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -1497,7 +1520,7 @@ func (s *OrderService) decorateTotals(order *models.Order, totalsFields []string
 }
 
 func (s *OrderService) RegisterReturnReceived(id uuid.UUID, receivedReturn *models.Return, customRefundAmount *float64) (*models.Order, *utils.ApplictaionError) {
-	order, err := s.RetrieveById(id, sql.Options{
+	order, err := s.RetrieveById(id, &sql.Options{
 		Selects:   []string{"total", "refunded_total", "refundable_amount"},
 		Relations: []string{"items", "returns", "payments"},
 	})
@@ -1508,7 +1531,6 @@ func (s *OrderService) RegisterReturnReceived(id uuid.UUID, receivedReturn *mode
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"A canceled order cannot be registered as received",
-			"500",
 			nil,
 		)
 	}
@@ -1516,7 +1538,6 @@ func (s *OrderService) RegisterReturnReceived(id uuid.UUID, receivedReturn *mode
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			"Received return does not exist",
-			"500",
 			nil,
 		)
 	}
@@ -1573,7 +1594,7 @@ func (s *OrderService) RegisterReturnReceived(id uuid.UUID, receivedReturn *mode
 	return order, nil
 }
 
-func (s *OrderService) transformQueryForTotals(config sql.Options) ([]string, []string, []string) {
+func (s *OrderService) transformQueryForTotals(config *sql.Options) ([]string, []string, []string) {
 	selects, relations := config.Selects, config.Relations
 	if selects == nil {
 		return selects, relations, []string{}
@@ -1647,7 +1668,7 @@ func (s *OrderService) transformQueryForTotals(config sql.Options) ([]string, []
 	return toSelect, relations, totalsToSelect
 }
 
-func (s *OrderService) GetTotalsRelations(config sql.Options) []string {
+func (s *OrderService) GetTotalsRelations(config *sql.Options) []string {
 	relationSet := []string{
 		"items",
 		"items.tax_lines",

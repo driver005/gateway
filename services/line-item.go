@@ -36,12 +36,11 @@ func (s *LineItemService) SetContext(context context.Context) *LineItemService {
 	return s
 }
 
-func (s *LineItemService) Retrieve(lineItemId uuid.UUID, config sql.Options) (*models.LineItem, *utils.ApplictaionError) {
+func (s *LineItemService) Retrieve(lineItemId uuid.UUID, config *sql.Options) (*models.LineItem, *utils.ApplictaionError) {
 	if lineItemId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"lineItemId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -55,10 +54,10 @@ func (s *LineItemService) Retrieve(lineItemId uuid.UUID, config sql.Options) (*m
 	return res, nil
 }
 
-func (s *LineItemService) List(selector models.LineItem, config sql.Options) ([]models.LineItem, *utils.ApplictaionError) {
+func (s *LineItemService) List(selector models.LineItem, config *sql.Options) ([]models.LineItem, *utils.ApplictaionError) {
 	var res []models.LineItem
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -117,7 +116,6 @@ func (s *LineItemService) Generate(
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			er.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -141,7 +139,7 @@ func (s *LineItemService) Generate(
 		resolvedDataMap[d.VariantId] = d
 		variantIds = append(variantIds, d.VariantId)
 	}
-	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, sql.Options{
+	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, &sql.Options{
 		Relations:     []string{"product"},
 		Specification: []sql.Specification{sql.In("id", variantIds)},
 	}, nil)
@@ -166,7 +164,6 @@ func (s *LineItemService) Generate(
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			fmt.Sprintf("Unable to generate the line items, some variant has not been found: %s", strings.Join(notFoundVariants.Strings(), ", ")),
-			"500",
 			nil,
 		)
 	}
@@ -200,16 +197,25 @@ func (s *LineItemService) Generate(
 	for _, variantData := range resolvedData {
 		variant := variantsMap[variantData.VariantId]
 		variantPricing := variantsPricing[variantData.VariantId]
-		lineItem, err := s.generateLineItem(variant, variantData.Quantity, types.GenerateLineItemContext{
-			UnitPrice:      variantData.UnitPrice,
-			Metadata:       variantData.Metadata,
+		lineItem, err := s.generateLineItem(variant, variantData.Quantity, GenerateLineItemContext{
+			GenerateLineItemContext: types.GenerateLineItemContext{
+				UnitPrice: variantData.UnitPrice,
+				Metadata:  variantData.Metadata,
+			},
 			VariantPricing: &variantPricing,
 		})
 		if err != nil {
 			return nil, err
 		}
 		if context.Cart != nil {
-			adjustments, err := s.r.LineItemAdjustmentService().SetContext(s.ctx).GenerateAdjustments(context.Cart, lineItem, &variant)
+			adjustments, err := s.r.LineItemAdjustmentService().SetContext(s.ctx).GenerateAdjustments(types.CalculationContextData{
+				Discounts:       context.Cart.Discounts,
+				Items:           context.Cart.Items,
+				Customer:        context.Cart.Customer,
+				Region:          context.Cart.Region,
+				ShippingAddress: context.Cart.ShippingAddress,
+				ShippingMethods: context.Cart.ShippingMethods,
+			}, lineItem, &variant)
 			if err != nil {
 				return nil, err
 			}
@@ -220,7 +226,12 @@ func (s *LineItemService) Generate(
 	return generatedItems, nil
 }
 
-func (s *LineItemService) generateLineItem(variant models.ProductVariant, quantity int, context types.GenerateLineItemContext) (*models.LineItem, *utils.ApplictaionError) {
+type GenerateLineItemContext struct {
+	types.GenerateLineItemContext
+	VariantPricing *types.ProductVariantPricing
+}
+
+func (s *LineItemService) generateLineItem(variant models.ProductVariant, quantity int, context GenerateLineItemContext) (*models.LineItem, *utils.ApplictaionError) {
 	unitPrice := 0.0
 	unitPriceIncludesTax := false
 	shouldMerge := false
@@ -280,7 +291,7 @@ func (s *LineItemService) Create(data []models.LineItem) ([]models.LineItem, *ut
 	return data, nil
 }
 
-func (s *LineItemService) Update(id uuid.UUID, selector *models.LineItem, Update *models.LineItem, config sql.Options) (*models.LineItem, *utils.ApplictaionError) {
+func (s *LineItemService) Update(id uuid.UUID, selector *models.LineItem, Update *models.LineItem, config *sql.Options) (*models.LineItem, *utils.ApplictaionError) {
 	if id != uuid.Nil {
 		selector = &models.LineItem{Model: core.Model{Id: id}}
 	}
@@ -299,7 +310,7 @@ func (s *LineItemService) Update(id uuid.UUID, selector *models.LineItem, Update
 }
 
 func (s *LineItemService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	item, err := s.Retrieve(id, sql.Options{})
+	item, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -325,7 +336,7 @@ func (s *LineItemService) CreateTaxLine(data *models.LineItemTaxLine) (*models.L
 }
 
 func (s *LineItemService) CloneTo(ids uuid.UUIDs, data *models.LineItem, options map[string]interface{}) ([]models.LineItem, *utils.ApplictaionError) {
-	lineItems, err := s.List(models.LineItem{}, sql.Options{
+	lineItems, err := s.List(models.LineItem{}, &sql.Options{
 		Relations:     []string{"tax_lines", "adjustments"},
 		Specification: []sql.Specification{sql.In("id", ids)},
 	})
@@ -342,7 +353,6 @@ func (s *LineItemService) CloneTo(ids uuid.UUIDs, data *models.LineItem, options
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Unable to clone a line item that is not attached to at least one of: order_edit, order, swap, claim or cart.",
-			"500",
 			nil,
 		)
 	}

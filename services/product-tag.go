@@ -31,12 +31,11 @@ func (s *ProductTagService) SetContext(context context.Context) *ProductTagServi
 	return s
 }
 
-func (s *ProductTagService) Retrieve(id uuid.UUID, config sql.Options) (*models.ProductTag, *utils.ApplictaionError) {
+func (s *ProductTagService) Retrieve(id uuid.UUID, config *sql.Options) (*models.ProductTag, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -59,7 +58,7 @@ func (s *ProductTagService) Create(tag *models.ProductTag) (*models.ProductTag, 
 	return tag, nil
 }
 
-func (s *ProductTagService) List(selector models.ProductTag, config sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductTag, *utils.ApplictaionError) {
+func (s *ProductTagService) List(selector models.ProductTag, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductTag, *utils.ApplictaionError) {
 	tags, _, err := s.ListAndCount(selector, config, q, discountConditionId)
 	if err != nil {
 		return nil, err
@@ -67,10 +66,10 @@ func (s *ProductTagService) List(selector models.ProductTag, config sql.Options,
 	return tags, nil
 }
 
-func (s *ProductTagService) ListAndCount(selector models.ProductTag, config sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductTag, *int64, *utils.ApplictaionError) {
+func (s *ProductTagService) ListAndCount(selector models.ProductTag, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductTag, *int64, *utils.ApplictaionError) {
 	var res []models.ProductTag
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(20)
 	}

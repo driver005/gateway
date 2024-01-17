@@ -66,7 +66,6 @@ func (s *PaymentProviderService) RetrieveProvider(providerId uuid.UUID) (interfa
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("Could not find a notification provider with id: %s.", providerId),
-			"500",
 			nil,
 		)
 	}
@@ -84,10 +83,10 @@ func (s *PaymentProviderService) List() ([]models.PaymentProvider, *utils.Applic
 }
 
 func (s *PaymentProviderService) RetrievePayment(id uuid.UUID, relations []string) (*models.Payment, *utils.ApplictaionError) {
-	return s.r.PaymentService().SetContext(s.ctx).Retrieve(id, sql.Options{Relations: relations})
+	return s.r.PaymentService().SetContext(s.ctx).Retrieve(id, &sql.Options{Relations: relations})
 }
 
-func (s *PaymentProviderService) ListPayments(selector models.Payment, config sql.Options) ([]models.Payment, *utils.ApplictaionError) {
+func (s *PaymentProviderService) ListPayments(selector models.Payment, config *sql.Options) ([]models.Payment, *utils.ApplictaionError) {
 	return s.r.PaymentService().SetContext(s.ctx).List(selector, config)
 }
 
@@ -96,12 +95,11 @@ func (s *PaymentProviderService) RetrieveSession(id uuid.UUID, relations []strin
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	var res *models.PaymentSession
-	query := sql.BuildQuery(models.PaymentSession{Model: core.Model{Id: id}}, sql.Options{Relations: relations})
+	query := sql.BuildQuery(models.PaymentSession{Model: core.Model{Id: id}}, &sql.Options{Relations: relations})
 	if err := s.r.PaymentSessionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
@@ -122,7 +120,6 @@ func (s *PaymentProviderService) CreateSession(providerId uuid.UUID, session *ty
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"`currency_code` and `amount` are required to Create payment session.",
-			"500",
 			nil,
 		)
 	}
@@ -214,26 +211,36 @@ func (s *PaymentProviderService) DeleteSession(paymentSession *models.PaymentSes
 	return nil
 }
 
-func (s *PaymentProviderService) CreatePayment(data *models.Payment) (*models.Payment, *utils.ApplictaionError) {
-	provider, err := s.RetrieveProvider(data.ProviderId.UUID)
+func (s *PaymentProviderService) CreatePayment(data *types.CreatePaymentInput) (*models.Payment, *utils.ApplictaionError) {
+	providerId := data.PaymentSession.ProviderId.UUID
+	if data.ProviderId != uuid.Nil {
+		providerId = data.ProviderId
+	}
+	provider, err := s.RetrieveProvider(providerId)
 	if err != nil {
 		return nil, err
 	}
-	payment, fail := provider.RetrievePayment(data.Data)
+	payment, fail := provider.RetrievePayment(data.PaymentSession.Data)
 	if fail != nil {
 		return nil, s.throwFromPaymentProcessorError(fail)
 	}
 
-	data.Data = payment
+	model := &models.Payment{
+		ProviderId:   uuid.NullUUID{UUID: providerId},
+		Amount:       data.Amount,
+		CurrencyCode: data.CurrencyCode,
+		Data:         payment,
+		CartId:       uuid.NullUUID{UUID: data.CartId},
+	}
 
-	if err := s.r.PaymentRepository().Save(s.ctx, data); err != nil {
+	if err := s.r.PaymentRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
-	return data, nil
+	return model, nil
 }
 
-func (s *PaymentProviderService) UpdatePayment(id uuid.UUID, Update *models.Payment) (*models.Payment, *utils.ApplictaionError) {
-	return s.r.PaymentService().SetContext(s.ctx).Update(id, Update)
+func (s *PaymentProviderService) UpdatePayment(id uuid.UUID, data *types.UpdatePaymentInput) (*models.Payment, *utils.ApplictaionError) {
+	return s.r.PaymentService().SetContext(s.ctx).Update(id, data)
 }
 
 func (s *PaymentProviderService) AuthorizePayment(paymentSession *models.PaymentSession, context map[string]interface{}) (*models.PaymentSession, *utils.ApplictaionError) {
@@ -352,7 +359,7 @@ func (s *PaymentProviderService) RefundPayments(data []models.Payment, amount fl
 	for _, d := range data {
 		ids = append(ids, d.Id)
 	}
-	payments, err := s.ListPayments(models.Payment{}, sql.Options{Specification: []sql.Specification{sql.In("id", ids)}})
+	payments, err := s.ListPayments(models.Payment{}, &sql.Options{Specification: []sql.Specification{sql.In("id", ids)}})
 	if err != nil {
 		return nil, err
 	}
@@ -374,7 +381,6 @@ func (s *PaymentProviderService) RefundPayments(data []models.Payment, amount fl
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Refund amount is greater than the refundable amount",
-			"500",
 			nil,
 		)
 	}
@@ -424,12 +430,11 @@ func (s *PaymentProviderService) RefundFromPayment(payment *models.Payment, amou
 	return s.RefundPayments([]models.Payment{*payment}, amount, reason, note)
 }
 
-func (s *PaymentProviderService) RetrieveRefund(id uuid.UUID, config sql.Options) (*models.Refund, *utils.ApplictaionError) {
+func (s *PaymentProviderService) RetrieveRefund(id uuid.UUID, config *sql.Options) (*models.Refund, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -489,7 +494,7 @@ func (s *PaymentProviderService) processUpdateRequestsData(data *models.Customer
 	}
 
 	if paymentResponse.UpdateRequests["customer_metadata"] != nil && data.Id != uuid.Nil {
-		_, err := s.r.CustomerService().SetContext(s.ctx).Update(data.Id, &models.Customer{Model: core.Model{Metadata: paymentResponse.UpdateRequests["customer_metadata"].(map[string]interface{})}})
+		_, err := s.r.CustomerService().SetContext(s.ctx).Update(data.Id, &types.UpdateCustomerInput{Metadata: paymentResponse.UpdateRequests["customer_metadata"].(map[string]interface{})})
 		if err != nil {
 			return err
 		}

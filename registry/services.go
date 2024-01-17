@@ -102,10 +102,10 @@ func (m *Base) EventBus() *services.Bus {
 	return m.eventBusService
 }
 func (m *Base) DefaultFileService() *services.DefaultFileService {
-	if m.fileService == nil {
-		m.fileService = services.NewDefaultFileService()
+	if m.defaultFileService == nil {
+		m.defaultFileService = services.NewDefaultFileService()
 	}
-	return m.fileService
+	return m.defaultFileService
 }
 func (m *Base) FulfillmentProviderService() *services.FulfillmentProviderService {
 	if m.fulfillmentProviderService == nil {
@@ -419,4 +419,11 @@ func (m *Base) UserService() *services.UserService {
 		m.userService = services.NewUserService(m)
 	}
 	return m.userService
+}
+
+func (m *Base) FlagRouter() *services.FlagRouter {
+	if m.flagRouter == nil {
+		m.flagRouter = services.NewFlagRouter(m)
+	}
+	return m.flagRouter
 }

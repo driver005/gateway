@@ -27,7 +27,7 @@ func (s *SalesChannelInventoryService) SetContext(context context.Context) *Sale
 }
 
 func (s *SalesChannelInventoryService) RetrieveAvailableItemQuantity(salesChannelId uuid.UUID, inventoryItemId uuid.UUID) (int, *utils.ApplictaionError) {
-	locationIds, err := s.r.SalesChannelLocationService().SetContext(s.ctx).ListLocationIds(salesChannelId)
+	locationIds, err := s.r.SalesChannelLocationService().SetContext(s.ctx).ListLocationIds(uuid.UUIDs{salesChannelId})
 	if err != nil {
 		return 0, err
 	}

@@ -22,7 +22,7 @@ type User struct {
 	LastName string `json:"last_name" gorm:"default:null"`
 
 	// Password of the user
-	Password string `json:"password" gorm:"-" sql:"-"`
+	// Password string `json:"password" gorm:"-" sql:"-"`
 
 	// Password hash of the user
 	PasswordHash string `json:"password_hash" gorm:"default:null"`

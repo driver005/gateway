@@ -1,55 +1,32 @@
 package utils
 
-import "time"
+import (
+	"encoding/json"
+	"errors"
+	"time"
+
+	"github.com/gofiber/fiber/v3"
+)
 
 type ApplictaionErrorType string
 
 const (
-	DB_ERROR                    ApplictaionErrorType = "DB_ERROR"
-	DUPLICATE_ERROR             ApplictaionErrorType = "DUPLICATE_ERROR"
-	INVALID_ARGUMENT            ApplictaionErrorType = "INVALID_ARGUMENT"
-	INVALID_DATA                ApplictaionErrorType = "INVALID_DATA"
-	UNAUTHORIZED                ApplictaionErrorType = "UNAUTHORIZED"
-	NOT_FOUND                   ApplictaionErrorType = "NOT_FOUND"
-	NOT_ALLOWED                 ApplictaionErrorType = "NOT_ALLOWED"
-	UNEXPECTED_STATE            ApplictaionErrorType = "UNEXPECTED_STATE"
-	CONFLICT                    ApplictaionErrorType = "CONFLICT"
-	PAYMENT_AUTHORIZATION_ERROR ApplictaionErrorType = "PAYMENT_AUTHORIZATION_ERROR"
-	INSUFFICIENT_INVENTORY      ApplictaionErrorType = "INSUFFICIENT_INVENTORY"
-	CART_INCOMPATIBLE_STATE     ApplictaionErrorType = "CART_INCOMPATIBLE_STATE"
+	DB_ERROR                        ApplictaionErrorType = "DB_ERROR"
+	DUPLICATE_ERROR                 ApplictaionErrorType = "DUPLICATE_ERROR"
+	INVALID_ARGUMENT                ApplictaionErrorType = "INVALID_ARGUMENT"
+	INVALID_DATA                    ApplictaionErrorType = "INVALID_DATA"
+	UNAUTHORIZED                    ApplictaionErrorType = "UNAUTHORIZED"
+	NOT_FOUND                       ApplictaionErrorType = "NOT_FOUND"
+	NOT_ALLOWED                     ApplictaionErrorType = "NOT_ALLOWED"
+	UNEXPECTED_STATE                ApplictaionErrorType = "UNEXPECTED_STATE"
+	CONFLICT                        ApplictaionErrorType = "CONFLICT"
+	PAYMENT_AUTHORIZATION_ERROR     ApplictaionErrorType = "PAYMENT_AUTHORIZATION_ERROR"
+	INSUFFICIENT_INVENTORY          ApplictaionErrorType = "INSUFFICIENT_INVENTORY"
+	CART_INCOMPATIBLE_STATE         ApplictaionErrorType = "CART_INCOMPATIBLE_STATE"
+	QueryRunnerAlreadyReleasedError ApplictaionErrorType = "QueryRunnerAlreadyReleasedError"
+	TransactionAlreadyStartedError  ApplictaionErrorType = "TransactionAlreadyStartedError"
+	TransactionNotStartedError      ApplictaionErrorType = "TransactionNotStartedError"
 )
-
-var ApplictaionErrorTypes = struct {
-	DB_ERROR                    ApplictaionErrorType
-	DUPLICATE_ERROR             ApplictaionErrorType
-	INVALID_ARGUMENT            ApplictaionErrorType
-	INVALID_DATA                ApplictaionErrorType
-	UNAUTHORIZED                ApplictaionErrorType
-	NOT_FOUND                   ApplictaionErrorType
-	NOT_ALLOWED                 ApplictaionErrorType
-	UNEXPECTED_STATE            ApplictaionErrorType
-	CONFLICT                    ApplictaionErrorType
-	PAYMENT_AUTHORIZATION_ERROR ApplictaionErrorType
-}{
-	DB_ERROR:                    "DB_ERROR",
-	DUPLICATE_ERROR:             "DUPLICATE_ERROR",
-	INVALID_ARGUMENT:            "INVALID_ARGUMENT",
-	INVALID_DATA:                "INVALID_DATA",
-	UNAUTHORIZED:                "UNAUTHORIZED",
-	NOT_FOUND:                   "NOT_FOUND",
-	NOT_ALLOWED:                 "NOT_ALLOWED",
-	UNEXPECTED_STATE:            "UNEXPECTED_STATE",
-	CONFLICT:                    "CONFLICT",
-	PAYMENT_AUTHORIZATION_ERROR: "PAYMENT_AUTHORIZATION_ERROR",
-}
-
-var ApplictaionErrorCodes = struct {
-	INSUFFICIENT_INVENTORY  ApplictaionErrorType
-	CART_INCOMPATIBLE_STATE ApplictaionErrorType
-}{
-	INSUFFICIENT_INVENTORY:  "INSUFFICIENT_INVENTORY",
-	CART_INCOMPATIBLE_STATE: "CART_INCOMPATIBLE_STATE",
-}
 
 type ApplictaionError struct {
 	Type    ApplictaionErrorType
@@ -58,15 +35,63 @@ type ApplictaionError struct {
 	Date    time.Time
 }
 
-func NewApplictaionError(typeStr ApplictaionErrorType, message string, code string, params ...interface{}) *ApplictaionError {
+func NewApplictaionError(typeStr ApplictaionErrorType, message string, params ...interface{}) *ApplictaionError {
 	return &ApplictaionError{
 		Type:    typeStr,
 		Message: message,
-		Code:    code,
 		Date:    time.Now(),
 	}
 }
 
 func (e *ApplictaionError) Error() string {
-	return e.Message
+	out, err := json.Marshal(e)
+	if err != nil {
+		e.Type = UNEXPECTED_STATE
+		return err.Error()
+	}
+
+	return string(out)
+}
+
+func ErrorHandler(ctx fiber.Ctx, err error) error {
+	// Status code defaults to 500
+	statusCode := 500
+
+	// Retrieve the custom status code if it's a *fiber.Error
+	var e *ApplictaionError
+	if errors.As(err, &e) {
+		// Handle the error and set appropriate values
+		switch e.Type {
+		case QueryRunnerAlreadyReleasedError, TransactionAlreadyStartedError, TransactionNotStartedError, CONFLICT:
+			e.Code = "invalid_state_error"
+			e.Message = "The request conflicted with another request. You may retry the request with the provided Idempotency-Key."
+			statusCode = 409
+		case UNAUTHORIZED:
+			statusCode = 401
+		case PAYMENT_AUTHORIZATION_ERROR:
+			statusCode = 422
+		case DUPLICATE_ERROR:
+			statusCode = 422
+			e.Code = "invalid_request_error"
+		case NOT_ALLOWED, INVALID_DATA:
+			statusCode = 400
+		case NOT_FOUND:
+			statusCode = 404
+		case DB_ERROR:
+			statusCode = 500
+			e.Code = "api_error"
+		case UNEXPECTED_STATE, INVALID_ARGUMENT:
+			statusCode = 500
+		default:
+			e.Code = "unknown_error"
+			e.Message = "An unknown error occurred."
+			e.Type = "unknown_error"
+		}
+	}
+
+	// Set Content-Type: application/json; charset=utf-8
+	ctx.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSONCharsetUTF8)
+
+	// Return status code with error message
+	return ctx.Status(statusCode).JSON(e)
 }

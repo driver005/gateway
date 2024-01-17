@@ -17,7 +17,7 @@ func PaymentCollectionRepository(db *gorm.DB) *PaymentCollectionRepo {
 	return &PaymentCollectionRepo{*sql.NewRepository[models.PaymentCollection](db)}
 }
 
-func (r *PaymentCollectionRepo) GetPaymentCollectionIdBySessionId(sessionId uuid.UUID, config sql.Options) (*models.PaymentCollection, *utils.ApplictaionError) {
+func (r *PaymentCollectionRepo) GetPaymentCollectionIdBySessionId(sessionId uuid.UUID, config *sql.Options) (*models.PaymentCollection, *utils.ApplictaionError) {
 	var paymentCollection models.PaymentCollection
 	err := r.Db().Where("payment_sessions.id = ?", sessionId).
 		Preload("PaymentSessions").
@@ -28,7 +28,7 @@ func (r *PaymentCollectionRepo) GetPaymentCollectionIdBySessionId(sessionId uuid
 	return &paymentCollection, nil
 }
 
-func (r *PaymentCollectionRepo) GetPaymentCollectionIdByPaymentId(paymentId uuid.UUID, config sql.Options) (*models.PaymentCollection, *utils.ApplictaionError) {
+func (r *PaymentCollectionRepo) GetPaymentCollectionIdByPaymentId(paymentId uuid.UUID, config *sql.Options) (*models.PaymentCollection, *utils.ApplictaionError) {
 	var paymentCollection models.PaymentCollection
 	err := r.Db().Where("payments.id = ?", paymentId).
 		Preload("Payments").

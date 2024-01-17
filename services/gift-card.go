@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -37,8 +38,8 @@ func (s *GiftCardService) GenerateCode() string {
 	return code
 }
 
-func (s *GiftCardService) ListAndCount(selector *models.GiftCard, config sql.Options) ([]models.GiftCard, *int64, *utils.ApplictaionError) {
-	if reflect.DeepEqual(config, sql.Options{}) {
+func (s *GiftCardService) ListAndCount(selector *models.GiftCard, config *sql.Options) ([]models.GiftCard, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -55,7 +56,7 @@ func (s *GiftCardService) ListAndCount(selector *models.GiftCard, config sql.Opt
 	return res, count, nil
 }
 
-func (s *GiftCardService) List(selector *models.GiftCard, config sql.Options) ([]models.GiftCard, *utils.ApplictaionError) {
+func (s *GiftCardService) List(selector *models.GiftCard, config *sql.Options) ([]models.GiftCard, *utils.ApplictaionError) {
 	result, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -63,34 +64,56 @@ func (s *GiftCardService) List(selector *models.GiftCard, config sql.Options) ([
 	return result, nil
 }
 
-func (s *GiftCardService) CreateTransaction(data *models.GiftCardTransaction) (uuid.UUID, *utils.ApplictaionError) {
-	if err := s.r.GiftCardTransactionRepository().Save(s.ctx, data); err != nil {
+func (s *GiftCardService) CreateTransaction(data *types.CreateGiftCardTransactionInput) (uuid.UUID, *utils.ApplictaionError) {
+	model := &models.GiftCardTransaction{
+		Model: core.Model{
+			CreatedAt: data.CreatedAt,
+		},
+		GiftCardId: uuid.NullUUID{UUID: data.GiftCardId},
+		OrderId:    uuid.NullUUID{UUID: data.OrderId},
+		Amount:     data.Amount,
+		IsTaxable:  data.IsTaxable,
+		TaxRate:    data.TaxRate,
+	}
+	if err := s.r.GiftCardTransactionRepository().Save(s.ctx, model); err != nil {
 		return uuid.Nil, err
 	}
 
-	return data.Id, nil
+	return model.Id, nil
 }
 
-func (s *GiftCardService) Create(data *models.GiftCard) (*models.GiftCard, *utils.ApplictaionError) {
-	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(data.RegionId.UUID, sql.Options{})
+func (s *GiftCardService) Create(data *types.CreateGiftCardInput) (*models.GiftCard, *utils.ApplictaionError) {
+	var model *models.GiftCard
+	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(data.RegionId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	data.RegionId = uuid.NullUUID{UUID: region.Id}
+	model.RegionId = uuid.NullUUID{UUID: region.Id}
 
-	data.Code = s.GenerateCode()
-	data.TaxRate = s.ResolveTaxRate(data.TaxRate, region)
+	model.Code = s.GenerateCode()
+	model.TaxRate = s.ResolveTaxRate(data.TaxRate, region)
 
 	// s.eventBus_.WithTransaction(manager).Emit(GiftCardService.Events.CREATED, {
 	// 	id: result.id,
 	// })
 
-	if err := s.r.GiftCardRepository().Save(s.ctx, data); err != nil {
+	model.OrderId = uuid.NullUUID{UUID: data.OrderId}
+	model.Value = data.Value
+	model.Balance = data.Balance
+	model.EndsAt = data.EndsAt
+	model.IsDisabled = data.IsDisabled
+	model.RegionId = uuid.NullUUID{UUID: data.RegionId}
+	model.TaxRate = data.TaxRate
+	if data.Metadata != nil {
+		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
+	}
+
+	if err := s.r.GiftCardRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	return model, nil
 }
 
 func (s *GiftCardService) ResolveTaxRate(giftCardTaxRate float64, region *models.Region) float64 {
@@ -103,7 +126,7 @@ func (s *GiftCardService) ResolveTaxRate(giftCardTaxRate float64, region *models
 	return region.TaxRate
 }
 
-func (s *GiftCardService) Retrieve(selector *models.GiftCard, config sql.Options) (*models.GiftCard, *utils.ApplictaionError) {
+func (s *GiftCardService) Retrieve(selector *models.GiftCard, config *sql.Options) (*models.GiftCard, *utils.ApplictaionError) {
 	var res *models.GiftCard
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.GiftCardRepository().FindOne(s.ctx, res, query); err != nil {
@@ -113,12 +136,11 @@ func (s *GiftCardService) Retrieve(selector *models.GiftCard, config sql.Options
 	return res, nil
 }
 
-func (s *GiftCardService) RetrieveById(id uuid.UUID, config sql.Options) (*models.GiftCard, *utils.ApplictaionError) {
+func (s *GiftCardService) RetrieveById(id uuid.UUID, config *sql.Options) (*models.GiftCard, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -126,12 +148,11 @@ func (s *GiftCardService) RetrieveById(id uuid.UUID, config sql.Options) (*model
 	return s.Retrieve(&models.GiftCard{Model: core.Model{Id: id}}, config)
 }
 
-func (s *GiftCardService) RetrieveByCode(code string, config sql.Options) (*models.GiftCard, *utils.ApplictaionError) {
+func (s *GiftCardService) RetrieveByCode(code string, config *sql.Options) (*models.GiftCard, *utils.ApplictaionError) {
 	if code == "" {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"code" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -139,21 +160,21 @@ func (s *GiftCardService) RetrieveByCode(code string, config sql.Options) (*mode
 	return s.Retrieve(&models.GiftCard{Code: code}, config)
 }
 
-func (s *GiftCardService) Update(id uuid.UUID, Update *models.GiftCard) (*models.GiftCard, *utils.ApplictaionError) {
-	giftCard, err := s.RetrieveById(id, sql.Options{})
+func (s *GiftCardService) Update(id uuid.UUID, data *types.UpdateGiftCardInput) (*models.GiftCard, *utils.ApplictaionError) {
+	giftCard, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	if Update.RegionId.UUID != uuid.Nil && Update.RegionId != giftCard.RegionId {
-		region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(Update.RegionId.UUID, sql.Options{})
+	if data.RegionId != uuid.Nil && data.RegionId != giftCard.RegionId.UUID {
+		region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(data.RegionId, &sql.Options{})
 		if err != nil {
 			return nil, err
 		}
-		Update.RegionId = uuid.NullUUID{UUID: region.Id}
+		giftCard.RegionId = uuid.NullUUID{UUID: region.Id}
 	}
-	if Update.Balance != 0.0 {
-		if Update.Balance < 0 || giftCard.Value < Update.Balance {
+	if data.Balance != 0.0 {
+		if data.Balance < 0 || giftCard.Value < data.Balance {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_ARGUMENT,
 				"new balance is invalid",
@@ -161,20 +182,26 @@ func (s *GiftCardService) Update(id uuid.UUID, Update *models.GiftCard) (*models
 				nil,
 			)
 		}
-		Update.Balance = giftCard.Balance
+		giftCard.Balance = giftCard.Balance
 	}
 
-	Update.Id = giftCard.Id
+	giftCard.Balance = data.Balance
+	giftCard.EndsAt = data.EndsAt
+	giftCard.IsDisabled = data.IsDisabled
+	giftCard.RegionId = uuid.NullUUID{UUID: data.RegionId}
+	if data.Metadata != nil {
+		giftCard.Metadata = utils.MergeMaps(giftCard.Metadata, data.Metadata)
+	}
 
-	if err := s.r.GiftCardRepository().Save(s.ctx, Update); err != nil {
+	if err := s.r.GiftCardRepository().Update(s.ctx, giftCard); err != nil {
 		return nil, err
 	}
 
-	return Update, nil
+	return giftCard, nil
 }
 
 func (s *GiftCardService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	res, err := s.RetrieveById(id, sql.Options{})
+	res, err := s.RetrieveById(id, &sql.Options{})
 	if err != nil {
 		return err
 	}

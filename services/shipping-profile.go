@@ -33,10 +33,10 @@ func (s *ShippingProfileService) SetContext(context context.Context) *ShippingPr
 	return s
 }
 
-func (s *ShippingProfileService) List(selector models.ShippingProfile, config sql.Options) ([]models.ShippingProfile, *utils.ApplictaionError) {
+func (s *ShippingProfileService) List(selector models.ShippingProfile, config *sql.Options) ([]models.ShippingProfile, *utils.ApplictaionError) {
 	var res []models.ShippingProfile
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -56,13 +56,12 @@ func (s *ShippingProfileService) GetMapProfileIdsByProductIds(productIds uuid.UU
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"productIds" must be defined`,
-			"500",
 			nil,
 		)
 	}
 
 	var shippingProfiles []models.ShippingProfile
-	query := sql.BuildQuery(models.ShippingProfile{}, sql.Options{
+	query := sql.BuildQuery(models.ShippingProfile{}, &sql.Options{
 		Relations: []string{"products"},
 		Selects:   []string{"id", "products.id"},
 	})
@@ -78,12 +77,11 @@ func (s *ShippingProfileService) GetMapProfileIdsByProductIds(productIds uuid.UU
 	return &mappedProfiles, nil
 }
 
-func (s *ShippingProfileService) Retrieve(profileId uuid.UUID, config sql.Options) (*models.ShippingProfile, *utils.ApplictaionError) {
+func (s *ShippingProfileService) Retrieve(profileId uuid.UUID, config *sql.Options) (*models.ShippingProfile, *utils.ApplictaionError) {
 	if profileId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"profileId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -102,7 +100,6 @@ func (s *ShippingProfileService) RetrieveForProducts(productIds uuid.UUIDs) (map
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"productIds" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -115,7 +112,6 @@ func (s *ShippingProfileService) RetrieveForProducts(productIds uuid.UUIDs) (map
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`No Profile found for products with id: `+strings.Join(productIds.Strings(), ", "),
-			"500",
 			nil,
 		)
 	}
@@ -125,7 +121,7 @@ func (s *ShippingProfileService) RetrieveForProducts(productIds uuid.UUIDs) (map
 func (s *ShippingProfileService) RetrieveDefault() (*models.ShippingProfile, *utils.ApplictaionError) {
 	var res *models.ShippingProfile
 
-	query := sql.BuildQuery(models.ShippingProfile{Type: models.ShippingProfileTypeDefault}, sql.Options{})
+	query := sql.BuildQuery(models.ShippingProfile{Type: models.ShippingProfileTypeDefault}, &sql.Options{})
 
 	if err := s.r.ShippingProfileRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -155,7 +151,7 @@ func (s *ShippingProfileService) CreateDefault() (*models.ShippingProfile, *util
 func (s *ShippingProfileService) RetrieveGiftCardDefault() (*models.ShippingProfile, *utils.ApplictaionError) {
 	var res *models.ShippingProfile
 
-	query := sql.BuildQuery(models.ShippingProfile{Type: models.ShippingProfileTypeGiftCard}, sql.Options{})
+	query := sql.BuildQuery(models.ShippingProfile{Type: models.ShippingProfileTypeGiftCard}, &sql.Options{})
 
 	if err := s.r.ShippingProfileRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -182,48 +178,47 @@ func (s *ShippingProfileService) CreateGiftCardDefault() (*models.ShippingProfil
 	return profile, nil
 }
 
-func (s *ShippingProfileService) Create(profile *models.ShippingProfile) (*models.ShippingProfile, *utils.ApplictaionError) {
-	if profile.Products != nil || profile.ShippingOptions != nil {
-		return nil, utils.NewApplictaionError(
-			utils.INVALID_DATA,
-			"Please add products and shipping_options after creating Shipping Profiles",
-			"500",
-			nil,
-		)
+func (s *ShippingProfileService) Create(data *types.CreateShippingProfile) (*models.ShippingProfile, *utils.ApplictaionError) {
+	model := &models.ShippingProfile{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Name: data.Name,
+		Type: data.Type,
 	}
 
-	if err := s.r.ShippingProfileRepository().Save(s.ctx, profile); err != nil {
+	if err := s.r.ShippingProfileRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
-	return profile, nil
+	return model, nil
 }
 
-func (s *ShippingProfileService) Update(profileId uuid.UUID, Update *types.UpdateShippingProfile) (*models.ShippingProfile, *utils.ApplictaionError) {
-	profile, err := s.Retrieve(profileId, sql.Options{})
+func (s *ShippingProfileService) Update(profileId uuid.UUID, data *types.UpdateShippingProfile) (*models.ShippingProfile, *utils.ApplictaionError) {
+	profile, err := s.Retrieve(profileId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
-	if Update.Products != nil {
-		_, err = s.AddProducts(profile.Id, Update.Products)
+	if data.Products != nil {
+		_, err = s.AddProducts(profile.Id, data.Products)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if Update.ShippingOptions != nil {
-		_, err = s.AddShippingOptions(profile.Id, Update.ShippingOptions)
+	if data.ShippingOptions != nil {
+		_, err = s.AddShippingOptions(profile.Id, data.ShippingOptions)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if Update.Metadata != nil {
-		profile.Metadata = Update.Metadata
+	if data.Metadata != nil {
+		profile.Metadata = utils.MergeMaps(profile.Metadata, data.Metadata)
 	}
 
-	profile.Name = Update.Name
-	profile.Type = Update.Type
+	profile.Name = data.Name
+	profile.Type = data.Type
 
 	if err := s.r.ShippingProfileRepository().Save(s.ctx, profile); err != nil {
 		return nil, err
@@ -233,7 +228,7 @@ func (s *ShippingProfileService) Update(profileId uuid.UUID, Update *types.Updat
 }
 
 func (s *ShippingProfileService) Delete(profileId uuid.UUID) *utils.ApplictaionError {
-	profile, err := s.Retrieve(profileId, sql.Options{})
+	profile, err := s.Retrieve(profileId, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -241,7 +236,6 @@ func (s *ShippingProfileService) Delete(profileId uuid.UUID) *utils.ApplictaionE
 		return utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Profile not existing",
-			"500",
 			nil,
 		)
 	}
@@ -261,7 +255,7 @@ func (s *ShippingProfileService) AddProducts(profileId uuid.UUID, productIds uui
 	if err != nil {
 		return nil, err
 	}
-	return s.Retrieve(profileId, sql.Options{})
+	return s.Retrieve(profileId, &sql.Options{})
 }
 
 func (s *ShippingProfileService) RemoveProducts(profileId uuid.UUID, productIds uuid.UUIDs) (*models.ShippingProfile, *utils.ApplictaionError) {
@@ -281,7 +275,7 @@ func (s *ShippingProfileService) AddShippingOptions(profileId uuid.UUID, optionI
 	if err != nil {
 		return nil, err
 	}
-	return s.Retrieve(profileId, sql.Options{
+	return s.Retrieve(profileId, &sql.Options{
 		Relations: []string{"products.profiles", "shipping_options.profile"},
 	})
 
@@ -293,7 +287,7 @@ func (s *ShippingProfileService) FetchCartOptions(cart *models.Cart) ([]models.S
 		return nil, err
 	}
 
-	customShippingOptions, err := s.r.CustomShippingOptionService().SetContext(s.ctx).List(models.CustomShippingOption{CartId: uuid.NullUUID{UUID: cart.Id}}, sql.Options{
+	customShippingOptions, err := s.r.CustomShippingOptionService().SetContext(s.ctx).List(models.CustomShippingOption{CartId: uuid.NullUUID{UUID: cart.Id}}, &sql.Options{
 		Selects: []string{"id", "shipping_option_id", "price"},
 	})
 	if err != nil {
@@ -306,7 +300,7 @@ func (s *ShippingProfileService) FetchCartOptions(cart *models.Cart) ([]models.S
 			selector = append(selector, cso.ShippingOption.Id)
 		}
 	}
-	rawOpts, err := s.r.ShippingOptionService().SetContext(s.ctx).List(models.ShippingOption{AdminOnly: false}, sql.Options{
+	rawOpts, err := s.r.ShippingOptionService().SetContext(s.ctx).List(models.ShippingOption{AdminOnly: false}, &sql.Options{
 		Relations:     []string{"requirements", "profile"},
 		Specification: []sql.Specification{sql.In("profile_id", profileIds), sql.In("id", selector)},
 	})

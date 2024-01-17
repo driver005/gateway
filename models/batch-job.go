@@ -11,6 +11,7 @@ import (
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/helper"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -26,18 +27,18 @@ type BatchJob struct {
 	Status BatchJobStatus `json:"status" gorm:"default:created"`
 
 	// The unique identifier of the user that created the batch job.
-	CreatedBy string `json:"created_by" gorm:"default:null"`
+	CreatedBy uuid.UUID `json:"created_by" gorm:"default:null"`
 
 	// A user object. Available if the relation `created_by_user` is expanded.
 	CreatedByUser *User `json:"created_by_user" gorm:"foreignKey:id"`
 
 	// The context of the batch job, the type of the batch job determines what the context should contain.
-	Context JSONB `json:"context" gorm:"default:null"`
+	Context core.JSONB `json:"context" gorm:"default:null"`
 
 	// Specify if the job must apply the modifications or not.
 	DryRun bool `json:"dry_run" gorm:"default:null"`
 
-	Result BatchJobResult `json:"result" gorm:"default:null"`
+	Result *BatchJobResult `json:"result" gorm:"default:null"`
 
 	// The date from which the job has been pre processed.
 	PreProcessedAt *time.Time `json:"pre_processed_at" gorm:"default:null"`
@@ -67,7 +68,7 @@ type BatchJobResultErrorsCode struct {
 type BatchJobResultErrors struct {
 	Message string `json:"message,omitempty" gorm:"default:null"`
 
-	Code BatchJobResultErrorsCode `json:"code,omitempty" gorm:"default:null"`
+	Code *BatchJobResultErrorsCode `json:"code,omitempty" gorm:"default:null"`
 
 	Err []string `json:"err,omitempty" gorm:"default:null"`
 }
@@ -88,9 +89,9 @@ type BatchJobResult struct {
 
 	Progress float64 `json:"progress,omitempty" gorm:"default:null"`
 
-	Errors BatchJobResultErrors `json:"errors,omitempty" gorm:"default:null"`
+	Errors *BatchJobResultErrors `json:"errors,omitempty" gorm:"default:null"`
 
-	StatDescriptors BatchJobResultStatDescriptors `json:"stat_descriptors,omitempty" gorm:"default:null"`
+	StatDescriptors *BatchJobResultStatDescriptors `json:"stat_descriptors,omitempty" gorm:"default:null"`
 
 	FileKey string `json:"file_key,omitempty" gorm:"default:null"`
 
@@ -101,11 +102,11 @@ func (b BatchJobResult) Interface() interface{} {
 	return BatchJobResult(b)
 }
 
-func (BatchJobResult) DBDataType() string {
+func (BatchJobResult) GormDataType() string {
 	return "result"
 }
 
-func (b BatchJobResult) DBValue(ctx context.Context, db *gorm.DB) clause.Expr {
+func (b BatchJobResult) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	return clause.Expr{
 		SQL: "ROW(?, ?, ?, ?, ?, ?, ?, ?)::result",
 		Vars: []interface{}{

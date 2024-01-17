@@ -28,7 +28,12 @@ type Secrets struct {
 }
 
 type Applictaion struct {
-	Preload bool `mapstructure:"preload"`
+	Preload  bool     `mapstructure:"preload"`
+	Features []string `mapstructure:"features"`
+}
+
+type Migration struct {
+	Active bool `mapstructure:"active"`
 }
 
 type Logger struct {
@@ -43,6 +48,7 @@ type Config struct {
 	Secrets        Secrets     `mapstructure:"secrets"`
 	Applictaion    Applictaion `mapstructure:"applictaion"`
 	Logger         Logger      `mapstructure:"logger"`
+	Migration      Migration   `mapstructure:"migration"`
 }
 
 // LoadConfig reads configuration from file or environment variables.

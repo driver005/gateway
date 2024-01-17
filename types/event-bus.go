@@ -1,15 +1,18 @@
 package types
 
-import "github.com/driver005/gateway/core"
+import (
+	"github.com/driver005/gateway/core"
+	"github.com/google/uuid"
+)
 
 type Subscriber func(data interface{}, eventName string) error
 
 type SubscriberContext struct {
-	SubscriberId string
+	SubscriberId uuid.UUID
 }
 
 type SubscriberDescriptor struct {
-	Id         string
+	Id         uuid.UUID
 	Subscriber Subscriber
 }
 

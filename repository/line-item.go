@@ -26,7 +26,7 @@ func (r *LineItemRepo) FindByReturn(ctx context.Context, returnId uuid.UUID) (*m
 		ReturnId: uuid.NullUUID{
 			UUID: returnId,
 		},
-	}, sql.Options{})
+	}, &sql.Options{})
 
 	if err := r.returnItemRepository.FindOne(ctx, res, query); err != nil {
 		return nil, nil, err

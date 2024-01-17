@@ -43,7 +43,7 @@ type DiscountConditionType string
 
 // Defines values for DiscountConditionType.
 const (
-	DiscountConditionTypeRroducts           DiscountConditionType = "products"
+	DiscountConditionTypeProducts           DiscountConditionType = "products"
 	DiscountConditionTypeProductTypes       DiscountConditionType = "product_types"
 	DiscountConditionTypeProductCollections DiscountConditionType = "product_collections"
 	DiscountConditionTypeProductTags        DiscountConditionType = "product_tags"

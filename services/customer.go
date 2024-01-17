@@ -10,6 +10,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -42,7 +43,7 @@ func (s *CustomerService) HashPassword(password string) (string, error) {
 }
 
 func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*string, *utils.ApplictaionError) {
-	customer, err := s.RetrieveById(customerId, sql.Options{
+	customer, err := s.RetrieveById(customerId, &sql.Options{
 		Selects: []string{"id", "has_account", "password_hash", "email", "first_name", "last_name"},
 	})
 	if err != nil {
@@ -53,7 +54,6 @@ func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*str
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"you must have an account to reset the password. Create an account first",
-			"500",
 			nil,
 		)
 	}
@@ -70,7 +70,6 @@ func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*str
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
 			er.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -78,7 +77,7 @@ func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*str
 	return tocken, nil
 }
 
-func (s *CustomerService) List(selector models.Customer, config sql.Options, q *string, groups []string) ([]models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) List(selector models.Customer, config *sql.Options, q *string, groups []string) ([]models.Customer, *utils.ApplictaionError) {
 	res, _, err := s.ListAndCount(selector, config, q, groups)
 	if err != nil {
 		return nil, err
@@ -86,8 +85,8 @@ func (s *CustomerService) List(selector models.Customer, config sql.Options, q *
 	return res, nil
 }
 
-func (s *CustomerService) ListAndCount(selector models.Customer, config sql.Options, q *string, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
-	if reflect.DeepEqual(config, sql.Options{}) {
+func (s *CustomerService) ListAndCount(selector models.Customer, config *sql.Options, q *string, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
@@ -104,7 +103,7 @@ func (s *CustomerService) Count() (*int64, *utils.ApplictaionError) {
 	return count, nil
 }
 
-func (s *CustomerService) Retrieve(selector models.Customer, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) Retrieve(selector models.Customer, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	var res *models.Customer
 	query := sql.BuildQuery[models.Customer](selector, config)
 
@@ -114,12 +113,11 @@ func (s *CustomerService) Retrieve(selector models.Customer, config sql.Options)
 	return res, nil
 }
 
-func (s *CustomerService) RetrieveByEmail(email string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) RetrieveByEmail(email string, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if email == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"email" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -133,41 +131,38 @@ func (s *CustomerService) RetrieveByEmail(email string, config sql.Options) (*mo
 	return res, nil
 }
 
-func (s *CustomerService) RetrieveUnregisteredByEmail(email string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) RetrieveUnregisteredByEmail(email string, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if email == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"email" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.Retrieve(models.Customer{Email: strings.ToLower(email), HasAccount: false}, config)
 }
 
-func (s *CustomerService) RetrieveRegisteredByEmail(email string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) RetrieveRegisteredByEmail(email string, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if email == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"email" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.Retrieve(models.Customer{Email: strings.ToLower(email), HasAccount: true}, config)
 }
 
-func (s *CustomerService) ListByEmail(email string, config sql.Options) ([]models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) ListByEmail(email string, config *sql.Options) ([]models.Customer, *utils.ApplictaionError) {
 	if email == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"email" must be defined`,
-			"500",
 			nil,
 		)
 	}
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(2)
 	}
@@ -175,24 +170,22 @@ func (s *CustomerService) ListByEmail(email string, config sql.Options) ([]model
 	return s.List(models.Customer{Email: strings.ToLower(email)}, config, nil, nil)
 }
 
-func (s *CustomerService) RetrieveByPhone(phone string, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) RetrieveByPhone(phone string, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if phone == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"phone" must be defined`,
-			"500",
 			nil,
 		)
 	}
 	return s.Retrieve(models.Customer{Phone: phone}, config)
 }
 
-func (s *CustomerService) RetrieveById(id uuid.UUID, config sql.Options) (*models.Customer, *utils.ApplictaionError) {
+func (s *CustomerService) RetrieveById(id uuid.UUID, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -200,30 +193,31 @@ func (s *CustomerService) RetrieveById(id uuid.UUID, config sql.Options) (*model
 	return s.Retrieve(models.Customer{Model: core.Model{Id: id}}, config)
 }
 
-func (s *CustomerService) Create(model *models.Customer) (*models.Customer, *utils.ApplictaionError) {
-	if err := validator.New().Var(model.Email, "required,email"); err != nil {
+func (s *CustomerService) Create(data *types.CreateCustomerInput) (*models.Customer, *utils.ApplictaionError) {
+	if err := validator.New().Var(data.Email, "required,email"); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
 
-	model.Email = strings.ToLower(model.Email)
+	var model *models.Customer
 
-	existing, _ := s.ListByEmail(model.Email, sql.Options{})
+	model.Email = strings.ToLower(data.Email)
+
+	existing, _ := s.ListByEmail(model.Email, &sql.Options{})
 
 	if len(existing) != 0 {
 		for _, exit := range existing {
-			if exit.HasAccount && model.Password != "" {
+			if exit.HasAccount && data.Password != "" {
 				return nil, utils.NewApplictaionError(
 					utils.INVALID_DATA,
 					`a customer with the given email already has an account. Log in instead`,
 					"500",
 					nil,
 				)
-			} else if !exit.HasAccount && model.Password == "" {
+			} else if !exit.HasAccount && data.Password == "" {
 				return nil, utils.NewApplictaionError(
 					utils.INVALID_DATA,
 					`guest customer with email already exists`,
@@ -234,8 +228,8 @@ func (s *CustomerService) Create(model *models.Customer) (*models.Customer, *uti
 		}
 	}
 
-	if model.Password != "" {
-		hashedPassword, err := s.HashPassword(model.Password)
+	if data.Password != "" {
+		hashedPassword, err := s.HashPassword(data.Password)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
@@ -248,6 +242,24 @@ func (s *CustomerService) Create(model *models.Customer) (*models.Customer, *uti
 		model.PasswordHash = hashedPassword
 	}
 
+	if data.Metadata != nil {
+		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
+	}
+
+	if data.HasAccount != model.HasAccount {
+		model.HasAccount = data.HasAccount
+	}
+
+	if data.FirstName != "" {
+		model.FirstName = data.FirstName
+	}
+	if data.LastName != "" {
+		model.LastName = data.LastName
+	}
+	if data.Phone != "" {
+		model.Phone = data.Phone
+	}
+
 	if err := s.r.CustomerRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
@@ -255,21 +267,16 @@ func (s *CustomerService) Create(model *models.Customer) (*models.Customer, *uti
 	return model, nil
 }
 
-func (s *CustomerService) Update(userId uuid.UUID, Update *models.Customer) (*models.Customer, *utils.ApplictaionError) {
-	if Update.Email != "" {
+func (s *CustomerService) Update(userId uuid.UUID, data *types.UpdateCustomerInput) (*models.Customer, *utils.ApplictaionError) {
+	model, err := s.RetrieveById(userId, &sql.Options{})
+	if err != nil {
+		return nil, err
+	}
+
+	if data.Email != "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"You are not allowed to Update email"`,
-			"500",
-			nil,
-		)
-	}
-
-	if Update.PasswordHash != "" {
-		return nil, utils.NewApplictaionError(
-			utils.INVALID_DATA,
-			"use dedicated field, `password` for password operations",
-			"500",
 			nil,
 		)
 	}
@@ -278,19 +285,12 @@ func (s *CustomerService) Update(userId uuid.UUID, Update *models.Customer) (*mo
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"userId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 
-	Update.Id = userId
-
-	if err := s.r.CustomerRepository().FindOne(s.ctx, Update, sql.Query{}); err != nil {
-		return nil, err
-	}
-
-	if Update.Password != "" {
-		hashedPassword, err := s.HashPassword(Update.Password)
+	if data.Password != "" {
+		hashedPassword, err := s.HashPassword(data.Password)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
@@ -300,17 +300,48 @@ func (s *CustomerService) Update(userId uuid.UUID, Update *models.Customer) (*mo
 			)
 		}
 
-		Update.PasswordHash = hashedPassword
+		model.PasswordHash = hashedPassword
 	}
 
-	if err := s.r.CustomerRepository().Upsert(s.ctx, Update); err != nil {
+	if data.Metadata != nil {
+		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
+	}
+
+	if data.BillingAddress != nil || data.BillingAddressId != uuid.Nil {
+		addr := utils.ToAddress(data.BillingAddress)
+		if data.BillingAddressId != uuid.Nil {
+			addr.Id = data.BillingAddressId
+		}
+		if err := s.UpdateBillingAddress(model, uuid.Nil, addr); err != nil {
+
+		}
+	}
+	if data.Groups != nil {
+		for _, g := range data.Groups {
+			model.Groups = append(model.Groups, models.CustomerGroup{
+				Model: core.Model{Id: g.Id},
+			})
+		}
+	}
+
+	if data.FirstName != "" {
+		model.FirstName = data.FirstName
+	}
+	if data.LastName != "" {
+		model.LastName = data.LastName
+	}
+	if data.Phone != "" {
+		model.Phone = data.Phone
+	}
+
+	if err := s.r.CustomerRepository().Upsert(s.ctx, model); err != nil {
 		return nil, err
 	}
 
-	return Update, nil
+	return model, nil
 }
 
-func (s *CustomerService) UpdateBillingAddress(model *models.Customer, address models.Address, id uuid.UUID) *utils.ApplictaionError {
+func (s *CustomerService) UpdateBillingAddress(model *models.Customer, id uuid.UUID, address *models.Address) *utils.ApplictaionError {
 	if reflect.DeepEqual(address, models.Address{}) && id == uuid.Nil {
 		model.BillingAddressId = uuid.NullUUID{}
 	}
@@ -329,7 +360,7 @@ func (s *CustomerService) UpdateBillingAddress(model *models.Customer, address m
 			)
 		}
 	} else {
-		addr = &address
+		addr = address
 	}
 
 	addr.CountryCode = strings.ToLower(addr.CountryCode)
@@ -363,7 +394,6 @@ func (s *CustomerService) UpdateAddress(customerId uuid.UUID, addressId uuid.UUI
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"userId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -372,7 +402,6 @@ func (s *CustomerService) UpdateAddress(customerId uuid.UUID, addressId uuid.UUI
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"customerId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -386,7 +415,6 @@ func (s *CustomerService) UpdateAddress(customerId uuid.UUID, addressId uuid.UUI
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"could not find address for customer",
-			"500",
 			nil,
 		)
 	}
@@ -403,7 +431,6 @@ func (s *CustomerService) RemoveAddress(customerId uuid.UUID, addressId uuid.UUI
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"userId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -412,7 +439,6 @@ func (s *CustomerService) RemoveAddress(customerId uuid.UUID, addressId uuid.UUI
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"customerId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -424,7 +450,6 @@ func (s *CustomerService) RemoveAddress(customerId uuid.UUID, addressId uuid.UUI
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"could not find address for customer",
-			"500",
 			nil,
 		)
 	}
@@ -441,21 +466,19 @@ func (s *CustomerService) AddAddress(customerId uuid.UUID, address *models.Addre
 		return nil, nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"customerId" must be defined`,
-			"500",
 			nil,
 		)
 	}
 
 	address.CountryCode = strings.ToLower(address.CountryCode)
 
-	customer, err := s.RetrieveById(customerId, sql.Options{
+	customer, err := s.RetrieveById(customerId, &sql.Options{
 		Relations: []string{"shipping_addresses"},
 	})
 	if err != nil {
 		return nil, nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"could not find address for customer",
-			"500",
 			nil,
 		)
 	}
@@ -472,7 +495,7 @@ func (s *CustomerService) AddAddress(customerId uuid.UUID, address *models.Addre
 }
 
 func (s *CustomerService) Delete(customerId uuid.UUID) *utils.ApplictaionError {
-	data, err := s.RetrieveById(customerId, sql.Options{})
+	data, err := s.RetrieveById(customerId, &sql.Options{})
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 )
@@ -30,12 +31,11 @@ func (s *CustomerGroupService) SetContext(context context.Context) *CustomerGrou
 	return s
 }
 
-func (s *CustomerGroupService) Retrieve(customerGroupId uuid.UUID, config sql.Options) (*models.CustomerGroup, *utils.ApplictaionError) {
+func (s *CustomerGroupService) Retrieve(customerGroupId uuid.UUID, config *sql.Options) (*models.CustomerGroup, *utils.ApplictaionError) {
 	if customerGroupId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"customerGroupId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -46,7 +46,6 @@ func (s *CustomerGroupService) Retrieve(customerGroupId uuid.UUID, config sql.Op
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`CustomerGroup with id `+customerGroupId.String()+` was not found`,
-			"500",
 			nil,
 		)
 	}
@@ -69,22 +68,29 @@ func (s *CustomerGroupService) AddCustomers(id uuid.UUID, customerIds uuid.UUIDs
 	return res, nil
 }
 
-func (s *CustomerGroupService) Update(customerGroupId uuid.UUID, Update *models.CustomerGroup) (*models.CustomerGroup, *utils.ApplictaionError) {
-	Update.Id = customerGroupId
-
-	if err := s.r.CustomerGroupRepository().FindOne(s.ctx, Update, sql.Query{}); err != nil {
+func (s *CustomerGroupService) Update(customerGroupId uuid.UUID, data *types.CustomerGroupUpdate) (*models.CustomerGroup, *utils.ApplictaionError) {
+	model, err := s.Retrieve(customerGroupId, &sql.Options{})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := s.r.CustomerGroupRepository().Upsert(s.ctx, Update); err != nil {
+	if data.Metadata != nil {
+		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
+	}
+
+	if data.Name != "" {
+		model.Name = data.Name
+	}
+
+	if err := s.r.CustomerGroupRepository().Update(s.ctx, model); err != nil {
 		return nil, err
 	}
-	return Update, nil
+	return model, nil
 
 }
 
 func (s *CustomerGroupService) Delete(groupId uuid.UUID) *utils.ApplictaionError {
-	data, err := s.Retrieve(groupId, sql.Options{})
+	data, err := s.Retrieve(groupId, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -96,7 +102,7 @@ func (s *CustomerGroupService) Delete(groupId uuid.UUID) *utils.ApplictaionError
 	return nil
 }
 
-func (s *CustomerGroupService) List(selector models.CustomerGroup, config sql.Options, q *string) ([]models.CustomerGroup, *utils.ApplictaionError) {
+func (s *CustomerGroupService) List(selector models.CustomerGroup, config *sql.Options, q *string) ([]models.CustomerGroup, *utils.ApplictaionError) {
 	customerGroups, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -104,7 +110,7 @@ func (s *CustomerGroupService) List(selector models.CustomerGroup, config sql.Op
 	return customerGroups, nil
 }
 
-func (s *CustomerGroupService) ListAndCount(selector models.CustomerGroup, config sql.Options, q *string) ([]models.CustomerGroup, *int64, *utils.ApplictaionError) {
+func (s *CustomerGroupService) ListAndCount(selector models.CustomerGroup, config *sql.Options, q *string) ([]models.CustomerGroup, *int64, *utils.ApplictaionError) {
 	var res []models.CustomerGroup
 
 	if q != nil {
@@ -133,16 +139,15 @@ func (s *CustomerGroupService) RemoveCustomer(id uuid.UUID, customerIds uuid.UUI
 
 func (s *CustomerGroupService) handleCreationFail(id uuid.UUID, ids uuid.UUIDs, err *utils.ApplictaionError) *utils.ApplictaionError {
 	if err.Type == utils.DB_ERROR {
-		s.Retrieve(id, sql.Options{})
+		s.Retrieve(id, &sql.Options{})
 		var nonExistingCustomers uuid.UUIDs
-		_, err := s.r.CustomerService().SetContext(s.ctx).List(models.Customer{Model: core.Model{Id: id}}, sql.Options{}, nil, []string{})
+		_, err := s.r.CustomerService().SetContext(s.ctx).List(models.Customer{Model: core.Model{Id: id}}, &sql.Options{}, nil, []string{})
 		if err != nil {
 			nonExistingCustomers = append(nonExistingCustomers, id)
 		}
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`The following customer ids do not exist: `+strings.Join(nonExistingCustomers.Strings(), ", "),
-			"500",
 			nil,
 		)
 	}

@@ -137,7 +137,7 @@ func (s *TaxProviderService) GetShippingTaxLines(shippingMethod *models.Shipping
 				Metadata: pl.Metadata,
 			},
 			ShippingMethodId: uuid.NullUUID{
-				UUID:  pl.ShippingMethodID,
+				UUID:  pl.ShippingMethodId,
 				Valid: true,
 			},
 			Rate: pl.Rate,
@@ -205,17 +205,17 @@ func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculatio
 	var liTaxLines []models.LineItemTaxLine
 
 	for _, pl := range providerLines {
-		if pl.ShippingMethodID != uuid.Nil {
+		if pl.ShippingMethodId != uuid.Nil {
 			smTaxLines = append(smTaxLines, models.ShippingMethodTaxLine{
 				Model: core.Model{
 					Metadata: pl.Metadata,
 				},
-				ShippingMethodId: uuid.NullUUID{UUID: pl.ShippingMethodID},
+				ShippingMethodId: uuid.NullUUID{UUID: pl.ShippingMethodId},
 				Rate:             pl.Rate,
 				Name:             pl.Name,
 				Code:             pl.Code,
 			})
-		} else if pl.ItemID == uuid.Nil {
+		} else if pl.ItemId == uuid.Nil {
 			return nil, nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
 				"Tax Provider returned invalid tax lines",
@@ -227,7 +227,7 @@ func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculatio
 				Model: core.Model{
 					Metadata: pl.Metadata,
 				},
-				ItemId: uuid.NullUUID{UUID: pl.ItemID},
+				ItemId: uuid.NullUUID{UUID: pl.ItemId},
 				Rate:   pl.Rate,
 				Name:   pl.Name,
 				Code:   pl.Code,
@@ -276,7 +276,6 @@ func (s *TaxProviderService) GetRegionRatesForShipping(optionId uuid.UUID, regio
 		return nil, utils.NewApplictaionError(
 			utils.UNEXPECTED_STATE,
 			er.Error(),
-			"500",
 			nil,
 		)
 	}

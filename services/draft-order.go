@@ -33,12 +33,11 @@ func (s *DraftOrderService) SetContext(context context.Context) *DraftOrderServi
 	return s
 }
 
-func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config sql.Options) (*models.DraftOrder, *utils.ApplictaionError) {
+func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config *sql.Options) (*models.DraftOrder, *utils.ApplictaionError) {
 	if draftOrderId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"draftOrderId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -53,7 +52,7 @@ func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config sql.Options)
 	return draftOrder, nil
 }
 
-func (s *DraftOrderService) RetrieveByCartId(cartId uuid.UUID, config sql.Options) (*models.DraftOrder, *utils.ApplictaionError) {
+func (s *DraftOrderService) RetrieveByCartId(cartId uuid.UUID, config *sql.Options) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder
 
 	query := sql.BuildQuery(models.DraftOrder{CartId: uuid.NullUUID{UUID: cartId}}, config)
@@ -65,7 +64,7 @@ func (s *DraftOrderService) RetrieveByCartId(cartId uuid.UUID, config sql.Option
 }
 
 func (s *DraftOrderService) Delete(draftOrderId uuid.UUID) *utils.ApplictaionError {
-	data, err := s.Retrieve(draftOrderId, sql.Options{})
+	data, err := s.Retrieve(draftOrderId, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -77,10 +76,10 @@ func (s *DraftOrderService) Delete(draftOrderId uuid.UUID) *utils.ApplictaionErr
 	return nil
 }
 
-func (s *DraftOrderService) ListAndCount(selector *models.DraftOrder, config sql.Options) ([]models.DraftOrder, *int64, *utils.ApplictaionError) {
+func (s *DraftOrderService) ListAndCount(selector *models.DraftOrder, config *sql.Options) ([]models.DraftOrder, *int64, *utils.ApplictaionError) {
 	var res []models.DraftOrder
 
-	if reflect.DeepEqual(config, sql.Options{}) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(20)
 	}
@@ -93,7 +92,7 @@ func (s *DraftOrderService) ListAndCount(selector *models.DraftOrder, config sql
 	return res, count, nil
 }
 
-func (s *DraftOrderService) List(selector *models.DraftOrder, config sql.Options) ([]models.DraftOrder, *utils.ApplictaionError) {
+func (s *DraftOrderService) List(selector *models.DraftOrder, config *sql.Options) ([]models.DraftOrder, *utils.ApplictaionError) {
 	var res []models.DraftOrder
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.DraftOrderRepository().Find(s.ctx, res, query); err != nil {
@@ -107,7 +106,6 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"region_id is required to Create a draft order",
-			"500",
 			nil,
 		)
 	}
@@ -117,7 +115,7 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 	idempotency_key := data.IdempotencyKey
 	discounts := data.Discounts
 
-	createdCart, err := s.r.CartService().SetContext(s.ctx).Create(&models.Cart{Type: models.CartClaim})
+	createdCart, err := s.r.CartService().SetContext(s.ctx).Create(&types.CartCreateProps{Type: models.CartClaim})
 	if err != nil {
 		return nil, err
 	}
@@ -139,9 +137,9 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 	itemsToGenerate := []types.GenerateInputData{}
 	itemsToCreate := []models.LineItem{}
 	for _, item := range items {
-		if item.VariantId.UUID != uuid.Nil {
+		if item.VariantId != uuid.Nil {
 			itemsToGenerate = append(itemsToGenerate, types.GenerateInputData{
-				VariantId: item.VariantId.UUID,
+				VariantId: item.VariantId,
 				Quantity:  item.Quantity,
 				Metadata:  item.Metadata,
 				UnitPrice: item.UnitPrice,
@@ -182,11 +180,11 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 	if len(itemsToCreate) > 0 {
 		s.r.LineItemService().SetContext(s.ctx).Create(itemsToCreate)
 	}
-	shippingMethodToCreate := []models.CustomShippingOption{}
+	shippingMethodToCreate := []types.CreateCustomShippingOptionInput{}
 	for _, method := range shipping_methods {
-		shippingMethodToCreate = append(shippingMethodToCreate, models.CustomShippingOption{
-			ShippingOptionId: method.ShippingOptionId,
-			CartId:           uuid.NullUUID{UUID: createdCart.Id},
+		shippingMethodToCreate = append(shippingMethodToCreate, types.CreateCustomShippingOptionInput{
+			ShippingOptionId: method.OptionId,
+			CartId:           createdCart.Id,
 			Price:            method.Price,
 		})
 	}
@@ -196,7 +194,7 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 			return nil, err
 		}
 	}
-	createdCart, err = s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(createdCart.Id, sql.Options{
+	createdCart, err = s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(createdCart.Id, &sql.Options{
 		Relations: []string{
 			"shipping_methods",
 			"shipping_methods.shipping_option",
@@ -208,14 +206,14 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 		return nil, err
 	}
 	for _, method := range shipping_methods {
-		_, err := s.r.CartService().SetContext(s.ctx).AddShippingMethod(uuid.Nil, createdCart, method.ShippingOptionId.UUID, method.Data)
+		_, err := s.r.CartService().SetContext(s.ctx).AddShippingMethod(uuid.Nil, createdCart, method.OptionId, method.Data)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if len(discounts) > 0 {
-		_, err := s.r.CartService().SetContext(s.ctx).Update(createdCart.Id, nil, &models.Cart{
+		_, err := s.r.CartService().SetContext(s.ctx).Update(createdCart.Id, nil, &types.CartUpdateProps{
 			Discounts: discounts,
 		})
 		if err != nil {
@@ -228,7 +226,7 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UUID) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder
 
-	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, sql.Options{})
+	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, &sql.Options{})
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
@@ -248,7 +246,7 @@ func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UU
 func (s *DraftOrderService) Update(id uuid.UUID, data *models.DraftOrder) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder
 
-	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, sql.Options{})
+	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, &sql.Options{})
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
@@ -257,7 +255,6 @@ func (s *DraftOrderService) Update(id uuid.UUID, data *models.DraftOrder) (*mode
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Can't Update a draft order which is complete`,
-			"500",
 			nil,
 		)
 	}

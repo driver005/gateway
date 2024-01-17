@@ -39,7 +39,6 @@ func (r *DiscountConditionRepo) FindOneWithDiscount(conditionId uuid.UUID, disco
 		return nil, utils.NewApplictaionError(
 			utils.DB_ERROR,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -184,7 +183,6 @@ func (r *DiscountConditionRepo) QueryConditionTable(types models.DiscountConditi
 		return nil, utils.NewApplictaionError(
 			utils.DB_ERROR,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -202,7 +200,6 @@ func (r *DiscountConditionRepo) IsValidForProduct(discountRuleId uuid.UUID, prod
 		return false, utils.NewApplictaionError(
 			utils.DB_ERROR,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}
@@ -238,7 +235,6 @@ func (r *DiscountConditionRepo) CanApplyForCustomer(discountRuleId uuid.UUID, cu
 		return false, utils.NewApplictaionError(
 			utils.DB_ERROR,
 			err.Error(),
-			"500",
 			nil,
 		)
 	}

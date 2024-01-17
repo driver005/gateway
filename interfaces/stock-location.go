@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 
+	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
@@ -11,19 +12,19 @@ import (
 type StringComparisonOperator string
 
 type StockLocationAddressDTO struct {
-	Id          uuid.UUID              `json:"id,omitempty"`
-	Address1    string                 `json:"address_1"`
-	Address2    *string                `json:"address_2,omitempty"`
-	Company     *string                `json:"company,omitempty"`
-	City        *string                `json:"city,omitempty"`
-	CountryCode string                 `json:"country_code"`
-	Phone       *string                `json:"phone,omitempty"`
-	PostalCode  *string                `json:"postal_code,omitempty"`
-	Province    *string                `json:"province,omitempty"`
-	CreatedAt   string                 `json:"created_at"`
-	UpdatedAt   string                 `json:"updated_at"`
-	DeletedAt   *string                `json:"deleted_at,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Id          uuid.UUID  `json:"id,omitempty"`
+	Address1    string     `json:"address_1"`
+	Address2    *string    `json:"address_2,omitempty"`
+	Company     *string    `json:"company,omitempty"`
+	City        *string    `json:"city,omitempty"`
+	CountryCode string     `json:"country_code"`
+	Phone       *string    `json:"phone,omitempty"`
+	PostalCode  *string    `json:"postal_code,omitempty"`
+	Province    *string    `json:"province,omitempty"`
+	CreatedAt   string     `json:"created_at"`
+	UpdatedAt   string     `json:"updated_at"`
+	DeletedAt   *string    `json:"deleted_at,omitempty"`
+	Metadata    core.JSONB `json:"metadata,omitempty"`
 }
 
 type StockLocationDTO struct {
@@ -48,14 +49,14 @@ type FilterableStockLocation struct {
 }
 
 type StockLocationAddressInput struct {
-	Address1    string                 `json:"address_1"`
-	Address2    *string                `json:"address_2,omitempty"`
-	City        *string                `json:"city,omitempty"`
-	CountryCode string                 `json:"country_code"`
-	Phone       *string                `json:"phone,omitempty"`
-	PostalCode  *string                `json:"postal_code,omitempty"`
-	Province    *string                `json:"province,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Address1    string     `json:"address_1"`
+	Address2    *string    `json:"address_2,omitempty"`
+	City        *string    `json:"city,omitempty"`
+	CountryCode string     `json:"country_code"`
+	Phone       *string    `json:"phone,omitempty"`
+	PostalCode  *string    `json:"postal_code,omitempty"`
+	Province    *string    `json:"province,omitempty"`
+	Metadata    core.JSONB `json:"metadata,omitempty"`
 }
 
 type CreateStockLocationInput struct {
@@ -73,9 +74,9 @@ type UpdateStockLocationInput struct {
 }
 
 type IStockLocationService interface {
-	List(context context.Context, selector FilterableStockLocation, config sql.Options) ([]StockLocationDTO, *utils.ApplictaionError)
-	ListAndCount(context context.Context, selector FilterableStockLocation, config sql.Options) ([]StockLocationDTO, *int64, *utils.ApplictaionError)
-	Retrieve(context context.Context, id uuid.UUID, config sql.Options) (StockLocationDTO, *utils.ApplictaionError)
+	List(context context.Context, selector FilterableStockLocation, config *sql.Options) ([]StockLocationDTO, *utils.ApplictaionError)
+	ListAndCount(context context.Context, selector FilterableStockLocation, config *sql.Options) ([]StockLocationDTO, *int64, *utils.ApplictaionError)
+	Retrieve(context context.Context, id uuid.UUID, config *sql.Options) (StockLocationDTO, *utils.ApplictaionError)
 	Create(context context.Context, input CreateStockLocationInput) (StockLocationDTO, *utils.ApplictaionError)
 	Update(context context.Context, id uuid.UUID, input UpdateStockLocationInput) (StockLocationDTO, *utils.ApplictaionError)
 	Delete(context context.Context, id uuid.UUID) *utils.ApplictaionError

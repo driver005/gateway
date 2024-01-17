@@ -11,6 +11,12 @@ func New(ctx context.Context) *Base {
 		registry.Logger().Fatal(err)
 	}
 
+	if registry.Config().Migration.Active {
+		if err := registry.Migration().Up(); err != nil {
+			registry.Logger().Error(err)
+		}
+	}
+
 	if registry.Config().Applictaion.Preload {
 		CallRegistry(registry)
 	}

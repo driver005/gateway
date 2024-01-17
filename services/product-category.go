@@ -31,7 +31,7 @@ func (s *ProductCategoryService) SetContext(context context.Context) *ProductCat
 	return s
 }
 
-func (s *ProductCategoryService) List(selector models.ProductCategory, config sql.Options, q *string) ([]models.ProductCategory, *utils.ApplictaionError) {
+func (s *ProductCategoryService) List(selector models.ProductCategory, config *sql.Options, q *string) ([]models.ProductCategory, *utils.ApplictaionError) {
 	collections, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (s *ProductCategoryService) List(selector models.ProductCategory, config sq
 	return collections, nil
 }
 
-func (s *ProductCategoryService) ListAndCount(selector models.ProductCategory, config sql.Options, q *string) ([]models.ProductCategory, *int64, *utils.ApplictaionError) {
+func (s *ProductCategoryService) ListAndCount(selector models.ProductCategory, config *sql.Options, q *string) ([]models.ProductCategory, *int64, *utils.ApplictaionError) {
 	includeDescendantsTree := true
 	query := sql.BuildQuery(selector, config)
 
@@ -50,7 +50,7 @@ func (s *ProductCategoryService) ListAndCount(selector models.ProductCategory, c
 	return res, count, nil
 }
 
-func (s *ProductCategoryService) Retrieve(selector models.ProductCategory, config sql.Options, q *string) (*models.ProductCategory, error) {
+func (s *ProductCategoryService) Retrieve(selector models.ProductCategory, config *sql.Options, q *string) (*models.ProductCategory, *utils.ApplictaionError) {
 	query := sql.BuildQuery(selector, config)
 
 	res, err := s.r.ProductCategoryRepository().FindOneWithDescendants(s.ctx, query, q)
@@ -60,12 +60,11 @@ func (s *ProductCategoryService) Retrieve(selector models.ProductCategory, confi
 	return res, nil
 }
 
-func (s *ProductCategoryService) RetrieveById(id uuid.UUID, config sql.Options, q *string) (*models.ProductCategory, error) {
+func (s *ProductCategoryService) RetrieveById(id uuid.UUID, config *sql.Options, q *string) (*models.ProductCategory, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -73,12 +72,11 @@ func (s *ProductCategoryService) RetrieveById(id uuid.UUID, config sql.Options, 
 	return s.Retrieve(models.ProductCategory{Model: core.Model{Id: id}}, config, q)
 }
 
-func (s *ProductCategoryService) RetrieveByHandle(handle string, config sql.Options, q *string) (*models.ProductCategory, error) {
+func (s *ProductCategoryService) RetrieveByHandle(handle string, config *sql.Options, q *string) (*models.ProductCategory, *utils.ApplictaionError) {
 	if handle == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -86,19 +84,43 @@ func (s *ProductCategoryService) RetrieveByHandle(handle string, config sql.Opti
 	return s.Retrieve(models.ProductCategory{Handle: handle}, config, q)
 }
 
-func (s *ProductCategoryService) Create(data *models.ProductCategory) (*models.ProductCategory, error) {
-	query := sql.BuildQuery(models.ProductCategory{Model: core.Model{Id: data.ParentCategoryId.UUID}}, sql.Options{})
+func (s *ProductCategoryService) Create(data *types.CreateProductCategoryInput) (*models.ProductCategory, *utils.ApplictaionError) {
+	query := sql.BuildQuery(models.ProductCategory{Model: core.Model{Id: data.ParentCategoryId}}, &sql.Options{})
 	siblingCount, err := s.r.ProductCategoryRepository().CountBy(s.ctx, []string{"parent_category_id"}, query)
 	if err != nil {
 		return nil, err
 	}
 
 	data.Rank = *siblingCount
-	if err := s.transformParentIdToEntity(data); err != nil {
+	if err := s.transformParentIdToEntity(&types.UpdateProductCategoryInput{
+		ProductCategoryInput: types.ProductCategoryInput{
+			Metadata:         data.Metadata,
+			Handle:           data.Handle,
+			IsInternal:       data.IsInternal,
+			IsActive:         data.IsActive,
+			ParentCategoryId: data.ParentCategoryId,
+			ParentCategory:   data.ParentCategory,
+			Rank:             data.Rank,
+		},
+		Name: data.Name,
+	}); err != nil {
 		return nil, err
 	}
 
-	if err := s.r.ProductCategoryRepository().Save(s.ctx, data); err != nil {
+	model := &models.ProductCategory{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Handle:           data.Handle,
+		IsInternal:       data.IsInternal,
+		IsActive:         data.IsActive,
+		ParentCategoryId: uuid.NullUUID{UUID: data.ParentCategoryId},
+		ParentCategory:   data.ParentCategory,
+		Rank:             data.Rank,
+		Name:             data.Name,
+	}
+
+	if err := s.r.ProductCategoryRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
 
@@ -109,28 +131,35 @@ func (s *ProductCategoryService) Create(data *models.ProductCategory) (*models.P
 	// 	return nil, err
 	// }
 
-	return data, nil
+	return model, nil
 }
 
-func (s *ProductCategoryService) Update(productCategoryId uuid.UUID, update *models.ProductCategory) (*models.ProductCategory, error) {
-	productCategory, err := s.RetrieveById(productCategoryId, sql.Options{}, nil)
+func (s *ProductCategoryService) Update(productCategoryId uuid.UUID, data *types.UpdateProductCategoryInput) (*models.ProductCategory, *utils.ApplictaionError) {
+	productCategory, err := s.RetrieveById(productCategoryId, &sql.Options{}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	conditions := s.fetchReorderConditions(productCategory, update, false)
+	conditions := s.fetchReorderConditions(productCategory, data, false)
 	if conditions.ShouldChangeRank || conditions.ShouldChangeParent {
-		update.Rank = types.TempReorderRank
+		data.Rank = types.TempReorderRank
 	}
 
-	err = s.transformParentIdToEntity(update)
+	err = s.transformParentIdToEntity(data)
 	if err != nil {
 		return productCategory, err
 	}
 
-	update.Id = productCategory.Id
+	productCategory.Metadata = data.Metadata
+	productCategory.Handle = data.Handle
+	productCategory.IsInternal = data.IsInternal
+	productCategory.IsActive = data.IsActive
+	productCategory.ParentCategoryId = uuid.NullUUID{UUID: data.ParentCategoryId}
+	productCategory.ParentCategory = data.ParentCategory
+	productCategory.Rank = data.Rank
+	productCategory.Name = data.Name
 
-	if err := s.r.ProductCategoryRepository().Save(s.ctx, update); err != nil {
+	if err := s.r.ProductCategoryRepository().Save(s.ctx, productCategory); err != nil {
 		return nil, err
 	}
 
@@ -146,11 +175,11 @@ func (s *ProductCategoryService) Update(productCategoryId uuid.UUID, update *mod
 	// 	return productCategory, err
 	// }
 
-	return nil, err
+	return productCategory, nil
 }
 
-func (s *ProductCategoryService) Delete(productCategoryId uuid.UUID) error {
-	productCategory, err := s.RetrieveById(productCategoryId, sql.Options{
+func (s *ProductCategoryService) Delete(productCategoryId uuid.UUID) *utils.ApplictaionError {
+	productCategory, err := s.RetrieveById(productCategoryId, &sql.Options{
 		Relations: []string{"category_children"},
 	}, nil)
 	if err != nil {
@@ -161,16 +190,17 @@ func (s *ProductCategoryService) Delete(productCategoryId uuid.UUID) error {
 		return nil
 	}
 
-	conditions := s.fetchReorderConditions(productCategory, &models.ProductCategory{
-		ParentCategoryId: productCategory.ParentCategoryId,
-		Rank:             productCategory.Rank,
+	conditions := s.fetchReorderConditions(productCategory, &types.UpdateProductCategoryInput{
+		ProductCategoryInput: types.ProductCategoryInput{
+			ParentCategoryId: productCategory.ParentCategoryId.UUID,
+			Rank:             productCategory.Rank,
+		},
 	}, true)
 
 	if len(productCategory.CategoryChildren) > 0 {
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Deleting models.ProductCategory (%s) with category children is not allowed", productCategoryId),
-			"500",
 			nil,
 		)
 	}
@@ -194,7 +224,7 @@ func (s *ProductCategoryService) Delete(productCategoryId uuid.UUID) error {
 	return nil
 }
 
-func (s *ProductCategoryService) AddProducts(productCategoryId uuid.UUID, productIDs uuid.UUIDs) error {
+func (s *ProductCategoryService) AddProducts(productCategoryId uuid.UUID, productIDs uuid.UUIDs) *utils.ApplictaionError {
 	if err := s.r.ProductCategoryRepository().AddProducts(productCategoryId, productIDs); err != nil {
 		return err
 	}
@@ -202,7 +232,7 @@ func (s *ProductCategoryService) AddProducts(productCategoryId uuid.UUID, produc
 	return nil
 }
 
-func (s *ProductCategoryService) RemoveProducts(productCategoryId uuid.UUID, productIDs uuid.UUIDs) error {
+func (s *ProductCategoryService) RemoveProducts(productCategoryId uuid.UUID, productIDs uuid.UUIDs) *utils.ApplictaionError {
 	if err := s.r.ProductCategoryRepository().RemoveProducts(productCategoryId, productIDs); err != nil {
 		return err
 	}
@@ -210,17 +240,17 @@ func (s *ProductCategoryService) RemoveProducts(productCategoryId uuid.UUID, pro
 	return nil
 }
 
-func (s *ProductCategoryService) fetchReorderConditions(productCategory *models.ProductCategory, input *models.ProductCategory, shouldDeleteElement bool) types.ReorderConditions {
+func (s *ProductCategoryService) fetchReorderConditions(productCategory *models.ProductCategory, input *types.UpdateProductCategoryInput, shouldDeleteElement bool) types.ReorderConditions {
 	originalParentId := productCategory.ParentCategoryId
 	targetParentId := input.ParentCategoryId
 	originalRank := productCategory.Rank
 	targetRank := input.Rank
-	shouldChangeParent := targetParentId.UUID != uuid.Nil && targetParentId != originalParentId
+	shouldChangeParent := targetParentId != uuid.Nil && targetParentId != originalParentId.UUID
 	shouldChangeRank := shouldChangeParent || (targetRank != 0 && originalRank != targetRank)
 	return types.ReorderConditions{
 		TargetCategoryId:    productCategory.Id,
 		OriginalParentId:    originalParentId.UUID,
-		TargetParentId:      targetParentId.UUID,
+		TargetParentId:      targetParentId,
 		OriginalRank:        originalRank,
 		TargetRank:          targetRank,
 		ShouldChangeParent:  shouldChangeParent,
@@ -230,7 +260,7 @@ func (s *ProductCategoryService) fetchReorderConditions(productCategory *models.
 	}
 }
 
-func (s *ProductCategoryService) performReordering(conditions types.ReorderConditions) error {
+func (s *ProductCategoryService) performReordering(conditions types.ReorderConditions) *utils.ApplictaionError {
 	shouldChangeParent := conditions.ShouldChangeParent
 	shouldChangeRank := conditions.ShouldChangeRank
 	shouldDeleteElement := conditions.ShouldDeleteElement
@@ -293,7 +323,7 @@ func (s *ProductCategoryService) performReordering(conditions types.ReorderCondi
 	return nil
 }
 
-func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderConditions) error {
+func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderConditions) *utils.ApplictaionError {
 	shouldIncrementRank := conditions.ShouldIncrementRank
 	targetRank := conditions.TargetRank
 	shouldChangeParent := conditions.ShouldChangeParent
@@ -305,7 +335,7 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 	query := sql.BuildQuery(models.ProductCategory{
 		ParentCategoryId: uuid.NullUUID{UUID: targetParentId},
 		Model:            core.Model{Id: targetCategoryId},
-	}, sql.Options{
+	}, &sql.Options{
 		Null: []string{"parent_category_id"},
 		Not:  []string{"id"},
 	})
@@ -320,7 +350,7 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 		Model:            core.Model{Id: targetCategoryId},
 		ParentCategoryId: uuid.NullUUID{UUID: targetParentId},
 		Rank:             types.TempReorderRank,
-	}, sql.Options{
+	}, &sql.Options{
 		Null: []string{"parent_category_id"},
 	})
 
@@ -348,7 +378,7 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 	query = sql.BuildQuery(models.ProductCategory{
 		Model:            core.Model{Id: targetCategoryId},
 		ParentCategoryId: uuid.NullUUID{UUID: targetParentId},
-	}, sql.Options{
+	}, &sql.Options{
 		Specification: []sql.Specification{rankCondition},
 		Not:           []string{"id"},
 		Null:          []string{"parent_category_id"},
@@ -386,13 +416,13 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 	return nil
 }
 
-func (s *ProductCategoryService) transformParentIdToEntity(update *models.ProductCategory) error {
+func (s *ProductCategoryService) transformParentIdToEntity(update *types.UpdateProductCategoryInput) *utils.ApplictaionError {
 	parentCategoryId := update.ParentCategoryId
-	if parentCategoryId.UUID == uuid.Nil {
+	if parentCategoryId == uuid.Nil {
 		return nil
 	}
 
-	parentCategory, err := s.RetrieveById(parentCategoryId.UUID, sql.Options{}, nil)
+	parentCategory, err := s.RetrieveById(parentCategoryId, &sql.Options{}, nil)
 	if err != nil {
 		return err
 	}

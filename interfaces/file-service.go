@@ -3,38 +3,42 @@ package interfaces
 import (
 	"io"
 	"mime/multipart"
+
+	"github.com/driver005/gateway/utils"
 )
 
 type FileServiceUploadResult struct {
-	// define the structure of FileServiceUploadResult
-}
-
-type DeleteFileType struct {
-	// define the structure of DeleteFileType
-}
-
-type UploadStreamDescriptorType struct {
-	// define the structure of UploadStreamDescriptorType
+	URL string
+	Key string
 }
 
 type FileServiceGetUploadStreamResult struct {
-	// define the structure of FileServiceGetUploadStreamResult
+	WriteStream io.Writer
+	Promise     chan struct{}
+	URL         string
+	FileKey     string
 }
 
 type GetUploadedFileType struct {
-	// define the structure of GetUploadedFileType
+	FileKey   string
+	IsPrivate bool
+}
+
+type DeleteFileType struct {
+	FileKey string
+}
+
+type UploadStreamDescriptorType struct {
+	Name      string
+	Ext       string
+	IsPrivate bool
 }
 
 type IFileService interface {
-	Upload(file *multipart.FileHeader) (*FileServiceUploadResult, error)
-	UploadProtected(file *multipart.FileHeader) (*FileServiceUploadResult, error)
-	Delete(fileData DeleteFileType) error
-	GetUploadStreamDescriptor(fileData UploadStreamDescriptorType) (*FileServiceGetUploadStreamResult, error)
-	GetDownloadStream(fileData GetUploadedFileType) (io.ReadCloser, error)
-	GetPresignedDownloadUrl(fileData GetUploadedFileType) (string, error)
-}
-
-func IsFileService(object interface{}) bool {
-	_, ok := object.(IFileService)
-	return ok
+	Upload(file *multipart.FileHeader) (*FileServiceUploadResult, *utils.ApplictaionError)
+	UploadProtected(file *multipart.FileHeader) (*FileServiceUploadResult, *utils.ApplictaionError)
+	Delete(fileData DeleteFileType) *utils.ApplictaionError
+	GetUploadStreamDescriptor(fileData UploadStreamDescriptorType) (*FileServiceGetUploadStreamResult, *utils.ApplictaionError)
+	GetDownloadStream(fileData GetUploadedFileType) (io.ReadCloser, *utils.ApplictaionError)
+	GetPresignedDownloadUrl(fileData GetUploadedFileType) (string, *utils.ApplictaionError)
 }

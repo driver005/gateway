@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/driver005/gateway/config"
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/repository"
 	"gorm.io/gorm"
@@ -8,6 +9,7 @@ import (
 
 type Registry interface {
 	Context() *gorm.DB
+	Config() *config.Config
 
 	//Repository
 	AddressRepository() *repository.AddressRepo
@@ -156,4 +158,6 @@ type Registry interface {
 	InventoryService() interfaces.IInventoryService
 	StockLocationService() interfaces.IStockLocationService
 	CacheService() interfaces.ICacheService
+	PricingModuleService() interfaces.IPricingModuleService
+	BatchJobStrategy() interfaces.IBatchJobStrategy
 }

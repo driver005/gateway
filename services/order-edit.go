@@ -34,12 +34,11 @@ func (s *OrderEditService) SetContext(context context.Context) *OrderEditService
 	return s
 }
 
-func (s *OrderEditService) Retrieve(id uuid.UUID, config sql.Options) (*models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) Retrieve(id uuid.UUID, config *sql.Options) (*models.OrderEdit, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -51,7 +50,7 @@ func (s *OrderEditService) Retrieve(id uuid.UUID, config sql.Options) (*models.O
 	return res, nil
 }
 
-func (s *OrderEditService) ListAndCount(selector models.OrderEdit, config sql.Options, q *string) ([]models.OrderEdit, *int64, *utils.ApplictaionError) {
+func (s *OrderEditService) ListAndCount(selector models.OrderEdit, config *sql.Options, q *string) ([]models.OrderEdit, *int64, *utils.ApplictaionError) {
 	var res []models.OrderEdit
 
 	if q != nil {
@@ -68,7 +67,7 @@ func (s *OrderEditService) ListAndCount(selector models.OrderEdit, config sql.Op
 	return res, count, nil
 }
 
-func (s *OrderEditService) List(selector models.OrderEdit, config sql.Options, q *string) ([]models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) List(selector models.OrderEdit, config *sql.Options, q *string) ([]models.OrderEdit, *utils.ApplictaionError) {
 	orderEdits, _, err := s.ListAndCount(selector, config, q)
 	if err != nil {
 		return nil, err
@@ -77,22 +76,21 @@ func (s *OrderEditService) List(selector models.OrderEdit, config sql.Options, q
 	return orderEdits, nil
 }
 
-func (s *OrderEditService) Create(data *models.OrderEdit, createdBy string) (*models.OrderEdit, *utils.ApplictaionError) {
-	activeOrderEdit, err := s.RetrieveActive(data.OrderId.UUID, sql.Options{})
+func (s *OrderEditService) Create(data *types.CreateOrderEditInput, createdBy string) (*models.OrderEdit, *utils.ApplictaionError) {
+	activeOrderEdit, err := s.RetrieveActive(data.OrderId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 	if activeOrderEdit != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
-			fmt.Sprintf("An active order edit already exists for the order %s", data.OrderId.UUID),
-			"500",
+			fmt.Sprintf("An active order edit already exists for the order %s", data.OrderId),
 			nil,
 		)
 	}
 
 	orderEdit := &models.OrderEdit{
-		OrderId:      data.OrderId,
+		OrderId:      uuid.NullUUID{UUID: data.OrderId},
 		InternalNote: data.InternalNote,
 		CreatedBy:    createdBy,
 	}
@@ -100,7 +98,7 @@ func (s *OrderEditService) Create(data *models.OrderEdit, createdBy string) (*mo
 		return nil, err
 	}
 
-	orderLineItems, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{OrderId: data.OrderId}, sql.Options{Selects: []string{"id"}})
+	orderLineItems, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{OrderId: uuid.NullUUID{UUID: data.OrderId}}, &sql.Options{Selects: []string{"id"}})
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +121,7 @@ func (s *OrderEditService) Create(data *models.OrderEdit, createdBy string) (*mo
 }
 
 func (s *OrderEditService) Update(id uuid.UUID, data *models.OrderEdit) (*models.OrderEdit, *utils.ApplictaionError) {
-	orderEdit, err := s.Retrieve(id, sql.Options{})
+	orderEdit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +141,7 @@ func (s *OrderEditService) Update(id uuid.UUID, data *models.OrderEdit) (*models
 }
 
 func (s *OrderEditService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	edit, err := s.Retrieve(id, sql.Options{})
+	edit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil
 	}
@@ -152,7 +150,6 @@ func (s *OrderEditService) Delete(id uuid.UUID) *utils.ApplictaionError {
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Cannot delete order edit with status %s", edit.Status),
-			"500",
 			nil,
 		)
 	}
@@ -170,7 +167,7 @@ func (s *OrderEditService) Delete(id uuid.UUID) *utils.ApplictaionError {
 }
 
 func (s *OrderEditService) Decline(id uuid.UUID, declinedBy string, declinedReason string) (*models.OrderEdit, *utils.ApplictaionError) {
-	orderEdit, err := s.Retrieve(id, sql.Options{})
+	orderEdit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +180,6 @@ func (s *OrderEditService) Decline(id uuid.UUID, declinedBy string, declinedReas
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Cannot decline an order edit with status %s.", orderEdit.Status),
-			"500",
 			nil,
 		)
 	}
@@ -206,7 +202,7 @@ func (s *OrderEditService) Decline(id uuid.UUID, declinedBy string, declinedReas
 }
 
 func (s *OrderEditService) UpdateLineItem(id uuid.UUID, itemId uuid.UUID, quantity int) *utils.ApplictaionError {
-	orderEdit, err := s.Retrieve(id, sql.Options{Selects: []string{"id", "order_id", "created_at", "requested_at", "confirmed_at", "declined_at", "canceled_at"}})
+	orderEdit, err := s.Retrieve(id, &sql.Options{Selects: []string{"id", "order_id", "created_at", "requested_at", "confirmed_at", "declined_at", "canceled_at"}})
 	if err != nil {
 		return err
 	}
@@ -216,12 +212,11 @@ func (s *OrderEditService) UpdateLineItem(id uuid.UUID, itemId uuid.UUID, quanti
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Can not update an item on the order edit %s with the status %s", id, orderEdit.Status),
-			"500",
 			nil,
 		)
 	}
 
-	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(itemId, sql.Options{Selects: []string{"id", "order_edit_id", "original_item_id"}})
+	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(itemId, &sql.Options{Selects: []string{"id", "order_edit_id", "original_item_id"}})
 	if err != nil {
 		return err
 	}
@@ -230,31 +225,30 @@ func (s *OrderEditService) UpdateLineItem(id uuid.UUID, itemId uuid.UUID, quanti
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("Invalid line item id %s it does not belong to the same order edit %s.", itemId, orderEdit.OrderId.UUID),
-			"500",
 			nil,
 		)
 	}
 
 	var change *models.OrderItemChange
-	changes, err := s.r.OrderItemChangeService().List(models.OrderItemChange{LineItemId: uuid.NullUUID{UUID: itemId}}, sql.Options{Selects: []string{"line_item_id", "original_line_item_id"}})
+	changes, err := s.r.OrderItemChangeService().List(models.OrderItemChange{LineItemId: uuid.NullUUID{UUID: itemId}}, &sql.Options{Selects: []string{"line_item_id", "original_line_item_id"}})
 	if err != nil {
 		return err
 	}
 	if len(changes) > 0 {
 		change = &changes[len(changes)-1]
 	} else {
-		change, err = s.r.OrderItemChangeService().Create(&models.OrderItemChange{
+		change, err = s.r.OrderItemChangeService().Create(&types.CreateOrderEditItemChangeInput{
 			Type:               models.OrderEditStatusItemUpdate,
-			OrderEditId:        uuid.NullUUID{UUID: id},
-			OriginalLineItemId: lineItem.OriginalItemId,
-			LineItemId:         uuid.NullUUID{UUID: itemId},
+			OrderEditId:        id,
+			OriginalLineItemId: lineItem.OriginalItemId.UUID,
+			LineItemId:         itemId,
 		})
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = s.r.LineItemService().SetContext(s.ctx).Update(change.LineItemId.UUID, nil, &models.LineItem{Quantity: quantity}, sql.Options{})
+	_, err = s.r.LineItemService().SetContext(s.ctx).Update(change.LineItemId.UUID, nil, &models.LineItem{Quantity: quantity}, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -268,7 +262,7 @@ func (s *OrderEditService) UpdateLineItem(id uuid.UUID, itemId uuid.UUID, quanti
 }
 
 func (s *OrderEditService) RemoveLineItem(id uuid.UUID, lineItemId uuid.UUID) *utils.ApplictaionError {
-	orderEdit, err := s.Retrieve(id, sql.Options{Selects: []string{"id", "created_at", "requested_at", "confirmed_at", "declined_at", "canceled_at"}})
+	orderEdit, err := s.Retrieve(id, &sql.Options{Selects: []string{"id", "created_at", "requested_at", "confirmed_at", "declined_at", "canceled_at"}})
 	if err != nil {
 		return err
 	}
@@ -278,12 +272,11 @@ func (s *OrderEditService) RemoveLineItem(id uuid.UUID, lineItemId uuid.UUID) *u
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Can not update an item on the order edit %s with the status %s", id, orderEdit.Status),
-			"500",
 			nil,
 		)
 	}
 
-	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(lineItemId, sql.Options{Selects: []string{"id", "order_edit_id", "original_item_id"}})
+	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(lineItemId, &sql.Options{Selects: []string{"id", "order_edit_id", "original_item_id"}})
 	if err != nil {
 		return nil
 	}
@@ -292,7 +285,6 @@ func (s *OrderEditService) RemoveLineItem(id uuid.UUID, lineItemId uuid.UUID) *u
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("Invalid line item id %s it does not belong to the same order edit %s.", lineItemId, orderEdit.OrderId.UUID),
-			"500",
 			nil,
 		)
 	}
@@ -307,10 +299,10 @@ func (s *OrderEditService) RemoveLineItem(id uuid.UUID, lineItemId uuid.UUID) *u
 		return err
 	}
 
-	_, err = s.r.OrderItemChangeService().Create(&models.OrderItemChange{
-		OriginalLineItemId: lineItem.OriginalItemId,
+	_, err = s.r.OrderItemChangeService().Create(&types.CreateOrderEditItemChangeInput{
+		OriginalLineItemId: lineItem.OriginalItemId.UUID,
 		Type:               models.OrderEditStatusItemRemove,
-		OrderEditId:        uuid.NullUUID{UUID: orderEdit.Id},
+		OrderEditId:        orderEdit.Id,
 	})
 	if err != nil {
 		return err
@@ -320,7 +312,7 @@ func (s *OrderEditService) RemoveLineItem(id uuid.UUID, lineItemId uuid.UUID) *u
 }
 
 func (s *OrderEditService) RefreshAdjustments(id uuid.UUID, preserveCustomAdjustments bool) *utils.ApplictaionError {
-	orderEdit, err := s.Retrieve(id, sql.Options{Relations: []string{"items", "items.variant", "items.adjustments", "items.tax_lines", "order", "order.customer", "order.discounts", "order.discounts.rule", "order.gift_cards", "order.region", "order.shipping_address", "order.shipping_methods"}})
+	orderEdit, err := s.Retrieve(id, &sql.Options{Relations: []string{"items", "items.variant", "items.adjustments", "items.tax_lines", "order", "order.customer", "order.discounts", "order.discounts.rule", "order.gift_cards", "order.region", "order.shipping_address", "order.shipping_methods"}})
 	if err != nil {
 		return err
 	}
@@ -356,12 +348,12 @@ func (s *OrderEditService) RefreshAdjustments(id uuid.UUID, preserveCustomAdjust
 }
 
 func (s *OrderEditService) DecorateTotals(orderEdit *models.OrderEdit) (*models.OrderEdit, *utils.ApplictaionError) {
-	edit, err := s.Retrieve(orderEdit.Id, sql.Options{Selects: []string{"id", "order_id", "items"}, Relations: []string{"items", "items.tax_lines", "items.adjustments", "items.variant"}})
+	edit, err := s.Retrieve(orderEdit.Id, &sql.Options{Selects: []string{"id", "order_id", "items"}, Relations: []string{"items", "items.tax_lines", "items.adjustments", "items.variant"}})
 	if err != nil {
 		return nil, err
 	}
 
-	order, err := s.r.OrderService().SetContext(s.ctx).RetrieveById(edit.OrderId.UUID, sql.Options{Relations: []string{"discounts", "discounts.rule", "gift_cards", "region", "items", "items.tax_lines", "items.adjustments", "items.variant", "region.tax_rates", "shipping_methods", "shipping_methods.shipping_option", "shipping_methods.tax_lines"}})
+	order, err := s.r.OrderService().SetContext(s.ctx).RetrieveById(edit.OrderId.UUID, &sql.Options{Relations: []string{"discounts", "discounts.rule", "gift_cards", "region", "items", "items.tax_lines", "items.adjustments", "items.variant", "region.tax_rates", "shipping_methods", "shipping_methods.shipping_option", "shipping_methods.tax_lines"}})
 	if err != nil {
 		return nil, err
 	}
@@ -386,8 +378,8 @@ func (s *OrderEditService) DecorateTotals(orderEdit *models.OrderEdit) (*models.
 	return orderEdit, nil
 }
 
-func (s *OrderEditService) AddLineItem(id uuid.UUID, data models.LineItem) *utils.ApplictaionError {
-	orderEdit, err := s.Retrieve(id, sql.Options{Relations: []string{"order", "order.region"}})
+func (s *OrderEditService) AddLineItem(id uuid.UUID, data types.AddOrderEditLineItemInput) *utils.ApplictaionError {
+	orderEdit, err := s.Retrieve(id, &sql.Options{Relations: []string{"order", "order.region"}})
 	if err != nil {
 		return err
 	}
@@ -396,12 +388,11 @@ func (s *OrderEditService) AddLineItem(id uuid.UUID, data models.LineItem) *util
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Can not add an item to the edit with status %s", orderEdit.Status),
-			"500",
 			nil,
 		)
 	}
 
-	lineItemData, err := s.r.LineItemService().SetContext(s.ctx).Generate(data.VariantId.UUID, nil, orderEdit.Order.RegionId.UUID, data.Quantity, types.GenerateLineItemContext{})
+	lineItemData, err := s.r.LineItemService().SetContext(s.ctx).Generate(data.VariantId, nil, orderEdit.Order.RegionId.UUID, data.Quantity, types.GenerateLineItemContext{})
 	if err != nil {
 		return err
 	}
@@ -411,7 +402,7 @@ func (s *OrderEditService) AddLineItem(id uuid.UUID, data models.LineItem) *util
 		return err
 	}
 
-	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(item[0].Id, sql.Options{Relations: []string{"variant.product.profiles"}})
+	lineItem, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(item[0].Id, &sql.Options{Relations: []string{"variant.product.profiles"}})
 	if err != nil {
 		return err
 	}
@@ -421,22 +412,25 @@ func (s *OrderEditService) AddLineItem(id uuid.UUID, data models.LineItem) *util
 		return err
 	}
 
-	_, err = s.r.OrderItemChangeService().Create(&models.OrderItemChange{
+	_, err = s.r.OrderItemChangeService().Create(&types.CreateOrderEditItemChangeInput{
 		Type:        models.OrderEditStatusItemAdd,
-		LineItemId:  uuid.NullUUID{UUID: lineItem.Id},
-		OrderEditId: uuid.NullUUID{UUID: id},
+		LineItemId:  lineItem.Id,
+		OrderEditId: id,
 	})
 	if err != nil {
 		return err
 	}
 
-	localCart := &models.Cart{
-		Items: []models.LineItem{*lineItem},
-	}
-
-	copier.CopyWithOption(&localCart, orderEdit.Order, copier.Option{IgnoreEmpty: true, DeepCopy: true})
-
-	calcContext, err := s.r.TotalsService().GetCalculationContext(localCart, nil, CalculationContextOptions{ExcludeShipping: true})
+	calcContext, err := s.r.TotalsService().GetCalculationContext(types.CalculationContextData{
+		Discounts:       orderEdit.Order.Discounts,
+		Items:           []models.LineItem{*lineItem},
+		Customer:        orderEdit.Order.Customer,
+		Region:          orderEdit.Order.Region,
+		ShippingAddress: orderEdit.Order.ShippingAddress,
+		Swaps:           orderEdit.Order.Swaps,
+		Claims:          orderEdit.Order.Claims,
+		ShippingMethods: orderEdit.Order.ShippingMethods,
+	}, CalculationContextOptions{ExcludeShipping: true})
 	if err != nil {
 		return err
 	}
@@ -450,12 +444,12 @@ func (s *OrderEditService) AddLineItem(id uuid.UUID, data models.LineItem) *util
 }
 
 func (s *OrderEditService) DeleteItemChange(id uuid.UUID, itemChangeId uuid.UUID) *utils.ApplictaionError {
-	itemChange, err := s.r.OrderItemChangeService().Retrieve(itemChangeId, sql.Options{Selects: []string{"id", "order_edit_id"}})
+	itemChange, err := s.r.OrderItemChangeService().Retrieve(itemChangeId, &sql.Options{Selects: []string{"id", "order_edit_id"}})
 	if err != nil {
 		return err
 	}
 
-	orderEdit, err := s.Retrieve(id, sql.Options{Selects: []string{"id", "confirmed_at", "canceled_at"}})
+	orderEdit, err := s.Retrieve(id, &sql.Options{Selects: []string{"id", "confirmed_at", "canceled_at"}})
 	if err != nil {
 		return err
 	}
@@ -464,7 +458,6 @@ func (s *OrderEditService) DeleteItemChange(id uuid.UUID, itemChangeId uuid.UUID
 		return utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("The item change you are trying to delete doesn't belong to the models.OrderEdit with id: %s.", id),
-			"500",
 			nil,
 		)
 	}
@@ -473,7 +466,6 @@ func (s *OrderEditService) DeleteItemChange(id uuid.UUID, itemChangeId uuid.UUID
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Cannot delete and item change from a %s order edit", orderEdit.Status),
-			"500",
 			nil,
 		)
 	}
@@ -482,7 +474,7 @@ func (s *OrderEditService) DeleteItemChange(id uuid.UUID, itemChangeId uuid.UUID
 }
 
 func (s *OrderEditService) RequestConfirmation(id uuid.UUID, requestedBy string) (*models.OrderEdit, *utils.ApplictaionError) {
-	orderEdit, err := s.Retrieve(id, sql.Options{Relations: []string{"changes", "changes.original_line_item", "changes.original_line_item.variant"}, Selects: []string{"id", "order_id", "requested_at"}})
+	orderEdit, err := s.Retrieve(id, &sql.Options{Relations: []string{"changes", "changes.original_line_item", "changes.original_line_item.variant"}, Selects: []string{"id", "order_id", "requested_at"}})
 	if err != nil {
 		return nil, err
 	}
@@ -491,7 +483,6 @@ func (s *OrderEditService) RequestConfirmation(id uuid.UUID, requestedBy string)
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Cannot request a confirmation on an edit with no changes",
-			"500",
 			nil,
 		)
 	}
@@ -516,7 +507,7 @@ func (s *OrderEditService) RequestConfirmation(id uuid.UUID, requestedBy string)
 }
 
 func (s *OrderEditService) Cancel(id uuid.UUID, canceledBy string) (*models.OrderEdit, *utils.ApplictaionError) {
-	orderEdit, err := s.Retrieve(id, sql.Options{})
+	orderEdit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -531,7 +522,6 @@ func (s *OrderEditService) Cancel(id uuid.UUID, canceledBy string) (*models.Orde
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Cannot cancel order edit with status %s", orderEdit.Status),
-			"500",
 			nil,
 		)
 	}
@@ -552,7 +542,7 @@ func (s *OrderEditService) Cancel(id uuid.UUID, canceledBy string) (*models.Orde
 }
 
 func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy string) (*models.OrderEdit, *utils.ApplictaionError) {
-	orderEdit, err := s.Retrieve(id, sql.Options{})
+	orderEdit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +553,6 @@ func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy string) (*models.Or
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("Cannot confirm an order edit with status %s", orderEdit.Status),
-			"500",
 			nil,
 		)
 	}
@@ -577,7 +566,7 @@ func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy string) (*models.Or
 		id,
 		&models.LineItem{OrderId: orderEdit.OrderId},
 		&models.LineItem{OrderId: uuid.NullUUID{}},
-		sql.Options{
+		&sql.Options{
 			Specification: []sql.Specification{
 				sql.Not(sql.Equal("order_edit_id", id)),
 				sql.IsNull("order_edit_id"),
@@ -592,7 +581,7 @@ func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy string) (*models.Or
 		uuid.Nil,
 		&models.LineItem{OrderEditId: uuid.NullUUID{UUID: orderEdit.Id}},
 		&models.LineItem{OrderId: orderEdit.OrderId},
-		sql.Options{},
+		&sql.Options{},
 	)
 	if err != nil {
 		return nil, err
@@ -625,12 +614,11 @@ func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy string) (*models.Or
 	return orderEdit, nil
 }
 
-func (s *OrderEditService) RetrieveActive(orderId uuid.UUID, config sql.Options) (*models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) RetrieveActive(orderId uuid.UUID, config *sql.Options) (*models.OrderEdit, *utils.ApplictaionError) {
 	if orderId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"orderId" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -650,7 +638,7 @@ func (s *OrderEditService) RetrieveActive(orderId uuid.UUID, config sql.Options)
 func (s *OrderEditService) DeleteClonedItems(id uuid.UUID) *utils.ApplictaionError {
 	clonedLineItems, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{
 		OrderEditId: uuid.NullUUID{UUID: id},
-	}, sql.Options{
+	}, &sql.Options{
 		Selects:   []string{"id", "tax_lines", "adjustments"},
 		Relations: []string{"tax_lines", "adjustments"},
 	})
@@ -661,7 +649,7 @@ func (s *OrderEditService) DeleteClonedItems(id uuid.UUID) *utils.ApplictaionErr
 	for _, item := range clonedLineItems {
 		clonedItemIds = append(clonedItemIds, item.Id)
 	}
-	orderEdit, err := s.Retrieve(id, sql.Options{
+	orderEdit, err := s.Retrieve(id, &sql.Options{
 		Selects:   []string{"id", "changes"},
 		Relations: []string{"changes", "changes.original_line_item", "changes.original_line_item.variant"},
 	})
@@ -681,7 +669,7 @@ func (s *OrderEditService) DeleteClonedItems(id uuid.UUID) *utils.ApplictaionErr
 	for _, id := range clonedItemIds {
 		if err := s.r.LineItemAdjustmentService().SetContext(s.ctx).Delete(uuid.Nil, &models.LineItemAdjustment{
 			ItemId: uuid.NullUUID{UUID: id},
-		}, sql.Options{}); err != nil {
+		}, &sql.Options{}); err != nil {
 			return err
 		}
 

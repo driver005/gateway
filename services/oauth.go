@@ -8,6 +8,7 @@ import (
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/sarulabs/di"
@@ -35,7 +36,7 @@ func (s *OAuthService) SetContext(context context.Context) *OAuthService {
 	return s
 }
 
-func (s *OAuthService) RetrieveByName(appName string, config sql.Options) (*models.OAuth, *utils.ApplictaionError) {
+func (s *OAuthService) RetrieveByName(appName string, config *sql.Options) (*models.OAuth, *utils.ApplictaionError) {
 	var res *models.OAuth
 	query := sql.BuildQuery(models.OAuth{ApplicationName: appName}, config)
 
@@ -46,12 +47,11 @@ func (s *OAuthService) RetrieveByName(appName string, config sql.Options) (*mode
 	return res, nil
 }
 
-func (s *OAuthService) Retrieve(id uuid.UUID, config sql.Options) (*models.OAuth, *utils.ApplictaionError) {
+func (s *OAuthService) Retrieve(id uuid.UUID, config *sql.Options) (*models.OAuth, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			`"id" must be defined`,
-			"500",
 			nil,
 		)
 	}
@@ -66,7 +66,7 @@ func (s *OAuthService) Retrieve(id uuid.UUID, config sql.Options) (*models.OAuth
 	return res, nil
 }
 
-func (s *OAuthService) List(selector *models.OAuth, config sql.Options) ([]models.OAuth, *utils.ApplictaionError) {
+func (s *OAuthService) List(selector *models.OAuth, config *sql.Options) ([]models.OAuth, *utils.ApplictaionError) {
 	var res []models.OAuth
 	query := sql.BuildQuery(selector, config)
 
@@ -77,29 +77,35 @@ func (s *OAuthService) List(selector *models.OAuth, config sql.Options) ([]model
 	return res, nil
 }
 
-func (s *OAuthService) Create(data *models.OAuth) (*models.OAuth, *utils.ApplictaionError) {
-	if err := s.r.OAuthRepository().Save(s.ctx, data); err != nil {
+func (s *OAuthService) Create(data *types.CreateOauthInput) (*models.OAuth, *utils.ApplictaionError) {
+	model := &models.OAuth{
+		DisplayName:     data.DisplayName,
+		ApplicationName: data.ApplicationName,
+		InstallUrl:      data.InstallURL,
+		UninstallUrl:    data.UninstallURL,
+	}
+	if err := s.r.OAuthRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
-	return data, nil
+	return model, nil
 }
 
-func (s *OAuthService) Update(id uuid.UUID, Update *models.OAuth) (*models.OAuth, *utils.ApplictaionError) {
-	oauth, err := s.Retrieve(id, sql.Options{})
+func (s *OAuthService) Update(id uuid.UUID, data *types.UpdateOauthInput) (*models.OAuth, *utils.ApplictaionError) {
+	oauth, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	Update.Id = oauth.Id
+	oauth.Data = data.Data
 
-	if err := s.r.OAuthRepository().Save(s.ctx, Update); err != nil {
+	if err := s.r.OAuthRepository().Save(s.ctx, oauth); err != nil {
 		return nil, err
 	}
-	return Update, nil
+	return oauth, nil
 }
 
-func (s *OAuthService) RegisterOauthApp(appDetails *models.OAuth) (*models.OAuth, *utils.ApplictaionError) {
-	existing, err := s.RetrieveByName(appDetails.ApplicationName, sql.Options{})
+func (s *OAuthService) RegisterOauthApp(appDetails *types.CreateOauthInput) (*models.OAuth, *utils.ApplictaionError) {
+	existing, err := s.RetrieveByName(appDetails.ApplicationName, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +116,7 @@ func (s *OAuthService) RegisterOauthApp(appDetails *models.OAuth) (*models.OAuth
 }
 
 func (s *OAuthService) GenerateToken(appName string, code string, state string) (*models.OAuth, *utils.ApplictaionError) {
-	app, err := s.RetrieveByName(appName, sql.Options{})
+	app, err := s.RetrieveByName(appName, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +124,7 @@ func (s *OAuthService) GenerateToken(appName string, code string, state string) 
 	if er != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
-			err.Error(),
-			"500",
+			er.Error(),
 			nil,
 		)
 	}
@@ -128,7 +133,6 @@ func (s *OAuthService) GenerateToken(appName string, code string, state string) 
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("An OAuth handler for %s could not be found make sure the plugin is installed", app.DisplayName),
-			"500",
 			nil,
 		)
 	}
@@ -136,7 +140,6 @@ func (s *OAuthService) GenerateToken(appName string, code string, state string) 
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			fmt.Sprintf("%s could not match state", app.DisplayName),
-			"500",
 			nil,
 		)
 	}
@@ -144,12 +147,11 @@ func (s *OAuthService) GenerateToken(appName string, code string, state string) 
 	if er != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
-			err.Error(),
-			"500",
+			er.Error(),
 			nil,
 		)
 	}
-	result, err := s.Update(app.Id, &models.OAuth{
+	result, err := s.Update(app.Id, &types.UpdateOauthInput{
 		Data: authData,
 	})
 	if err != nil {
@@ -163,7 +165,7 @@ func (s *OAuthService) GenerateToken(appName string, code string, state string) 
 }
 
 func (s *OAuthService) RefreshToken(appName string) (*models.OAuth, *utils.ApplictaionError) {
-	app, err := s.RetrieveByName(appName, sql.Options{})
+	app, err := s.RetrieveByName(appName, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -172,8 +174,7 @@ func (s *OAuthService) RefreshToken(appName string) (*models.OAuth, *utils.Appli
 	if er != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
-			err.Error(),
-			"500",
+			er.Error(),
 			nil,
 		)
 	}
@@ -182,7 +183,6 @@ func (s *OAuthService) RefreshToken(appName string) (*models.OAuth, *utils.Appli
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			fmt.Sprintf("An OAuth handler for %s could not be found make sure the plugin is installed", app.DisplayName),
-			"500",
 			nil,
 		)
 	}
@@ -190,12 +190,11 @@ func (s *OAuthService) RefreshToken(appName string) (*models.OAuth, *utils.Appli
 	if er != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
-			err.Error(),
-			"500",
+			er.Error(),
 			nil,
 		)
 	}
-	result, err := s.Update(app.Id, &models.OAuth{
+	result, err := s.Update(app.Id, &types.UpdateOauthInput{
 		Data: authData,
 	})
 	if err != nil {

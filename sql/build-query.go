@@ -6,15 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/driver005/gateway/utils"
 	"github.com/fatih/structs"
+	"github.com/gofiber/fiber/v3"
 )
 
 type Options struct {
-	Selects       []string
-	Skip          *int
-	Take          *int
-	Relations     []string
-	Order         *string
+	Selects       []string `json:"fields,omitempty"`
+	Skip          *int     `json:"offset,omitempty"`
+	Take          *int     `json:"limit,omitempty"`
+	Relations     []string `json:"expand,omitempty"`
+	Order         *string  `json:"order,omitempty"`
 	Specification []Specification
 	Not           []string
 	Null          []string
@@ -53,7 +55,20 @@ func NewQuery(where *string, selects []string, skip *int, take *int, relations [
 	}
 }
 
-func BuildQuery[T any](selector T, config Options) Query {
+func FromQuery(context fiber.Ctx) (*Options, *utils.ApplictaionError) {
+	var req *Options
+	if err := context.Bind().Query(req); err != nil {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			"Invalid query parameters",
+			nil,
+		)
+	}
+
+	return req, nil
+}
+
+func BuildQuery[T any](selector T, config *Options) Query {
 	s := structs.New(selector)
 	whereString := Build(s.Fields())
 
