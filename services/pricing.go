@@ -290,7 +290,7 @@ func (s *PricingService) GetProductVariantsPricing(data []interfaces.Pricing, co
 		FilterModel: core.FilterModel{Id: variantIds},
 	}, &sql.Options{
 		Selects: []string{"id", "product_id"},
-	}, nil)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +456,7 @@ func (s *PricingService) GetProductPricingById(productId uuid.UUID, context *int
 		ProductId: uuid.UUIDs{productId},
 	}, &sql.Options{
 		Selects: []string{"id"},
-	}, nil)
+	})
 	if err != nil {
 		return nil, err
 	}

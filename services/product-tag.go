@@ -58,15 +58,15 @@ func (s *ProductTagService) Create(tag *models.ProductTag) (*models.ProductTag, 
 	return tag, nil
 }
 
-func (s *ProductTagService) List(selector models.ProductTag, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductTag, *utils.ApplictaionError) {
-	tags, _, err := s.ListAndCount(selector, config, q, discountConditionId)
+func (s *ProductTagService) List(selector models.ProductTag, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductTag, *utils.ApplictaionError) {
+	tags, _, err := s.ListAndCount(selector, config, discountConditionId)
 	if err != nil {
 		return nil, err
 	}
 	return tags, nil
 }
 
-func (s *ProductTagService) ListAndCount(selector models.ProductTag, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductTag, *int64, *utils.ApplictaionError) {
+func (s *ProductTagService) ListAndCount(selector models.ProductTag, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductTag, *int64, *utils.ApplictaionError) {
 	var res []models.ProductTag
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -74,8 +74,8 @@ func (s *ProductTagService) ListAndCount(selector models.ProductTag, config *sql
 		config.Take = gox.NewInt(20)
 	}
 
-	if q != nil {
-		v := sql.ILike(*q)
+	if config.Q != nil {
+		v := sql.ILike(*config.Q)
 		selector.Value = v
 	}
 

@@ -16,7 +16,16 @@ func NewNote(r Registry) *Note {
 }
 
 func (m *Note) Get(context fiber.Ctx) error {
-	return nil
+	id, config, err := api.BindGet(context, "id")
+	if err != nil {
+		return err
+	}
+	result, err := m.r.NoteService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Note) List(context fiber.Ctx) error {

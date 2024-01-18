@@ -17,11 +17,11 @@ func CustomerRepository(db *gorm.DB) *CustomerRepo {
 	return &CustomerRepo{*sql.NewRepository[models.Customer](db)}
 }
 
-func (r *CustomerRepo) ListAndCount(ctx context.Context, selector models.Customer, config *sql.Options, q *string, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
+func (r *CustomerRepo) ListAndCount(ctx context.Context, selector models.Customer, config *sql.Options, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
 	var res []models.Customer
 
-	if q != nil {
-		v := sql.ILike(*q)
+	if config.Q != nil {
+		v := sql.ILike(*config.Q)
 		selector.Email = v
 		selector.FirstName = v
 		selector.LastName = v

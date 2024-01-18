@@ -649,11 +649,11 @@ func (s *ProductVariantService) DeleteOptionValue(id uuid.UUID, optionId uuid.UU
 }
 
 // ListAndCount lists and counts the variants
-func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVariant, config *sql.Options, q *string) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
+func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVariant, config *sql.Options) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
 	var res []models.ProductVariant
 
-	if q != nil {
-		v := sql.ILike(*q)
+	if config.Q != nil {
+		v := sql.ILike(*config.Q)
 		selector.Title = []string{v}
 		selector.SKU = []string{v}
 		selector.Product.Title = v
@@ -669,8 +669,8 @@ func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVar
 }
 
 // list lists the variants
-func (s *ProductVariantService) List(selector types.FilterableProductVariant, config *sql.Options, q *string) ([]models.ProductVariant, *utils.ApplictaionError) {
-	variant, _, err := s.ListAndCount(selector, config, q)
+func (s *ProductVariantService) List(selector types.FilterableProductVariant, config *sql.Options) ([]models.ProductVariant, *utils.ApplictaionError) {
+	variant, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
 	}

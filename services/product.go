@@ -32,15 +32,15 @@ func (s *ProductService) SetContext(context context.Context) *ProductService {
 	return s
 }
 
-func (s *ProductService) List(selector types.FilterableProduct, config *sql.Options, q *string) ([]models.Product, *utils.ApplictaionError) {
-	products, _, err := s.ListAndCount(selector, config, q)
+func (s *ProductService) List(selector types.FilterableProduct, config *sql.Options) ([]models.Product, *utils.ApplictaionError) {
+	products, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
 	}
 	return products, nil
 }
 
-func (s *ProductService) ListAndCount(selector types.FilterableProduct, config *sql.Options, q *string) ([]models.Product, *int64, *utils.ApplictaionError) {
+func (s *ProductService) ListAndCount(selector types.FilterableProduct, config *sql.Options) ([]models.Product, *int64, *utils.ApplictaionError) {
 	hasSalesChannelsRelation := false
 	for _, r := range config.Relations {
 		if r == "sales_channels" {
@@ -65,8 +65,8 @@ func (s *ProductService) ListAndCount(selector types.FilterableProduct, config *
 	var products []models.Product
 
 	query := sql.BuildQuery(selector, config)
-	if q != nil {
-		p, c, err := s.r.ProductRepository().GetFreeTextSearchResultsAndCount(q, query, config.Relations)
+	if config.Q != nil {
+		p, c, err := s.r.ProductRepository().GetFreeTextSearchResultsAndCount(config.Q, query, config.Relations)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -162,7 +162,7 @@ func (s *ProductService) FilterProductsBySalesChannel(productIds uuid.UUIDs, sal
 	config.Relations = append(config.Relations, requiredRelations...)
 	config.Specification = append(config.Specification, sql.In("id", productIds))
 
-	products, err := s.List(types.FilterableProduct{}, config, nil)
+	products, err := s.List(types.FilterableProduct{}, config)
 	if err != nil {
 		return nil, err
 	}

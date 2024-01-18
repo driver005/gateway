@@ -3,6 +3,7 @@ package admin
 import (
 	"strings"
 
+	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/models"
@@ -36,7 +37,7 @@ type VariantInventory struct {
 
 type AdminGetVariantsParams struct {
 	types.AdminPriceSelectionParams
-	Q                 string           `form:"q"`
+	Q                 *string          `form:"q"`
 	Limit             int              `form:"limit" validate:"omitempty,min=0"`
 	Offset            int              `form:"offset" validate:"omitempty,min=0"`
 	Expand            string           `form:"expand"`
@@ -63,19 +64,12 @@ func (m *Variant) SetRoutes(router fiber.Router) {
 }
 
 func (m *Variant) Get(context fiber.Ctx) error {
-	var req types.FindParams
-	if err := context.Bind().Query(&req); err != nil {
-		return err
-	}
-	id, err := utils.ParseUUID(context.Params("id"))
+	id, config, err := api.BindGet(context, "id")
 	if err != nil {
 		return err
 	}
 
-	rawVariant, err := m.r.ProductVariantService().Retrieve(id, &sql.Options{
-		Selects:   strings.SplitAfter(req.Fields, ","),
-		Relations: strings.SplitAfter(req.Expand, ","),
-	})
+	rawVariant, err := m.r.ProductVariantService().Retrieve(id, config)
 	if err != nil {
 		return err
 	}
@@ -103,7 +97,8 @@ func (m *Variant) List(context fiber.Ctx) error {
 		Skip:      gox.NewInt(req.Offset),
 		Take:      gox.NewInt(req.Limit),
 		Relations: strings.SplitAfter(req.Expand, ","),
-	}, &req.Q)
+		Q:         req.Q,
+	})
 	if err != nil {
 		return err
 	}

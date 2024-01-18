@@ -16,7 +16,16 @@ func NewStockLocation(r Registry) *StockLocation {
 }
 
 func (m *StockLocation) Get(context fiber.Ctx) error {
-	return nil
+	id, config, err := api.BindGet(context, "id")
+	if err != nil {
+		return err
+	}
+	result, err := m.r.StockLocationService().Retrieve(context.Context(), id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *StockLocation) List(context fiber.Ctx) error {

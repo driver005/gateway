@@ -16,7 +16,16 @@ func NewDraftOrder(r Registry) *DraftOrder {
 }
 
 func (m *DraftOrder) Get(context fiber.Ctx) error {
-	return nil
+	id, config, err := api.BindGet(context, "id")
+	if err != nil {
+		return err
+	}
+	result, err := m.r.DraftOrderService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *DraftOrder) List(context fiber.Ctx) error {

@@ -77,22 +77,22 @@ func (s *CustomerService) GenerateResetPasswordToken(customerId uuid.UUID) (*str
 	return tocken, nil
 }
 
-func (s *CustomerService) List(selector models.Customer, config *sql.Options, q *string, groups []string) ([]models.Customer, *utils.ApplictaionError) {
-	res, _, err := s.ListAndCount(selector, config, q, groups)
+func (s *CustomerService) List(selector models.Customer, config *sql.Options, groups []string) ([]models.Customer, *utils.ApplictaionError) {
+	res, _, err := s.ListAndCount(selector, config, groups)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *CustomerService) ListAndCount(selector models.Customer, config *sql.Options, q *string, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
+func (s *CustomerService) ListAndCount(selector models.Customer, config *sql.Options, groups []string) ([]models.Customer, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
 		config.Order = gox.NewString("created_at DESC")
 	}
 
-	return s.r.CustomerRepository().ListAndCount(s.ctx, selector, config, q, groups)
+	return s.r.CustomerRepository().ListAndCount(s.ctx, selector, config, groups)
 }
 
 func (s *CustomerService) Count() (*int64, *utils.ApplictaionError) {
@@ -167,7 +167,7 @@ func (s *CustomerService) ListByEmail(email string, config *sql.Options) ([]mode
 		config.Take = gox.NewInt(2)
 	}
 
-	return s.List(models.Customer{Email: strings.ToLower(email)}, config, nil, nil)
+	return s.List(models.Customer{Email: strings.ToLower(email)}, config, nil)
 }
 
 func (s *CustomerService) RetrieveByPhone(phone string, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {

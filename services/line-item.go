@@ -142,7 +142,7 @@ func (s *LineItemService) Generate(
 	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, &sql.Options{
 		Relations:     []string{"product"},
 		Specification: []sql.Specification{sql.In("id", variantIds)},
-	}, nil)
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -68,19 +68,19 @@ func (s *ProductCollectionService) RetrieveByHandle(collectionHandle string, con
 	return res, nil
 }
 
-func (s *ProductCollectionService) List(selector models.ProductCollection, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductCollection, *utils.ApplictaionError) {
-	collections, _, err := s.ListAndCount(selector, config, q, discountConditionId)
+func (s *ProductCollectionService) List(selector models.ProductCollection, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductCollection, *utils.ApplictaionError) {
+	collections, _, err := s.ListAndCount(selector, config, discountConditionId)
 	if err != nil {
 		return nil, err
 	}
 	return collections, nil
 }
 
-func (s *ProductCollectionService) ListAndCount(selector models.ProductCollection, config *sql.Options, q *string, discountConditionId uuid.UUID) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
+func (s *ProductCollectionService) ListAndCount(selector models.ProductCollection, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
 	var res []models.ProductCollection
 
-	if q != nil {
-		v := sql.ILike(*q)
+	if config.Q != nil {
+		v := sql.ILike(*config.Q)
 		selector.Title = v
 		selector.Handle = v
 	}

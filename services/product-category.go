@@ -32,36 +32,36 @@ func (s *ProductCategoryService) SetContext(context context.Context) *ProductCat
 	return s
 }
 
-func (s *ProductCategoryService) List(selector models.ProductCategory, config *sql.Options, q *string) ([]models.ProductCategory, *utils.ApplictaionError) {
-	collections, _, err := s.ListAndCount(selector, config, q)
+func (s *ProductCategoryService) List(selector models.ProductCategory, config *sql.Options) ([]models.ProductCategory, *utils.ApplictaionError) {
+	collections, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
 	}
 	return collections, nil
 }
 
-func (s *ProductCategoryService) ListAndCount(selector models.ProductCategory, config *sql.Options, q *string) ([]models.ProductCategory, *int64, *utils.ApplictaionError) {
+func (s *ProductCategoryService) ListAndCount(selector models.ProductCategory, config *sql.Options) ([]models.ProductCategory, *int64, *utils.ApplictaionError) {
 	includeDescendantsTree := true
 	query := sql.BuildQuery(selector, config)
 
-	res, count, err := s.r.ProductCategoryRepository().GetFreeTextSearchResultsAndCount(s.ctx, query, q, includeDescendantsTree)
+	res, count, err := s.r.ProductCategoryRepository().GetFreeTextSearchResultsAndCount(s.ctx, query, config.Q, includeDescendantsTree)
 	if err != nil {
 		return nil, nil, err
 	}
 	return res, count, nil
 }
 
-func (s *ProductCategoryService) Retrieve(selector models.ProductCategory, config *sql.Options, q *string) (*models.ProductCategory, *utils.ApplictaionError) {
+func (s *ProductCategoryService) Retrieve(selector models.ProductCategory, config *sql.Options) (*models.ProductCategory, *utils.ApplictaionError) {
 	query := sql.BuildQuery(selector, config)
 
-	res, err := s.r.ProductCategoryRepository().FindOneWithDescendants(s.ctx, query, q)
+	res, err := s.r.ProductCategoryRepository().FindOneWithDescendants(s.ctx, query, config.Q)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (s *ProductCategoryService) RetrieveById(id uuid.UUID, config *sql.Options, q *string) (*models.ProductCategory, *utils.ApplictaionError) {
+func (s *ProductCategoryService) RetrieveById(id uuid.UUID, config *sql.Options) (*models.ProductCategory, *utils.ApplictaionError) {
 	if id == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
@@ -70,10 +70,10 @@ func (s *ProductCategoryService) RetrieveById(id uuid.UUID, config *sql.Options,
 		)
 	}
 
-	return s.Retrieve(models.ProductCategory{Model: core.Model{Id: id}}, config, q)
+	return s.Retrieve(models.ProductCategory{Model: core.Model{Id: id}}, config)
 }
 
-func (s *ProductCategoryService) RetrieveByHandle(handle string, config *sql.Options, q *string) (*models.ProductCategory, *utils.ApplictaionError) {
+func (s *ProductCategoryService) RetrieveByHandle(handle string, config *sql.Options) (*models.ProductCategory, *utils.ApplictaionError) {
 	if handle == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
@@ -82,7 +82,7 @@ func (s *ProductCategoryService) RetrieveByHandle(handle string, config *sql.Opt
 		)
 	}
 
-	return s.Retrieve(models.ProductCategory{Handle: handle}, config, q)
+	return s.Retrieve(models.ProductCategory{Handle: handle}, config)
 }
 
 func (s *ProductCategoryService) Create(data *types.CreateProductCategoryInput) (*models.ProductCategory, *utils.ApplictaionError) {
@@ -136,7 +136,7 @@ func (s *ProductCategoryService) Create(data *types.CreateProductCategoryInput) 
 }
 
 func (s *ProductCategoryService) Update(productCategoryId uuid.UUID, data *types.UpdateProductCategoryInput) (*models.ProductCategory, *utils.ApplictaionError) {
-	productCategory, err := s.RetrieveById(productCategoryId, &sql.Options{}, nil)
+	productCategory, err := s.RetrieveById(productCategoryId, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (s *ProductCategoryService) Update(productCategoryId uuid.UUID, data *types
 func (s *ProductCategoryService) Delete(productCategoryId uuid.UUID) *utils.ApplictaionError {
 	productCategory, err := s.RetrieveById(productCategoryId, &sql.Options{
 		Relations: []string{"category_children"},
-	}, nil)
+	})
 	if err != nil {
 		return err
 	}
@@ -439,7 +439,7 @@ func (s *ProductCategoryService) transformParentIdToEntity(update *types.UpdateP
 		return nil
 	}
 
-	parentCategory, err := s.RetrieveById(parentCategoryId, &sql.Options{}, nil)
+	parentCategory, err := s.RetrieveById(parentCategoryId, &sql.Options{})
 	if err != nil {
 		return err
 	}

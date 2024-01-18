@@ -72,7 +72,7 @@ func (s *PublishableApiKeyService) Retrieve(selector *models.PublishableApiKey, 
 	return res, nil
 }
 
-func (s *PublishableApiKeyService) ListAndCount(selector *models.PublishableApiKey, config *sql.Options, q *string) ([]models.PublishableApiKey, *int64, *utils.ApplictaionError) {
+func (s *PublishableApiKeyService) ListAndCount(selector *models.PublishableApiKey, config *sql.Options) ([]models.PublishableApiKey, *int64, *utils.ApplictaionError) {
 	var res []models.PublishableApiKey
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -80,8 +80,8 @@ func (s *PublishableApiKeyService) ListAndCount(selector *models.PublishableApiK
 		config.Take = gox.NewInt(20)
 	}
 
-	if q != nil {
-		v := sql.ILike(*q)
+	if config.Q != nil {
+		v := sql.ILike(*config.Q)
 		selector.Title = v
 	}
 

@@ -16,7 +16,16 @@ func NewSalesChannel(r Registry) *SalesChannel {
 }
 
 func (m *SalesChannel) Get(context fiber.Ctx) error {
-	return nil
+	id, config, err := api.BindGet(context, "id")
+	if err != nil {
+		return err
+	}
+	result, err := m.r.SalesChannelService().SetContext(context.Context()).RetrieveById(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *SalesChannel) List(context fiber.Ctx) error {

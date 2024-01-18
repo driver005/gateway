@@ -16,7 +16,16 @@ func NewShippingOption(r Registry) *ShippingOption {
 }
 
 func (m *ShippingOption) Get(context fiber.Ctx) error {
-	return nil
+	id, config, err := api.BindGet(context, "id")
+	if err != nil {
+		return err
+	}
+	result, err := m.r.ShippingOptionService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *ShippingOption) List(context fiber.Ctx) error {

@@ -20,6 +20,7 @@ type Options struct {
 	Specification []Specification
 	Not           []string
 	Null          []string
+	Q             *string
 }
 
 type Query struct {

@@ -40,15 +40,15 @@ func (s *OrderService) SetContext(context context.Context) *OrderService {
 	return s
 }
 
-func (s *OrderService) List(selector models.Order, config *sql.Options, q *string) ([]models.Order, *utils.ApplictaionError) {
-	orders, _, err := s.ListAndCount(selector, config, q)
+func (s *OrderService) List(selector models.Order, config *sql.Options) ([]models.Order, *utils.ApplictaionError) {
+	orders, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
 	}
 	return orders, nil
 }
 
-func (s *OrderService) ListAndCount(selector models.Order, config *sql.Options, q *string) ([]models.Order, *int64, *utils.ApplictaionError) {
+func (s *OrderService) ListAndCount(selector models.Order, config *sql.Options) ([]models.Order, *int64, *utils.ApplictaionError) {
 	var res []models.Order
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -58,13 +58,13 @@ func (s *OrderService) ListAndCount(selector models.Order, config *sql.Options, 
 	}
 	var specification []sql.Specification
 
-	if q != nil {
+	if config.Q != nil {
 		if config.Relations != nil {
 			config.Relations = append(config.Relations, "shipping_address", "customer")
 		} else {
 			config.Relations = []string{"shipping_address", "customer"}
 		}
-		v := sql.ILike(*q)
+		v := sql.ILike(*config.Q)
 
 		specification = append(specification, sql.Not(sql.IsNull("customer.id")))
 		specification = append(specification, sql.Not(sql.IsNull("shipping_address.id")))

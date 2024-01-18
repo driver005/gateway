@@ -51,15 +51,15 @@ func (s *ProductTypeService) Retrieve(id uuid.UUID, config *sql.Options) (*model
 	return res, nil
 }
 
-func (s *ProductTypeService) List(selector models.ProductType, config *sql.Options, q *string) ([]models.ProductType, *utils.ApplictaionError) {
-	productTypes, _, err := s.ListAndCount(selector, config, q)
+func (s *ProductTypeService) List(selector models.ProductType, config *sql.Options) ([]models.ProductType, *utils.ApplictaionError) {
+	productTypes, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
 	}
 	return productTypes, nil
 }
 
-func (s *ProductTypeService) ListAndCount(selector models.ProductType, config *sql.Options, q *string) ([]models.ProductType, *int64, *utils.ApplictaionError) {
+func (s *ProductTypeService) ListAndCount(selector models.ProductType, config *sql.Options) ([]models.ProductType, *int64, *utils.ApplictaionError) {
 	var res []models.ProductType
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -67,8 +67,8 @@ func (s *ProductTypeService) ListAndCount(selector models.ProductType, config *s
 		config.Take = gox.NewInt(20)
 	}
 
-	if q != nil {
-		v := sql.ILike(*q)
+	if config.Q != nil {
+		v := sql.ILike(*config.Q)
 		selector.Value = v
 	}
 
