@@ -14,6 +14,11 @@ func NewPayment(r Registry) *Payment {
 	return &m
 }
 
+func (m *Payment) SetRoutes(router fiber.Router) {
+	route := router.Group("/payments")
+	route.Get("/:id", m.Get)
+}
+
 func (m *Payment) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

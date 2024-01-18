@@ -15,6 +15,11 @@ func NewProductType(r Registry) *ProductType {
 	return &m
 }
 
+func (m *ProductType) SetRoutes(router fiber.Router) {
+	route := router.Group("/product-types")
+	route.Get("/", m.List)
+}
+
 func (m *ProductType) List(context fiber.Ctx) error {
 	model, config, err := api.BindList[types.FilterableProductType](context)
 	if err != nil {

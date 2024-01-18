@@ -15,6 +15,11 @@ func NewProductTag(r Registry) *ProductTag {
 	return &m
 }
 
+func (m *ProductTag) SetRoutes(router fiber.Router) {
+	route := router.Group("/product-tags")
+	route.Get("/", m.List)
+}
+
 func (m *ProductTag) List(context fiber.Ctx) error {
 	model, config, err := api.BindList[types.FilterableProductTag](context)
 	if err != nil {

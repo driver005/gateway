@@ -15,6 +15,12 @@ func NewCurrencie(r Registry) *Currencie {
 	return &m
 }
 
+func (m *Currencie) SetRoutes(router fiber.Router) {
+	route := router.Group("/currencies")
+	route.Get("/", m.List)
+	route.Post("/:id", m.Update)
+}
+
 func (m *Currencie) List(context fiber.Ctx) error {
 	model, config, err := api.BindList[types.FilterableCurrencyProps](context)
 	if err != nil {

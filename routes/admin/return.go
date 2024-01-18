@@ -15,6 +15,11 @@ func NewReturn(r Registry) *Return {
 	return &m
 }
 
+func (m *Return) SetRoutes(router fiber.Router) {
+	route := router.Group("/returns")
+	route.Get("/", m.List)
+}
+
 func (m *Return) List(context fiber.Ctx) error {
 	model, config, err := api.BindList[types.FilterableReturn](context)
 	if err != nil {

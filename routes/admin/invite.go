@@ -15,6 +15,13 @@ func NewInvite(r Registry) *Invite {
 	return &m
 }
 
+func (m *Invite) SetRoutes(router fiber.Router) {
+	route := router.Group("/invites")
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *Invite) List(context fiber.Ctx) error {
 	model, config, err := api.BindList[types.FilterableInvite](context)
 	if err != nil {

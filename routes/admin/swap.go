@@ -15,6 +15,12 @@ func NewSwap(r Registry) *Swap {
 	return &m
 }
 
+func (m *Swap) SetRoutes(router fiber.Router) {
+	route := router.Group("/swaps")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+}
+
 func (m *Swap) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

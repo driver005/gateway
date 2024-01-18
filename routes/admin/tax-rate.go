@@ -15,6 +15,15 @@ func NewTaxRate(r Registry) *TaxRate {
 	return &m
 }
 
+func (m *TaxRate) SetRoutes(router fiber.Router) {
+	route := router.Group("/store")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *TaxRate) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -72,6 +81,23 @@ func (m *TaxRate) Update(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(result)
+}
+
+func (m *TaxRate) Delete(context fiber.Ctx) error {
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.TaxRateService().SetContext(context.Context()).Delete(id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "tax-rate",
+		"deleted": true,
+	})
 }
 
 func (m *TaxRate) AddProductTypes(context fiber.Ctx) error {

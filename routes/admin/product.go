@@ -15,6 +15,15 @@ func NewProduct(r Registry) *Product {
 	return &m
 }
 
+func (m *Product) SetRoutes(router fiber.Router) {
+	route := router.Group("/products")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *Product) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

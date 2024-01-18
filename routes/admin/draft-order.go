@@ -16,6 +16,15 @@ func NewDraftOrder(r Registry) *DraftOrder {
 	return &m
 }
 
+func (m *DraftOrder) SetRoutes(router fiber.Router) {
+	route := router.Group("/draft-orders")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *DraftOrder) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

@@ -15,6 +15,15 @@ func NewSalesChannel(r Registry) *SalesChannel {
 	return &m
 }
 
+func (m *SalesChannel) SetRoutes(router fiber.Router) {
+	route := router.Group("/sales-channels")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *SalesChannel) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

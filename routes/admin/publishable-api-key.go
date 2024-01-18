@@ -17,6 +17,15 @@ func NewPublishableApiKey(r Registry) *PublishableApiKey {
 	return &m
 }
 
+func (m *PublishableApiKey) SetRoutes(router fiber.Router) {
+	route := router.Group("/publishable-api-keys")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *PublishableApiKey) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

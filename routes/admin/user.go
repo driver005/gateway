@@ -37,11 +37,11 @@ func NewUser(r Registry) *User {
 
 func (m *User) SetRoutes(router fiber.Router) {
 	route := router.Group("/users")
-	route.Get("/:user_id", m.Get)
-	route.Post("/", m.Create)
-	route.Post("/:user_id", m.Update)
-	route.Delete("/:user_id", m.Delete)
+	route.Get("/:id", m.Get)
 	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
 
 	route.Post("/password-tocken", m.ResetPasswordTocken)
 	route.Post("/reste-password", m.ResetPassword)
@@ -109,7 +109,7 @@ func (m *User) Update(context fiber.Ctx) error {
 }
 
 func (m *User) Delete(context fiber.Ctx) error {
-	id, err := api.BindDelete(context, "uid")
+	id, err := api.BindDelete(context, "id")
 	if err != nil {
 		return err
 	}

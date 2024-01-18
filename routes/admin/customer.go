@@ -15,6 +15,14 @@ func NewCustomer(r Registry) *Customer {
 	return &m
 }
 
+func (m *Customer) SetRoutes(router fiber.Router) {
+	route := router.Group("/customers")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+}
+
 func (m *Customer) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

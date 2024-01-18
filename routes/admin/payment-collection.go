@@ -15,6 +15,13 @@ func NewPaymentCollection(r Registry) *PaymentCollection {
 	return &m
 }
 
+func (m *PaymentCollection) SetRoutes(router fiber.Router) {
+	route := router.Group("/payment-collections")
+	route.Get("/:id", m.Get)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *PaymentCollection) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

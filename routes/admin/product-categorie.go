@@ -15,6 +15,15 @@ func NewProductCategory(r Registry) *ProductCategory {
 	return &m
 }
 
+func (m *ProductCategory) SetRoutes(router fiber.Router) {
+	route := router.Group("/product-categories")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *ProductCategory) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -72,6 +81,23 @@ func (m *ProductCategory) Update(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(result)
+}
+
+func (m *ProductCategory) Delete(context fiber.Ctx) error {
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.ProductCategoryService().SetContext(context.Context()).Delete(id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "product-category",
+		"deleted": true,
+	})
 }
 
 func (m *ProductCategory) AddProductsBatch(context fiber.Ctx) error {

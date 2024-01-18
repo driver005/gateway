@@ -15,6 +15,13 @@ func NewOrder(r Registry) *Order {
 	return &m
 }
 
+func (m *Order) SetRoutes(router fiber.Router) {
+	route := router.Group("/orders")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/:id", m.Update)
+}
+
 func (m *Order) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

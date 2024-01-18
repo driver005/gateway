@@ -15,6 +15,15 @@ func NewPriceList(r Registry) *PriceList {
 	return &m
 }
 
+func (m *PriceList) SetRoutes(router fiber.Router) {
+	route := router.Group("/price-lists")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *PriceList) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {

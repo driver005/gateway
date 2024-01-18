@@ -15,6 +15,11 @@ func NewNotification(r Registry) *Notification {
 	return &m
 }
 
+func (m *Notification) SetRoutes(router fiber.Router) {
+	route := router.Group("/notifications")
+	route.Get("/", m.List)
+}
+
 func (m *Notification) List(context fiber.Ctx) error {
 	model, config, err := api.BindList[types.FilterableNotification](context)
 	if err != nil {

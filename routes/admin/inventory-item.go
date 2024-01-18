@@ -11,6 +11,15 @@ func NewInventoryItem(r Registry) *InventoryItem {
 	return &m
 }
 
+func (m *InventoryItem) SetRoutes(router fiber.Router) {
+	route := router.Group("/inventory-items")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *InventoryItem) Get(context fiber.Ctx) error {
 	return nil
 }

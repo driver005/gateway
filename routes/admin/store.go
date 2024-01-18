@@ -17,6 +17,12 @@ func NewStore(r Registry) *Store {
 	return &m
 }
 
+func (m *Store) SetRoutes(router fiber.Router) {
+	route := router.Group("/store")
+	route.Get("/:id", m.Get)
+	route.Post("/:id", m.Update)
+}
+
 func (m *Store) Get(context fiber.Ctx) error {
 	var config *sql.Options
 	if err := context.Bind().Query(config); err != nil {

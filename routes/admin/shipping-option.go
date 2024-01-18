@@ -15,6 +15,15 @@ func NewShippingOption(r Registry) *ShippingOption {
 	return &m
 }
 
+func (m *ShippingOption) SetRoutes(router fiber.Router) {
+	route := router.Group("/shipping-options")
+	route.Get("/:id", m.Get)
+	route.Get("/", m.List)
+	route.Post("/", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
+}
+
 func (m *ShippingOption) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
