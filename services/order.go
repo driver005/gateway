@@ -40,7 +40,7 @@ func (s *OrderService) SetContext(context context.Context) *OrderService {
 	return s
 }
 
-func (s *OrderService) List(selector models.Order, config *sql.Options) ([]models.Order, *utils.ApplictaionError) {
+func (s *OrderService) List(selector *types.FilterableOrder, config *sql.Options) ([]models.Order, *utils.ApplictaionError) {
 	orders, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (s *OrderService) List(selector models.Order, config *sql.Options) ([]model
 	return orders, nil
 }
 
-func (s *OrderService) ListAndCount(selector models.Order, config *sql.Options) ([]models.Order, *int64, *utils.ApplictaionError) {
+func (s *OrderService) ListAndCount(selector *types.FilterableOrder, config *sql.Options) ([]models.Order, *int64, *utils.ApplictaionError) {
 	var res []models.Order
 
 	if reflect.DeepEqual(config, &sql.Options{}) {

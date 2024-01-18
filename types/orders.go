@@ -6,6 +6,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableOrder struct {
+	core.FilterModel
+
+	Email           string           `json:"email,omitempty" validate:"omitempty"`
+	BillingAddress  *AddressPayload  `json:"billing_address,omitempty" validate:"omitempty"`
+	ShippingAddress *AddressPayload  `json:"shipping_address,omitempty" validate:"omitempty"`
+	Customer        *models.Customer `json:"customer,omitempty" validate:"omitempty"`
+}
 type ShippingMethodOrder struct {
 	ProviderId uuid.UUID    `json:"provider_id,omitempty" validate:"omitempty"`
 	ProfileId  uuid.UUID    `json:"profile_id,omitempty" validate:"omitempty"`

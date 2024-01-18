@@ -29,7 +29,21 @@ func (m *Customer) Get(context fiber.Ctx) error {
 }
 
 func (m *Customer) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableCustomer](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.CustomerService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *Customer) Create(context fiber.Ctx) error {
@@ -47,5 +61,15 @@ func (m *Customer) Create(context fiber.Ctx) error {
 }
 
 func (m *Customer) Update(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.UpdateCustomerInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.CustomerService().SetContext(context.Context()).Update(id, model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

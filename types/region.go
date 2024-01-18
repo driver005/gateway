@@ -5,6 +5,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableRegion struct {
+	core.FilterModel
+	Name string `json:"name,omitempty" validate:"omitempty"`
+}
+
 type UpdateRegionInput struct {
 	Name                 string     `json:"name,omitempty" validate:"omitempty"`
 	CurrencyCode         string     `json:"currency_code,omitempty" validate:"omitempty"`

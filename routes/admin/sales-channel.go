@@ -29,7 +29,21 @@ func (m *SalesChannel) Get(context fiber.Ctx) error {
 }
 
 func (m *SalesChannel) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableSalesChannel](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.SalesChannelService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *SalesChannel) Create(context fiber.Ctx) error {
@@ -47,11 +61,34 @@ func (m *SalesChannel) Create(context fiber.Ctx) error {
 }
 
 func (m *SalesChannel) Update(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.UpdateSalesChannelInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.SalesChannelService().SetContext(context.Context()).Update(id, model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *SalesChannel) Delete(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.SalesChannelService().SetContext(context.Context()).Delete(id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "sales-channel",
+		"deleted": true,
+	})
 }
 
 func (m *SalesChannel) AddProductsBatch(context fiber.Ctx) error {

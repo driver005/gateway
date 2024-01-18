@@ -10,6 +10,7 @@ import (
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -66,7 +67,7 @@ func (s *NotificationService) RegisterInstalledProviders(providers uuid.UUIDs) *
 	return nil
 }
 
-func (s *NotificationService) List(selector *models.Notification, config *sql.Options) ([]models.Notification, *utils.ApplictaionError) {
+func (s *NotificationService) List(selector *types.FilterableNotification, config *sql.Options) ([]models.Notification, *utils.ApplictaionError) {
 	notifications, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -74,7 +75,7 @@ func (s *NotificationService) List(selector *models.Notification, config *sql.Op
 	return notifications, nil
 }
 
-func (s *NotificationService) ListAndCount(selector *models.Notification, config *sql.Options) ([]models.Notification, *int64, *utils.ApplictaionError) {
+func (s *NotificationService) ListAndCount(selector *types.FilterableNotification, config *sql.Options) ([]models.Notification, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)

@@ -41,7 +41,7 @@ func (s *CurrencyService) RetrieveByCode(code string) (*models.Currency, *utils.
 	}
 	var res *models.Currency
 
-	query := sql.BuildQuery[models.Currency](models.Currency{Code: strings.ToLower(code)}, &sql.Options{})
+	query := sql.BuildQuery(models.Currency{Code: strings.ToLower(code)}, &sql.Options{})
 
 	if err := s.r.CurrencyRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (s *CurrencyService) RetrieveByCode(code string) (*models.Currency, *utils.
 	return res, nil
 }
 
-func (s *CurrencyService) ListAndCount(selector models.Currency, config *sql.Options) ([]models.Currency, *int64, *utils.ApplictaionError) {
+func (s *CurrencyService) ListAndCount(selector *types.FilterableCurrencyProps, config *sql.Options) ([]models.Currency, *int64, *utils.ApplictaionError) {
 	var res []models.Currency
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -57,7 +57,7 @@ func (s *CurrencyService) ListAndCount(selector models.Currency, config *sql.Opt
 		config.Take = gox.NewInt(20)
 	}
 
-	query := sql.BuildQuery[models.Currency](selector, config)
+	query := sql.BuildQuery(selector, config)
 	count, err := s.r.CurrencyRepository().FindAndCount(s.ctx, res, query)
 	if err != nil {
 		return nil, nil, err
@@ -65,7 +65,7 @@ func (s *CurrencyService) ListAndCount(selector models.Currency, config *sql.Opt
 	return res, count, nil
 }
 
-func (s *CurrencyService) Update(code string, data types.UpdateCurrencyInput) (*models.Currency, *utils.ApplictaionError) {
+func (s *CurrencyService) Update(code string, data *types.UpdateCurrencyInput) (*models.Currency, *utils.ApplictaionError) {
 	if code == "" {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,

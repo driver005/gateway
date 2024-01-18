@@ -29,7 +29,21 @@ func (m *ShippingOption) Get(context fiber.Ctx) error {
 }
 
 func (m *ShippingOption) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableShippingOption](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.ShippingOptionService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *ShippingOption) Create(context fiber.Ctx) error {
@@ -47,9 +61,32 @@ func (m *ShippingOption) Create(context fiber.Ctx) error {
 }
 
 func (m *ShippingOption) Update(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.UpdateShippingOptionInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.ShippingOptionService().SetContext(context.Context()).Update(id, model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *ShippingOption) Delete(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.ShippingOptionService().SetContext(context.Context()).Delete(id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "shipping-option",
+		"deleted": true,
+	})
 }

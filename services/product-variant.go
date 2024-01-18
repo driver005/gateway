@@ -336,7 +336,7 @@ func (s *ProductVariantService) UpdateVariantPrices(data []types.UpdateVariantPr
 	}
 	s.r.MoneyAmountRepository().DeleteVariantPricesNotIn(uuid.Nil, prices)
 
-	regions, err := s.r.RegionService().SetContext(s.ctx).List(models.Region{}, &sql.Options{
+	regions, err := s.r.RegionService().SetContext(s.ctx).List(&types.FilterableRegion{}, &sql.Options{
 		Selects:       []string{"id", "currency_code"},
 		Specification: []sql.Specification{sql.In("id", regionIds)},
 	})
@@ -649,7 +649,7 @@ func (s *ProductVariantService) DeleteOptionValue(id uuid.UUID, optionId uuid.UU
 }
 
 // ListAndCount lists and counts the variants
-func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVariant, config *sql.Options) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
+func (s *ProductVariantService) ListAndCount(selector *types.FilterableProductVariant, config *sql.Options) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
 	var res []models.ProductVariant
 
 	if config.Q != nil {
@@ -669,7 +669,7 @@ func (s *ProductVariantService) ListAndCount(selector types.FilterableProductVar
 }
 
 // list lists the variants
-func (s *ProductVariantService) List(selector types.FilterableProductVariant, config *sql.Options) ([]models.ProductVariant, *utils.ApplictaionError) {
+func (s *ProductVariantService) List(selector *types.FilterableProductVariant, config *sql.Options) ([]models.ProductVariant, *utils.ApplictaionError) {
 	variant, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err

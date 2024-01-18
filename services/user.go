@@ -39,13 +39,26 @@ func (s *UserService) HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (s *UserService) List(selector types.FilterableUser, config *sql.Options) ([]models.User, *utils.ApplictaionError) {
-	var res []models.User
-	query := sql.BuildQuery[types.FilterableUser](selector, config)
-	if err := s.r.UserRepository().Find(s.ctx, res, query); err != nil {
+func (s *UserService) List(selector *types.FilterableUser, config *sql.Options) ([]models.User, *utils.ApplictaionError) {
+	users, _, err := s.ListAndCount(selector, config)
+	if err != nil {
 		return nil, err
 	}
-	return res, nil
+
+	return users, nil
+}
+
+func (s *UserService) ListAndCount(selector *types.FilterableUser, config *sql.Options) ([]models.User, *int64, *utils.ApplictaionError) {
+	var res []models.User
+
+	query := sql.BuildQuery(selector, config)
+
+	count, err := s.r.UserRepository().FindAndCount(s.ctx, res, query)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return res, count, nil
 }
 
 func (s *UserService) Retrieve(userId uuid.UUID, config *sql.Options) (*models.User, *utils.ApplictaionError) {
@@ -58,7 +71,7 @@ func (s *UserService) Retrieve(userId uuid.UUID, config *sql.Options) (*models.U
 	}
 	var res *models.User
 
-	query := sql.BuildQuery[types.FilterableUser](types.FilterableUser{
+	query := sql.BuildQuery(types.FilterableUser{
 		FilterModel: core.FilterModel{
 			Id: []uuid.UUID{userId},
 		},
@@ -100,7 +113,7 @@ func (s *UserService) RetrieveByEmail(email string, config *sql.Options) (*model
 	}
 	var res *models.User
 
-	query := sql.BuildQuery[types.FilterableUser](types.FilterableUser{Email: strings.ToLower(email)}, config)
+	query := sql.BuildQuery(types.FilterableUser{Email: strings.ToLower(email)}, config)
 
 	if err := s.r.UserRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

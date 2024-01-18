@@ -5,6 +5,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableReturnReason struct {
+	core.FilterModel
+	ParentReturnReasonId uuid.UUID `json:"parent_return_reason_id,omitempty" validate:"omitempty"`
+}
+
 type CreateReturnReason struct {
 	Value                string     `json:"value"`
 	Label                string     `json:"label"`

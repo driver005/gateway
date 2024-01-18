@@ -22,7 +22,6 @@ type UpdateCustomerGroup struct {
 type FilterableCustomerGroup struct {
 	core.FilterModel
 
-	Q                   string    `json:"q,omitempty" validate:"omitempty"`
 	Name                []string  `json:"name,omitempty" validate:"omitempty"`
 	DiscountConditionId uuid.UUID `json:"discount_condition_id,omitempty" validate:"omitempty"`
 }

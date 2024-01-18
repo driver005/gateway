@@ -8,6 +8,15 @@ import (
 
 const TempReorderRank = 99999
 
+type FilterableProductCategory struct {
+	core.FilterModel
+	Handle                 string    `json:"handle,omitempty" validate:"omitempty,string"`
+	IncludeDescendantsTree bool      `json:"include_descendants_tree,omitempty" validate:"omitempty,bool"`
+	IsInternal             bool      `json:"is_internal,omitempty" validate:"omitempty,bool"`
+	IsActive               bool      `json:"is_active,omitempty" validate:"omitempty,bool"`
+	ParentCategoryId       uuid.UUID `json:"parent_category_id,omitempty" validate:"omitempty,string"`
+}
+
 type ProductCategoryInput struct {
 	Handle           string                  `json:"handle,omitempty" validate:"omitempty"`
 	IsInternal       bool                    `json:"is_internal,omitempty" validate:"omitempty"`

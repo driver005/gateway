@@ -5,6 +5,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableDraftOrder struct {
+	core.FilterModel
+}
+
 type DraftOrderListSelector struct {
 	Q string `json:"q,omitempty" validate:"omitempty"`
 }

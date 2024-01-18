@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -58,15 +59,15 @@ func (s *ProductTagService) Create(tag *models.ProductTag) (*models.ProductTag, 
 	return tag, nil
 }
 
-func (s *ProductTagService) List(selector models.ProductTag, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductTag, *utils.ApplictaionError) {
-	tags, _, err := s.ListAndCount(selector, config, discountConditionId)
+func (s *ProductTagService) List(selector *types.FilterableProductTag, config *sql.Options) ([]models.ProductTag, *utils.ApplictaionError) {
+	tags, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
 	}
 	return tags, nil
 }
 
-func (s *ProductTagService) ListAndCount(selector models.ProductTag, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductTag, *int64, *utils.ApplictaionError) {
+func (s *ProductTagService) ListAndCount(selector *types.FilterableProductTag, config *sql.Options) ([]models.ProductTag, *int64, *utils.ApplictaionError) {
 	var res []models.ProductTag
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -81,8 +82,8 @@ func (s *ProductTagService) ListAndCount(selector models.ProductTag, config *sql
 
 	query := sql.BuildQuery(selector, config)
 
-	if discountConditionId != uuid.Nil {
-		return s.r.ProductTagRepository().FindAndCountByDiscountConditionID(discountConditionId, query)
+	if selector.DiscountConditionId != uuid.Nil {
+		return s.r.ProductTagRepository().FindAndCountByDiscountConditionID(selector.DiscountConditionId, query)
 	}
 
 	count, err := s.r.ProductTagRepository().FindAndCount(s.ctx, res, query)

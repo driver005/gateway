@@ -7,6 +7,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableGiftCard struct {
+	core.FilterModel
+}
+
 type CreateGiftCardInput struct {
 	OrderId    uuid.UUID  `json:"order_id,omitempty" validate:"omitempty"`
 	Value      float64    `json:"value,omitempty" validate:"omitempty"`

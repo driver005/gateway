@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/icza/gox/gox"
@@ -51,7 +52,7 @@ func (s *ProductTypeService) Retrieve(id uuid.UUID, config *sql.Options) (*model
 	return res, nil
 }
 
-func (s *ProductTypeService) List(selector models.ProductType, config *sql.Options) ([]models.ProductType, *utils.ApplictaionError) {
+func (s *ProductTypeService) List(selector *types.FilterableProductType, config *sql.Options) ([]models.ProductType, *utils.ApplictaionError) {
 	productTypes, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -59,7 +60,7 @@ func (s *ProductTypeService) List(selector models.ProductType, config *sql.Optio
 	return productTypes, nil
 }
 
-func (s *ProductTypeService) ListAndCount(selector models.ProductType, config *sql.Options) ([]models.ProductType, *int64, *utils.ApplictaionError) {
+func (s *ProductTypeService) ListAndCount(selector *types.FilterableProductType, config *sql.Options) ([]models.ProductType, *int64, *utils.ApplictaionError) {
 	var res []models.ProductType
 
 	if reflect.DeepEqual(config, &sql.Options{}) {

@@ -29,7 +29,21 @@ func (m *TaxRate) Get(context fiber.Ctx) error {
 }
 
 func (m *TaxRate) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableTaxRate](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.TaxRateService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *TaxRate) Create(context fiber.Ctx) error {
@@ -47,7 +61,17 @@ func (m *TaxRate) Create(context fiber.Ctx) error {
 }
 
 func (m *TaxRate) Update(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.UpdateTaxRateInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.TaxRateService().SetContext(context.Context()).Update(id, model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *TaxRate) AddProductTypes(context fiber.Ctx) error {

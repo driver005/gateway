@@ -5,6 +5,7 @@ import (
 
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -73,7 +74,7 @@ func (s *SalesChannelLocationService) AssociateLocation(salesChannelId uuid.UUID
 }
 
 func (s *SalesChannelLocationService) ListLocationIds(salesChannelId uuid.UUIDs) (uuid.UUIDs, *utils.ApplictaionError) {
-	salesChannels, err := s.r.SalesChannelService().SetContext(s.ctx).List(models.SalesChannel{}, &sql.Options{
+	salesChannels, err := s.r.SalesChannelService().SetContext(s.ctx).List(&types.FilterableSalesChannel{}, &sql.Options{
 		Selects:       []string{"id"},
 		Specification: []sql.Specification{sql.In("id", salesChannelId)},
 	})

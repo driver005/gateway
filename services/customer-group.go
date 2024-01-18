@@ -109,7 +109,7 @@ func (s *CustomerGroupService) Delete(groupId uuid.UUID) *utils.ApplictaionError
 	return nil
 }
 
-func (s *CustomerGroupService) List(selector models.CustomerGroup, config *sql.Options) ([]models.CustomerGroup, *utils.ApplictaionError) {
+func (s *CustomerGroupService) List(selector *types.FilterableCustomerGroup, config *sql.Options) ([]models.CustomerGroup, *utils.ApplictaionError) {
 	customerGroups, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -117,12 +117,12 @@ func (s *CustomerGroupService) List(selector models.CustomerGroup, config *sql.O
 	return customerGroups, nil
 }
 
-func (s *CustomerGroupService) ListAndCount(selector models.CustomerGroup, config *sql.Options) ([]models.CustomerGroup, *int64, *utils.ApplictaionError) {
+func (s *CustomerGroupService) ListAndCount(selector *types.FilterableCustomerGroup, config *sql.Options) ([]models.CustomerGroup, *int64, *utils.ApplictaionError) {
 	var res []models.CustomerGroup
 
 	if config.Q != nil {
 		v := sql.ILike(*config.Q)
-		selector.Name = v
+		selector.Name = append(selector.Name, v)
 	}
 
 	config.Relations = []string{}
@@ -148,7 +148,7 @@ func (s *CustomerGroupService) handleCreationFail(id uuid.UUID, ids uuid.UUIDs, 
 	if err.Type == utils.DB_ERROR {
 		s.Retrieve(id, &sql.Options{})
 		var nonExistingCustomers uuid.UUIDs
-		_, err := s.r.CustomerService().SetContext(s.ctx).List(models.Customer{Model: core.Model{Id: id}}, &sql.Options{}, []string{})
+		_, err := s.r.CustomerService().SetContext(s.ctx).List(&types.FilterableCustomer{FilterModel: core.FilterModel{Id: ids}}, &sql.Options{})
 		if err != nil {
 			nonExistingCustomers = append(nonExistingCustomers, id)
 		}

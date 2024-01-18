@@ -42,7 +42,7 @@ func (s *NoteService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Note,
 	return res, nil
 }
 
-func (s *NoteService) List(selector *models.Note, config *sql.Options) ([]models.Note, *utils.ApplictaionError) {
+func (s *NoteService) List(selector *types.FilterableNote, config *sql.Options) ([]models.Note, *utils.ApplictaionError) {
 	result, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (s *NoteService) List(selector *models.Note, config *sql.Options) ([]models
 	return result, nil
 }
 
-func (s *NoteService) ListAndCount(selector *models.Note, config *sql.Options) ([]models.Note, *int64, *utils.ApplictaionError) {
+func (s *NoteService) ListAndCount(selector *types.FilterableNote, config *sql.Options) ([]models.Note, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
@@ -90,13 +90,13 @@ func (s *NoteService) Create(data *types.CreateNoteInput, config map[string]inte
 	return model, nil
 }
 
-func (s *NoteService) Update(id uuid.UUID, value string) (*models.Note, *utils.ApplictaionError) {
+func (s *NoteService) Update(id uuid.UUID, data *types.UpdateNoteInput) (*models.Note, *utils.ApplictaionError) {
 	note, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
 	}
 
-	note.Value = value
+	note.Value = data.Value
 	// s.eventBus_.withTransaction(manager).emit(NoteService.Events.UPDATED, map[string]interface{}{"id": result.id})
 
 	if err := s.r.NoteRepository().Save(s.ctx, note); err != nil {

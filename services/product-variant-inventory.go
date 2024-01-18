@@ -177,7 +177,7 @@ func (s *ProductVariantInventoryService) ListVariantsByItem(itemId uuid.UUID) ([
 		ids = append(ids, variantInventory.Id)
 	}
 
-	items, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, &sql.Options{Specification: []sql.Specification{sql.In("id", ids)}})
+	items, err := s.r.ProductVariantService().SetContext(s.ctx).List(&types.FilterableProductVariant{}, &sql.Options{Specification: []sql.Specification{sql.In("id", ids)}})
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		variantIds = append(variantIds, d.VariantId.UUID)
 	}
 
-	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, &sql.Options{Selects: []string{"id"}, Specification: []sql.Specification{sql.In("id", variantIds)}})
+	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(&types.FilterableProductVariant{}, &sql.Options{Selects: []string{"id"}, Specification: []sql.Specification{sql.In("id", variantIds)}})
 	if err != nil {
 		return nil, err
 	}

@@ -15,6 +15,10 @@ type CreateNoteInput struct {
 	Metadata     core.JSONB   `json:"metadata,omitempty" validate:"omitempty"`
 }
 
+type UpdateNoteInput struct {
+	Value string `json:"value"`
+}
+
 type Selector struct {
 	ResourceId uuid.UUID `json:"resource_id,omitempty" validate:"omitempty"`
 }

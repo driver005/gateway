@@ -32,7 +32,7 @@ func (s *ProductCategoryService) SetContext(context context.Context) *ProductCat
 	return s
 }
 
-func (s *ProductCategoryService) List(selector models.ProductCategory, config *sql.Options) ([]models.ProductCategory, *utils.ApplictaionError) {
+func (s *ProductCategoryService) List(selector *types.FilterableProductCategory, config *sql.Options) ([]models.ProductCategory, *utils.ApplictaionError) {
 	collections, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (s *ProductCategoryService) List(selector models.ProductCategory, config *s
 	return collections, nil
 }
 
-func (s *ProductCategoryService) ListAndCount(selector models.ProductCategory, config *sql.Options) ([]models.ProductCategory, *int64, *utils.ApplictaionError) {
+func (s *ProductCategoryService) ListAndCount(selector *types.FilterableProductCategory, config *sql.Options) ([]models.ProductCategory, *int64, *utils.ApplictaionError) {
 	includeDescendantsTree := true
 	query := sql.BuildQuery(selector, config)
 

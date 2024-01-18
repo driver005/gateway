@@ -4,7 +4,6 @@ import (
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
-	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
@@ -40,20 +39,16 @@ func (m *Batch) Get(context fiber.Ctx) error {
 }
 
 func (m *Batch) List(context fiber.Ctx) error {
-	var req types.FilterableBatchJob
-	if err := context.Bind().Query(&req); err != nil {
-		return err
-	}
-
-	createdBy := utils.GetUser(context)
-	config, err := sql.FromQuery(context)
+	model, config, err := api.BindList[types.FilterableBatchJob](context)
 	if err != nil {
 		return err
 	}
 
-	req.CreatedBy = append(req.CreatedBy, createdBy)
+	createdBy := utils.GetUser(context)
 
-	jobs, count, err := m.r.BatchJobService().ListAndCount(req, config)
+	model.CreatedBy = append(model.CreatedBy, createdBy)
+
+	jobs, count, err := m.r.BatchJobService().ListAndCount(model, config)
 	if err != nil {
 		return err
 	}

@@ -62,11 +62,21 @@ func (m *User) Get(context fiber.Ctx) error {
 }
 
 func (m *User) List(context fiber.Ctx) error {
-	user, err := m.r.UserService().SetContext(context.Context()).List(types.FilterableUser{}, &sql.Options{})
+	model, config, err := api.BindList[types.FilterableUser](context)
 	if err != nil {
 		return err
 	}
-	return context.Status(fiber.StatusOK).JSON(user)
+	result, count, err := m.r.UserService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *User) Create(context fiber.Ctx) error {
@@ -85,17 +95,12 @@ func (m *User) Create(context fiber.Ctx) error {
 }
 
 func (m *User) Update(context fiber.Ctx) error {
-	Id, err := utils.ParseUUID(context.Params("user_id"))
+	model, id, err := api.BindUpdate[types.UpdateUserInput](context, "id", m.r.Validator())
 	if err != nil {
 		return err
 	}
 
-	model, err := api.BindCreate[types.UpdateUserInput](context, m.r.Validator())
-	if err != nil {
-		return err
-	}
-
-	result, err := m.r.UserService().SetContext(context.Context()).Update(Id, model)
+	result, err := m.r.UserService().SetContext(context.Context()).Update(id, model)
 	if err != nil {
 		return err
 	}
@@ -104,17 +109,17 @@ func (m *User) Update(context fiber.Ctx) error {
 }
 
 func (m *User) Delete(context fiber.Ctx) error {
-	Id, err := utils.ParseUUID(context.Params("user_id"))
+	id, err := api.BindDelete(context, "uid")
 	if err != nil {
 		return err
 	}
 
-	if err := m.r.UserService().SetContext(context.Context()).Delete(Id); err != nil {
+	if err := m.r.CustomerGroupService().SetContext(context.Context()).Delete(id); err != nil {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
-		"id":      Id,
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
 		"object":  "user",
 		"deleted": true,
 	})

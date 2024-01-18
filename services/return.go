@@ -83,7 +83,7 @@ func (s *ReturnService) GetFulfillmentItems(order *models.Order, items []types.O
 	return filtered, nil
 }
 
-func (s *ReturnService) List(selector *models.Return, config *sql.Options) ([]models.Return, *utils.ApplictaionError) {
+func (s *ReturnService) List(selector *types.FilterableReturn, config *sql.Options) ([]models.Return, *utils.ApplictaionError) {
 	returns, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (s *ReturnService) List(selector *models.Return, config *sql.Options) ([]mo
 	return returns, nil
 }
 
-func (s *ReturnService) ListAndCount(selector *models.Return, config *sql.Options) ([]models.Return, *int64, *utils.ApplictaionError) {
+func (s *ReturnService) ListAndCount(selector *types.FilterableReturn, config *sql.Options) ([]models.Return, *int64, *utils.ApplictaionError) {
 	var res []models.Return
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -317,7 +317,7 @@ func (s *ReturnService) Create(data *types.CreateReturnInput) (*models.Return, *
 		Items:        make([]models.ReturnItem, len(returnLines)),
 	}
 
-	returnReasons, err := s.r.ReturnReasonService().SetContext(s.ctx).List(models.ReturnReason{}, &sql.Options{
+	returnReasons, err := s.r.ReturnReasonService().SetContext(s.ctx).List(&types.FilterableReturnReason{}, &sql.Options{
 		Relations:     []string{"return_reason_children"},
 		Specification: []sql.Specification{sql.In("id", ids)},
 	})

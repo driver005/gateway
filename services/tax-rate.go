@@ -31,13 +31,13 @@ func (s *TaxRateService) SetContext(context context.Context) *TaxRateService {
 	return s
 }
 
-func (s *TaxRateService) List(selector types.FilterableTaxRate, config *sql.Options) ([]models.TaxRate, *utils.ApplictaionError) {
-	query := sql.BuildQuery[types.FilterableTaxRate](selector, config)
+func (s *TaxRateService) List(selector *types.FilterableTaxRate, config *sql.Options) ([]models.TaxRate, *utils.ApplictaionError) {
+	query := sql.BuildQuery(selector, config)
 	return s.r.TaxRateRepository().FindWithResolution(query)
 }
 
-func (s *TaxRateService) ListAndCount(selector types.FilterableTaxRate, config *sql.Options) ([]models.TaxRate, int64, *utils.ApplictaionError) {
-	query := sql.BuildQuery[types.FilterableTaxRate](selector, config)
+func (s *TaxRateService) ListAndCount(selector *types.FilterableTaxRate, config *sql.Options) ([]models.TaxRate, int64, *utils.ApplictaionError) {
+	query := sql.BuildQuery(selector, config)
 	taxRates, count, err := s.r.TaxRateRepository().FindAndCountWithResolution(query)
 	return taxRates, *count, err
 }
@@ -50,7 +50,7 @@ func (s *TaxRateService) Retrieve(taxRateId uuid.UUID, config *sql.Options) (*mo
 			nil,
 		)
 	}
-	query := sql.BuildQuery[types.FilterableTaxRate](types.FilterableTaxRate{FilterModel: core.FilterModel{Id: uuid.UUIDs{taxRateId}}}, config)
+	query := sql.BuildQuery(types.FilterableTaxRate{FilterModel: core.FilterModel{Id: uuid.UUIDs{taxRateId}}}, config)
 	taxRate, err := s.r.TaxRateRepository().FindOneWithResolution(query)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (s *TaxRateService) Create(data *types.CreateTaxRateInput) (*models.TaxRate
 	return model, nil
 }
 
-func (s *TaxRateService) Update(id uuid.UUID, data types.UpdateTaxRateInput) (*models.TaxRate, *utils.ApplictaionError) {
+func (s *TaxRateService) Update(id uuid.UUID, data *types.UpdateTaxRateInput) (*models.TaxRate, *utils.ApplictaionError) {
 	taxRate, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (s *TaxRateService) AddToShippingOption(id uuid.UUID, optionIds uuid.UUIDs,
 	if err != nil {
 		return nil, err
 	}
-	options, err := s.r.ShippingOptionService().SetContext(s.ctx).List(models.ShippingOption{Model: core.Model{Id: id}}, &sql.Options{Selects: []string{"id", "region_id"}})
+	options, err := s.r.ShippingOptionService().SetContext(s.ctx).List(&types.FilterableShippingOption{FilterModel: core.FilterModel{Id: []uuid.UUID{id}}}, &sql.Options{Selects: []string{"id", "region_id"}})
 	if err != nil {
 		return nil, err
 	}

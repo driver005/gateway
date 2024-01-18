@@ -2,6 +2,7 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -28,11 +29,35 @@ func (m *Order) Get(context fiber.Ctx) error {
 }
 
 func (m *Order) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableOrder](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.OrderService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *Order) Update(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.UpdateOrderInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.OrderService().SetContext(context.Context()).Update(id, model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Order) AddShippingMethod(context fiber.Ctx) error {

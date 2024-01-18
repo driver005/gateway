@@ -1,6 +1,10 @@
 package admin
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/types"
+	"github.com/gofiber/fiber/v3"
+)
 
 type Return struct {
 	r Registry
@@ -12,7 +16,21 @@ func NewReturn(r Registry) *Return {
 }
 
 func (m *Return) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableReturn](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.ReturnService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *Return) Cancel(context fiber.Ctx) error {

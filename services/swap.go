@@ -143,7 +143,7 @@ func (s *SwapService) RetrieveByCartId(cartId uuid.UUID, relations []string) (*m
 	return swap, nil
 }
 
-func (s *SwapService) List(selector models.Swap, config *sql.Options) ([]models.Swap, *utils.ApplictaionError) {
+func (s *SwapService) List(selector *types.FilterableSwap, config *sql.Options) ([]models.Swap, *utils.ApplictaionError) {
 	res, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (s *SwapService) List(selector models.Swap, config *sql.Options) ([]models.
 	return res, nil
 }
 
-func (s *SwapService) ListAndCount(selector models.Swap, config *sql.Options) ([]models.Swap, *int64, *utils.ApplictaionError) {
+func (s *SwapService) ListAndCount(selector *types.FilterableSwap, config *sql.Options) ([]models.Swap, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)

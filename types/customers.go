@@ -10,10 +10,14 @@ type Group struct {
 }
 
 // AdminListCustomerSelector filters used to filter retrieved customers.
-type AdminListCustomerSelector struct {
-	Q          string   `json:"q,omitempty" validate:"omitempty"`
-	HasAccount bool     `json:"has_account,omitempty" validate:"omitempty"`
-	Groups     []string `json:"groups,omitempty" validate:"omitempty"`
+type FilterableCustomer struct {
+	core.FilterModel
+	Email      string     `json:"email,omitempty" validate:"omitempty"`
+	FirstName  string     `json:"first_name,omitempty" validate:"omitempty"`
+	LastName   string     `json:"last_name,omitempty" validate:"omitempty"`
+	Phone      string     `json:"phone,omitempty" validate:"omitempty"`
+	HasAccount bool       `json:"has_account,omitempty" validate:"omitempty"`
+	Groups     uuid.UUIDs `json:"groups,omitempty" validate:"omitempty"`
 }
 
 // CreateCustomerInput represents the input for creating a customer.

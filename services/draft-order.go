@@ -76,7 +76,7 @@ func (s *DraftOrderService) Delete(draftOrderId uuid.UUID) *utils.ApplictaionErr
 	return nil
 }
 
-func (s *DraftOrderService) ListAndCount(selector *models.DraftOrder, config *sql.Options) ([]models.DraftOrder, *int64, *utils.ApplictaionError) {
+func (s *DraftOrderService) ListAndCount(selector *types.FilterableDraftOrder, config *sql.Options) ([]models.DraftOrder, *int64, *utils.ApplictaionError) {
 	var res []models.DraftOrder
 
 	if reflect.DeepEqual(config, &sql.Options{}) {

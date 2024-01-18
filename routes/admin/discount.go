@@ -29,7 +29,21 @@ func (m *Discount) Get(context fiber.Ctx) error {
 }
 
 func (m *Discount) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableDiscount](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.DiscountService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *Discount) Create(context fiber.Ctx) error {
@@ -47,11 +61,34 @@ func (m *Discount) Create(context fiber.Ctx) error {
 }
 
 func (m *Discount) Update(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.UpdateDiscountInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.DiscountService().SetContext(context.Context()).Update(id, model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Discount) Delete(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.DiscountService().SetContext(context.Context()).Delete(id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "disocunt",
+		"deleted": true,
+	})
 }
 
 func (m *Discount) GetConditon(context fiber.Ctx) error {

@@ -65,7 +65,7 @@ func (s *SalesChannelService) RetrieveByName(name string, config *sql.Options) (
 	return s.Retrieve(&models.SalesChannel{Name: name}, config)
 }
 
-func (s *SalesChannelService) List(selector models.SalesChannel, config *sql.Options) ([]models.SalesChannel, *utils.ApplictaionError) {
+func (s *SalesChannelService) List(selector *types.FilterableSalesChannel, config *sql.Options) ([]models.SalesChannel, *utils.ApplictaionError) {
 	res, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (s *SalesChannelService) List(selector models.SalesChannel, config *sql.Opt
 	return res, nil
 }
 
-func (s *SalesChannelService) ListAndCount(selector models.SalesChannel, config *sql.Options) ([]models.SalesChannel, *int64, *utils.ApplictaionError) {
+func (s *SalesChannelService) ListAndCount(selector *types.FilterableSalesChannel, config *sql.Options) ([]models.SalesChannel, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)

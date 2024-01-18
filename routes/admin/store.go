@@ -1,7 +1,9 @@
 package admin
 
 import (
+	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
 )
@@ -34,7 +36,17 @@ func (m *Store) Get(context fiber.Ctx) error {
 }
 
 func (m *Store) Update(context fiber.Ctx) error {
-	return nil
+	model, err := api.Bind[types.UpdateStoreInput](context, m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.StoreService().SetContext(context.Context()).Update(model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Store) AddCurrency(context fiber.Ctx) error {

@@ -139,7 +139,7 @@ func (s *LineItemService) Generate(
 		resolvedDataMap[d.VariantId] = d
 		variantIds = append(variantIds, d.VariantId)
 	}
-	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{}, &sql.Options{
+	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(&types.FilterableProductVariant{}, &sql.Options{
 		Relations:     []string{"product"},
 		Specification: []sql.Specification{sql.In("id", variantIds)},
 	})

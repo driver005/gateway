@@ -282,7 +282,7 @@ func (s *RegionService) RetrieveByCountryCode(code string, config *sql.Options) 
 }
 
 func (s *RegionService) RetrieveByName(name string) (*models.Region, *utils.ApplictaionError) {
-	regions, err := s.List(models.Region{Name: name}, &sql.Options{Take: gox.NewInt(1)})
+	regions, err := s.List(&types.FilterableRegion{Name: name}, &sql.Options{Take: gox.NewInt(1)})
 	if err != nil {
 		return nil, err
 	}
@@ -317,7 +317,7 @@ func (s *RegionService) Retrieve(regionId uuid.UUID, config *sql.Options) (*mode
 	return res, nil
 }
 
-func (s *RegionService) List(selector models.Region, config *sql.Options) ([]models.Region, *utils.ApplictaionError) {
+func (s *RegionService) List(selector *types.FilterableRegion, config *sql.Options) ([]models.Region, *utils.ApplictaionError) {
 	customerGroups, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -325,7 +325,7 @@ func (s *RegionService) List(selector models.Region, config *sql.Options) ([]mod
 	return customerGroups, nil
 }
 
-func (s *RegionService) ListAndCount(selector models.Region, config *sql.Options) ([]models.Region, *int64, *utils.ApplictaionError) {
+func (s *RegionService) ListAndCount(selector *types.FilterableRegion, config *sql.Options) ([]models.Region, *int64, *utils.ApplictaionError) {
 	var res []models.Region
 
 	query := sql.BuildQuery(selector, config)

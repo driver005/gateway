@@ -51,7 +51,7 @@ func (s *PriceListService) Retrieve(id uuid.UUID, config *sql.Options) (*models.
 	return res, nil
 }
 
-func (s *PriceListService) List(selector types.FilterablePriceList, config *sql.Options) ([]models.PriceList, *utils.ApplictaionError) {
+func (s *PriceListService) List(selector *types.FilterablePriceList, config *sql.Options) ([]models.PriceList, *utils.ApplictaionError) {
 	res, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (s *PriceListService) List(selector types.FilterablePriceList, config *sql.
 	return res, nil
 }
 
-func (s *PriceListService) ListAndCount(selector types.FilterablePriceList, config *sql.Options) ([]models.PriceList, *int64, *utils.ApplictaionError) {
+func (s *PriceListService) ListAndCount(selector *types.FilterablePriceList, config *sql.Options) ([]models.PriceList, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
@@ -253,7 +253,7 @@ func (s *PriceListService) UpsertCustomerGroups(id uuid.UUID, customerGroups []t
 	return nil
 }
 
-func (s *PriceListService) ListProducts(id uuid.UUID, selector types.FilterableProduct, config *sql.Options, requiresPriceList bool) ([]models.Product, *int64, *utils.ApplictaionError) {
+func (s *PriceListService) ListProducts(id uuid.UUID, selector *types.FilterableProduct, config *sql.Options, requiresPriceList bool) ([]models.Product, *int64, *utils.ApplictaionError) {
 	products, count, err := s.r.ProductService().SetContext(s.ctx).ListAndCount(selector, config)
 	if err != nil {
 		return nil, nil, err
@@ -278,7 +278,7 @@ func (s *PriceListService) ListProducts(id uuid.UUID, selector types.FilterableP
 	return productsWithPrices, count, nil
 }
 
-func (s *PriceListService) ListVariants(id uuid.UUID, selector types.FilterableProductVariant, config *sql.Options, requiresPriceList bool) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
+func (s *PriceListService) ListVariants(id uuid.UUID, selector *types.FilterableProductVariant, config *sql.Options, requiresPriceList bool) ([]models.ProductVariant, *int64, *utils.ApplictaionError) {
 	variants, count, err := s.r.ProductVariantService().ListAndCount(selector, config)
 	if err != nil {
 		return nil, nil, err
@@ -297,7 +297,7 @@ func (s *PriceListService) ListVariants(id uuid.UUID, selector types.FilterableP
 }
 
 func (s *PriceListService) DeleteProductPrices(id uuid.UUID, productIds uuid.UUIDs) (uuid.UUIDs, *int, *utils.ApplictaionError) {
-	products, count, err := s.ListProducts(id, types.FilterableProduct{FilterModel: core.FilterModel{Id: productIds}}, &sql.Options{Relations: []string{"variants"}}, true)
+	products, count, err := s.ListProducts(id, &types.FilterableProduct{FilterModel: core.FilterModel{Id: productIds}}, &sql.Options{Relations: []string{"variants"}}, true)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -322,7 +322,7 @@ func (s *PriceListService) DeleteProductPrices(id uuid.UUID, productIds uuid.UUI
 }
 
 func (s *PriceListService) DeleteVariantPrices(id uuid.UUID, variantIds uuid.UUIDs) (uuid.UUIDs, *int, *utils.ApplictaionError) {
-	variants, count, err := s.ListVariants(id, types.FilterableProductVariant{FilterModel: core.FilterModel{Id: variantIds}}, &sql.Options{}, true)
+	variants, count, err := s.ListVariants(id, &types.FilterableProductVariant{FilterModel: core.FilterModel{Id: variantIds}}, &sql.Options{}, true)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -350,7 +350,7 @@ func (s *PriceListService) AddCurrencyFromRegion(prices []types.PriceListPriceCr
 	for _, p := range prices {
 		regionIds = append(regionIds, p.RegionId)
 	}
-	regions, err := s.r.RegionService().SetContext(s.ctx).List(models.Region{}, &sql.Options{Specification: []sql.Specification{sql.In("id", regionIds)}})
+	regions, err := s.r.RegionService().SetContext(s.ctx).List(&types.FilterableRegion{}, &sql.Options{Specification: []sql.Specification{sql.In("id", regionIds)}})
 	if err != nil {
 		return nil, err
 	}

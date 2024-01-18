@@ -6,6 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableShippingProfile struct {
+	core.FilterModel
+}
+
 type CreateShippingProfile struct {
 	Name     string                     `json:"name"`
 	Type     models.ShippingProfileType `json:"type"`

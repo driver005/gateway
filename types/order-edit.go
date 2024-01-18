@@ -6,6 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableOrderEdit struct {
+	core.FilterModel
+	OrderId      uuid.UUID `json:"order_id,omitempty" validate:"omitempty"`
+	InternalNote string    `json:"internal_note,omitempty" validate:"omitempty"`
+}
+
 type CreateOrderEditInput struct {
 	OrderId      uuid.UUID `json:"order_id"`
 	InternalNote string    `json:"internal_note,omitempty" validate:"omitempty"`

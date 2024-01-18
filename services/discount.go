@@ -55,7 +55,7 @@ func (s *DiscountService) List(selector types.FilterableDiscount, config *sql.Op
 	return discounts, nil
 }
 
-func (s *DiscountService) ListAndCount(selector types.FilterableDiscount, config *sql.Options) ([]models.Discount, *int64, *utils.ApplictaionError) {
+func (s *DiscountService) ListAndCount(selector *types.FilterableDiscount, config *sql.Options) ([]models.Discount, *int64, *utils.ApplictaionError) {
 	var discounts []models.Discount
 	query := sql.BuildQuery(selector, config)
 	count, err := s.r.DiscountRepository().FindAndCount(s.ctx, discounts, query)

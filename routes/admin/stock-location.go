@@ -29,7 +29,21 @@ func (m *StockLocation) Get(context fiber.Ctx) error {
 }
 
 func (m *StockLocation) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[interfaces.FilterableStockLocation](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.StockLocationService().ListAndCount(context.Context(), *model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
 func (m *StockLocation) Create(context fiber.Ctx) error {
@@ -47,9 +61,32 @@ func (m *StockLocation) Create(context fiber.Ctx) error {
 }
 
 func (m *StockLocation) Update(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[interfaces.UpdateStockLocationInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.StockLocationService().Update(context.Context(), id, *model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *StockLocation) Delete(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.StockLocationService().Delete(context.Context(), id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "stock-location",
+		"deleted": true,
+	})
 }

@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"strings"
-
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/interfaces"
@@ -13,7 +11,6 @@ import (
 	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type ResponseInventoryItem struct {
@@ -36,15 +33,11 @@ type VariantInventory struct {
 }
 
 type AdminGetVariantsParams struct {
-	types.AdminPriceSelectionParams
-	Q                 *string          `form:"q"`
-	Limit             int              `form:"limit" validate:"omitempty,min=0"`
-	Offset            int              `form:"offset" validate:"omitempty,min=0"`
-	Expand            string           `form:"expand"`
-	Fields            string           `form:"fields"`
-	Id                uuid.UUIDs       `form:"id"`
-	Title             []string         `form:"title"`
-	InventoryQuantity core.NumberModel `form:"inventory_quantity"`
+	types.FilterableProductVariant
+	CartId       uuid.UUID `json:"cart_id,omitempty" validate:"omitempty"`
+	RegionId     uuid.UUID `json:"region_id,omitempty" validate:"omitempty"`
+	CurrencyCode string    `json:"currency_code,omitempty" validate:"omitempty"`
+	CustomerId   uuid.UUID `json:"customer_id,omitempty" validate:"omitempty"`
 }
 
 type Variant struct {
@@ -83,30 +76,39 @@ func (m *Variant) Get(context fiber.Ctx) error {
 }
 
 func (m *Variant) List(context fiber.Ctx) error {
-	var req AdminGetVariantsParams
-	if err := context.Bind().Query(&req); err != nil {
-		return err
-	}
-
-	rawVariants, count, err := m.r.ProductVariantService().ListAndCount(types.FilterableProductVariant{
-		FilterModel:       core.FilterModel{Id: req.Id},
-		Title:             req.Title,
-		InventoryQuantity: req.InventoryQuantity,
-	}, &sql.Options{
-		Selects:   strings.SplitAfter(req.Fields, ","),
-		Skip:      gox.NewInt(req.Offset),
-		Take:      gox.NewInt(req.Limit),
-		Relations: strings.SplitAfter(req.Expand, ","),
-		Q:         req.Q,
-	})
+	model, config, err := api.BindList[AdminGetVariantsParams](context)
 	if err != nil {
 		return err
 	}
 
-	regionId := req.RegionId
-	currencyCode := req.CurrencyCode
-	if req.CartId != uuid.Nil {
-		cart, err := m.r.CartService().Retrieve(req.CartId, &sql.Options{
+	rawVariants, count, err := m.r.ProductVariantService().ListAndCount(&types.FilterableProductVariant{
+		Title:             model.Title,
+		ProductId:         model.ProductId,
+		Product:           model.Product,
+		SKU:               model.SKU,
+		Barcode:           model.Barcode,
+		EAN:               model.EAN,
+		UPC:               model.UPC,
+		InventoryQuantity: model.InventoryQuantity,
+		AllowBackorder:    model.AllowBackorder,
+		ManageInventory:   model.ManageInventory,
+		HSCode:            model.HSCode,
+		OriginCountry:     model.OriginCountry,
+		MidCode:           model.MidCode,
+		Material:          model.Material,
+		Weight:            model.Weight,
+		Length:            model.Length,
+		Height:            model.Height,
+		Width:             model.Width,
+	}, config)
+	if err != nil {
+		return err
+	}
+
+	regionId := model.RegionId
+	currencyCode := model.CurrencyCode
+	if model.CartId != uuid.Nil {
+		cart, err := m.r.CartService().Retrieve(model.CartId, &sql.Options{
 			Selects: []string{"id", "region_id"},
 		}, services.TotalsConfig{})
 		if err != nil {
@@ -123,10 +125,10 @@ func (m *Variant) List(context fiber.Ctx) error {
 	}
 
 	variants, err := m.r.PricingService().SetAdminVariantPricing(rawVariants, &interfaces.PricingContext{
-		CartId:                req.CartId,
+		CartId:                model.CartId,
 		RegionId:              regionId,
 		CurrencyCode:          currencyCode,
-		CustomerId:            req.CustomerId,
+		CustomerId:            model.CustomerId,
 		IncludeDiscountPrices: true,
 		IgnoreCache:           true,
 	})
@@ -135,7 +137,7 @@ func (m *Variant) List(context fiber.Ctx) error {
 	}
 
 	if m.r.InventoryService() != nil {
-		salesChannelsIds, err := m.r.SalesChannelService().List(models.SalesChannel{}, &sql.Options{
+		salesChannelsIds, err := m.r.SalesChannelService().List(&types.FilterableSalesChannel{}, &sql.Options{
 			Selects: []string{"id"},
 		})
 		if err != nil {
@@ -158,8 +160,8 @@ func (m *Variant) List(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
 		"variants": variants,
 		"count":    count,
-		"offset":   req.Offset,
-		"limit":    req.Limit,
+		"offset":   config.Skip,
+		"limit":    config.Take,
 	})
 
 }
@@ -177,7 +179,7 @@ func (m *Variant) GetInventory(context fiber.Ctx) error {
 		SalesChannelAvailability: []SalesChannelAvailability{},
 	}
 
-	rawChannels, _, err := m.r.SalesChannelService().ListAndCount(models.SalesChannel{}, &sql.Options{})
+	rawChannels, _, err := m.r.SalesChannelService().ListAndCount(&types.FilterableSalesChannel{}, &sql.Options{})
 	if err != nil {
 		return err
 	}

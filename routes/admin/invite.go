@@ -16,7 +16,22 @@ func NewInvite(r Registry) *Invite {
 }
 
 func (m *Invite) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableInvite](context)
+	if err != nil {
+		return err
+	}
+	result, err := m.r.InviteService().SetContext(context.Context()).List(model, config)
+	if err != nil {
+		return err
+	}
+
+	// return context.Status(fiber.StatusOK).JSON(fiber.Map{
+	// 	"data":   result,
+	// 	"count":  count,
+	// 	"offset": config.Skip,
+	// 	"limit":  config.Take,
+	// })
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Invite) Create(context fiber.Ctx) error {
@@ -34,7 +49,20 @@ func (m *Invite) Create(context fiber.Ctx) error {
 }
 
 func (m *Invite) Delete(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.InviteService().SetContext(context.Context()).Delete(id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "invite",
+		"deleted": true,
+	})
 }
 
 func (m *Invite) Accept(context fiber.Ctx) error {

@@ -98,7 +98,7 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 	return model, nil
 }
 
-func (s *ShippingOptionService) List(selector models.ShippingOption, config *sql.Options) ([]models.ShippingOption, *utils.ApplictaionError) {
+func (s *ShippingOptionService) List(selector *types.FilterableShippingOption, config *sql.Options) ([]models.ShippingOption, *utils.ApplictaionError) {
 	var res []models.ShippingOption
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.ShippingOptionRepository().Find(s.ctx, res, query); err != nil {
@@ -107,7 +107,7 @@ func (s *ShippingOptionService) List(selector models.ShippingOption, config *sql
 	return res, nil
 }
 
-func (s *ShippingOptionService) ListAndCount(selector models.ShippingOption, config *sql.Options) ([]models.ShippingOption, *int64, *utils.ApplictaionError) {
+func (s *ShippingOptionService) ListAndCount(selector *types.FilterableShippingOption, config *sql.Options) ([]models.ShippingOption, *int64, *utils.ApplictaionError) {
 	var res []models.ShippingOption
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -488,17 +488,17 @@ func (s *ShippingOptionService) Update(optionId uuid.UUID, data *types.UpdateShi
 	return optionWithValidatedPrice, nil
 }
 
-func (s *ShippingOptionService) Delete(optionId uuid.UUID) (*models.ShippingOption, *utils.ApplictaionError) {
+func (s *ShippingOptionService) Delete(optionId uuid.UUID) *utils.ApplictaionError {
 	data, err := s.Retrieve(optionId, &sql.Options{})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := s.r.ShippingOptionRepository().SoftRemove(s.ctx, data); err != nil {
-		return nil, err
+		return err
 	}
 
-	return data, nil
+	return nil
 }
 
 func (s *ShippingOptionService) AddRequirement(optionId uuid.UUID, requirement *models.ShippingOptionRequirement) (*models.ShippingOption, *utils.ApplictaionError) {

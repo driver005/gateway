@@ -1,6 +1,10 @@
 package admin
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/types"
+	"github.com/gofiber/fiber/v3"
+)
 
 type ProductTag struct {
 	r Registry
@@ -12,5 +16,19 @@ func NewProductTag(r Registry) *ProductTag {
 }
 
 func (m *ProductTag) List(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableProductTag](context)
+	if err != nil {
+		return err
+	}
+	result, count, err := m.r.ProductTagService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }

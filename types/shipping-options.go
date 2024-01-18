@@ -6,6 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableShippingOption struct {
+	core.FilterModel
+	RegionId  uuid.UUID `json:"region_id,omitempty" validate:"omitempty"`
+	IsReturn  bool      `json:"is_return,omitempty" validate:"omitempty"`
+	AdminOnly bool      `json:"admin_only,omitempty" validate:"omitempty"`
+}
+
 type ShippingRequirement struct {
 	Type   models.ShippingOptionRequirementType `json:"type"`
 	Amount int                                  `json:"amount"`
@@ -59,8 +66,8 @@ type CreateShippingOptionInput struct {
 	Data         core.JSONB                     `json:"data"`
 	IncludesTax  bool                           `json:"includes_tax,omitempty" validate:"omitempty"`
 	Amount       float64                        `json:"amount,omitempty" validate:"omitempty"`
-	AdminOnly    bool                           `json:"is_return,omitempty" validate:"omitempty"`
-	IsReturn     bool                           `json:"admin_only,omitempty" validate:"omitempty"`
+	AdminOnly    bool                           `json:"admin_only,omitempty" validate:"omitempty"`
+	IsReturn     bool                           `json:"is_return,omitempty" validate:"omitempty"`
 	Metadata     core.JSONB                     `json:"metadata,omitempty" validate:"omitempty"`
 	Requirements []RequirementInput             `json:"requirements,omitempty" validate:"omitempty"`
 }

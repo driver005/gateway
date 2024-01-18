@@ -33,7 +33,7 @@ func (s *ShippingProfileService) SetContext(context context.Context) *ShippingPr
 	return s
 }
 
-func (s *ShippingProfileService) List(selector models.ShippingProfile, config *sql.Options) ([]models.ShippingProfile, *utils.ApplictaionError) {
+func (s *ShippingProfileService) List(selector *types.FilterableShippingProfile, config *sql.Options) ([]models.ShippingProfile, *utils.ApplictaionError) {
 	var res []models.ShippingProfile
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -304,7 +304,7 @@ func (s *ShippingProfileService) FetchCartOptions(cart *models.Cart) ([]models.S
 			selector = append(selector, cso.ShippingOption.Id)
 		}
 	}
-	rawOpts, err := s.r.ShippingOptionService().SetContext(s.ctx).List(models.ShippingOption{AdminOnly: false}, &sql.Options{
+	rawOpts, err := s.r.ShippingOptionService().SetContext(s.ctx).List(&types.FilterableShippingOption{AdminOnly: false}, &sql.Options{
 		Relations:     []string{"requirements", "profile"},
 		Specification: []sql.Specification{sql.In("profile_id", profileIds), sql.In("id", selector)},
 	})

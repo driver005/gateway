@@ -50,7 +50,7 @@ func (s *OrderEditService) Retrieve(id uuid.UUID, config *sql.Options) (*models.
 	return res, nil
 }
 
-func (s *OrderEditService) ListAndCount(selector models.OrderEdit, config *sql.Options) ([]models.OrderEdit, *int64, *utils.ApplictaionError) {
+func (s *OrderEditService) ListAndCount(selector *types.FilterableOrderEdit, config *sql.Options) ([]models.OrderEdit, *int64, *utils.ApplictaionError) {
 	var res []models.OrderEdit
 
 	if config.Q != nil {
@@ -67,7 +67,7 @@ func (s *OrderEditService) ListAndCount(selector models.OrderEdit, config *sql.O
 	return res, count, nil
 }
 
-func (s *OrderEditService) List(selector models.OrderEdit, config *sql.Options) ([]models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) List(selector *types.FilterableOrderEdit, config *sql.Options) ([]models.OrderEdit, *utils.ApplictaionError) {
 	orderEdits, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err

@@ -1,6 +1,15 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"github.com/driver005/gateway/core"
+	"github.com/google/uuid"
+)
+
+type FilterableSalesChannel struct {
+	core.FilterModel
+	Name        string `json:"name,omitempty" validate:"omitempty"`
+	Description string `json:"description,omitempty" validate:"omitempty"`
+}
 
 type CreateSalesChannelInput struct {
 	Name        string `json:"name"`

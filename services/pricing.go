@@ -286,7 +286,7 @@ func (s *PricingService) GetProductVariantsPricing(data []interfaces.Pricing, co
 		dataMap[d.VariantId] = d
 		variantIds = append(variantIds, d.VariantId)
 	}
-	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{
+	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(&types.FilterableProductVariant{
 		FilterModel: core.FilterModel{Id: variantIds},
 	}, &sql.Options{
 		Selects: []string{"id", "product_id"},
@@ -452,7 +452,7 @@ func (s *PricingService) GetProductPricingById(productId uuid.UUID, context *int
 	if err != nil {
 		return nil, err
 	}
-	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(types.FilterableProductVariant{
+	variants, err := s.r.ProductVariantService().SetContext(s.ctx).List(&types.FilterableProductVariant{
 		ProductId: uuid.UUIDs{productId},
 	}, &sql.Options{
 		Selects: []string{"id"},

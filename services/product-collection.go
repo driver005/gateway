@@ -68,15 +68,15 @@ func (s *ProductCollectionService) RetrieveByHandle(collectionHandle string, con
 	return res, nil
 }
 
-func (s *ProductCollectionService) List(selector models.ProductCollection, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductCollection, *utils.ApplictaionError) {
-	collections, _, err := s.ListAndCount(selector, config, discountConditionId)
+func (s *ProductCollectionService) List(selector *types.FilterableCollectionProps, config *sql.Options) ([]models.ProductCollection, *utils.ApplictaionError) {
+	collections, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
 	}
 	return collections, nil
 }
 
-func (s *ProductCollectionService) ListAndCount(selector models.ProductCollection, config *sql.Options, discountConditionId uuid.UUID) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
+func (s *ProductCollectionService) ListAndCount(selector *types.FilterableCollectionProps, config *sql.Options) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
 	var res []models.ProductCollection
 
 	if config.Q != nil {
@@ -89,8 +89,8 @@ func (s *ProductCollectionService) ListAndCount(selector models.ProductCollectio
 
 	query := sql.BuildQuery(selector, config)
 
-	if discountConditionId != uuid.Nil {
-		return s.r.ProductCollectionRepository().FindAndCountByDiscountConditionId(s.ctx, discountConditionId, query)
+	if selector.DiscountConditionId != uuid.Nil {
+		return s.r.ProductCollectionRepository().FindAndCountByDiscountConditionId(s.ctx, selector.DiscountConditionId, query)
 	}
 
 	count, err := s.r.ProductCollectionRepository().FindAndCount(s.ctx, res, query)

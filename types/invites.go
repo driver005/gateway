@@ -1,6 +1,13 @@
 package types
 
-import "github.com/driver005/gateway/models"
+import (
+	"github.com/driver005/gateway/core"
+	"github.com/driver005/gateway/models"
+)
+
+type FilterableInvite struct {
+	core.FilterModel
+}
 
 type ListInvite struct {
 	*models.Invite

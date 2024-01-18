@@ -5,6 +5,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type FilterableReturn struct {
+	core.FilterModel
+}
+
 type OrderReturnItem struct {
 	ItemId   uuid.UUID `json:"item_id"`
 	Quantity int       `json:"quantity"`

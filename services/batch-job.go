@@ -62,7 +62,7 @@ func (s *BatchJobService) Retrive(batchJobId uuid.UUID) (*models.BatchJob, *util
 	return model, nil
 }
 
-func (s *BatchJobService) ListAndCount(selector types.FilterableBatchJob, config *sql.Options) ([]models.BatchJob, *int64, *utils.ApplictaionError) {
+func (s *BatchJobService) ListAndCount(selector *types.FilterableBatchJob, config *sql.Options) ([]models.BatchJob, *int64, *utils.ApplictaionError) {
 	var res []models.BatchJob
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
@@ -70,7 +70,7 @@ func (s *BatchJobService) ListAndCount(selector types.FilterableBatchJob, config
 		config.Take = gox.NewInt(20)
 	}
 
-	query := sql.BuildQuery[types.FilterableBatchJob](selector, config)
+	query := sql.BuildQuery(selector, config)
 	count, err := s.r.BatchJobRepository().FindAndCount(s.ctx, res, query)
 	if err != nil {
 		return nil, nil, err

@@ -38,7 +38,7 @@ func (s *GiftCardService) GenerateCode() string {
 	return code
 }
 
-func (s *GiftCardService) ListAndCount(selector *models.GiftCard, config *sql.Options) ([]models.GiftCard, *int64, *utils.ApplictaionError) {
+func (s *GiftCardService) ListAndCount(selector *types.FilterableGiftCard, config *sql.Options) ([]models.GiftCard, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
 		config.Skip = gox.NewInt(0)
 		config.Take = gox.NewInt(50)
@@ -56,7 +56,7 @@ func (s *GiftCardService) ListAndCount(selector *models.GiftCard, config *sql.Op
 	return res, count, nil
 }
 
-func (s *GiftCardService) List(selector *models.GiftCard, config *sql.Options) ([]models.GiftCard, *utils.ApplictaionError) {
+func (s *GiftCardService) List(selector *types.FilterableGiftCard, config *sql.Options) ([]models.GiftCard, *utils.ApplictaionError) {
 	result, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
