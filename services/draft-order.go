@@ -101,7 +101,7 @@ func (s *DraftOrderService) List(selector *models.DraftOrder, config *sql.Option
 	return res, nil
 }
 
-func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOrder, *utils.ApplictaionError) {
+func (s *DraftOrderService) Create(data *types.DraftOrderCreate) (*models.DraftOrder, *utils.ApplictaionError) {
 	if data.RegionId == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
@@ -109,11 +109,6 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 			nil,
 		)
 	}
-	shipping_methods := data.ShippingMethods
-	no_notification_order := data.NoNotificationOrder
-	items := data.Items
-	idempotency_key := data.IdempotencyKey
-	discounts := data.Discounts
 
 	createdCart, err := s.r.CartService().SetContext(s.ctx).Create(&types.CartCreateProps{Type: models.CartClaim})
 	if err != nil {
@@ -122,8 +117,12 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 
 	var draftOrder *models.DraftOrder
 	draftOrder.CartId = uuid.NullUUID{UUID: createdCart.Id}
-	draftOrder.NoNotificationOrder = no_notification_order
-	draftOrder.IdempotencyKey = idempotency_key
+	if !reflect.ValueOf(data.NoNotificationOrder).IsZero() {
+		draftOrder.NoNotificationOrder = data.NoNotificationOrder
+	}
+	if !reflect.ValueOf(data.IdempotencyKey).IsZero() {
+		draftOrder.IdempotencyKey = data.IdempotencyKey
+	}
 
 	if err := s.r.DraftOrderRepository().Save(s.ctx, draftOrder); err != nil {
 		return nil, err
@@ -136,7 +135,7 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 
 	itemsToGenerate := []types.GenerateInputData{}
 	itemsToCreate := []models.LineItem{}
-	for _, item := range items {
+	for _, item := range data.Items {
 		if item.VariantId != uuid.Nil {
 			itemsToGenerate = append(itemsToGenerate, types.GenerateInputData{
 				VariantId: item.VariantId,
@@ -181,7 +180,7 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 		s.r.LineItemService().SetContext(s.ctx).Create(itemsToCreate)
 	}
 	shippingMethodToCreate := []types.CreateCustomShippingOptionInput{}
-	for _, method := range shipping_methods {
+	for _, method := range data.ShippingMethods {
 		shippingMethodToCreate = append(shippingMethodToCreate, types.CreateCustomShippingOptionInput{
 			ShippingOptionId: method.OptionId,
 			CartId:           createdCart.Id,
@@ -205,16 +204,16 @@ func (s *DraftOrderService) Create(data types.DraftOrderCreate) (*models.DraftOr
 	if err != nil {
 		return nil, err
 	}
-	for _, method := range shipping_methods {
+	for _, method := range data.ShippingMethods {
 		_, err := s.r.CartService().SetContext(s.ctx).AddShippingMethod(uuid.Nil, createdCart, method.OptionId, method.Data)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if len(discounts) > 0 {
+	if len(data.Discounts) > 0 {
 		_, err := s.r.CartService().SetContext(s.ctx).Update(createdCart.Id, nil, &types.CartUpdateProps{
-			Discounts: discounts,
+			Discounts: data.Discounts,
 		})
 		if err != nil {
 			return nil, err
@@ -259,7 +258,7 @@ func (s *DraftOrderService) Update(id uuid.UUID, data *models.DraftOrder) (*mode
 		)
 	}
 
-	if data.NoNotificationOrder {
+	if !reflect.ValueOf(data.NoNotificationOrder).IsZero() {
 		draftOrder.NoNotificationOrder = data.NoNotificationOrder
 	}
 

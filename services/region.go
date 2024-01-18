@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -53,11 +54,11 @@ func (s *RegionService) Create(data *types.CreateRegionInput) (*models.Region, *
 	feature := true
 
 	if feature {
-		if data.IncludesTax {
+		if !reflect.ValueOf(data.IncludesTax).IsZero() {
 			validated.IncludesTax = data.IncludesTax
 		}
 	}
-	if data.CurrencyCode != "" {
+	if !reflect.ValueOf(data.CurrencyCode).IsZero() {
 		if err := s.validateCurrency(data.CurrencyCode); err != nil {
 			return nil, err
 		}

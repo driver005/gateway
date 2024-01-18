@@ -1,14 +1,13 @@
 package admin
 
 import (
+	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
-	"github.com/jinzhu/copier"
 )
 
 type AdminCreateUserRequest struct {
@@ -71,52 +70,37 @@ func (m *User) List(context fiber.Ctx) error {
 }
 
 func (m *User) Create(context fiber.Ctx) error {
-	var req AdminCreateUserRequest
-	if err := context.Bind().Body(&req); err != nil {
-		return err
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		return err
-	}
-
-	user := &models.User{}
-	copier.CopyWithOption(user, &req, copier.Option{IgnoreEmpty: true, DeepCopy: true})
-	res, err := m.r.UserService().SetContext(context.Context()).Create(user)
+	model, err := api.BindCreate[types.CreateUserInput](context, m.r.Validator())
 	if err != nil {
 		return err
 	}
 
-	res.PasswordHash = ""
-	return context.Status(fiber.StatusOK).JSON(res)
+	result, err := m.r.UserService().SetContext(context.Context()).Create(model)
+	if err != nil {
+		return err
+	}
+
+	result.PasswordHash = ""
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *User) Update(context fiber.Ctx) error {
-	var req AdminUpdateUserRequest
-
 	Id, err := utils.ParseUUID(context.Params("user_id"))
 	if err != nil {
 		return err
 	}
 
-	if err := context.Bind().Body(&req); err != nil {
-		return err
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		return err
-	}
-
-	user := &models.User{}
-	copier.CopyWithOption(user, &req, copier.Option{IgnoreEmpty: true})
-	res, err := m.r.UserService().SetContext(context.Context()).Update(Id, user)
+	model, err := api.BindCreate[types.UpdateUserInput](context, m.r.Validator())
 	if err != nil {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(res)
+	result, err := m.r.UserService().SetContext(context.Context()).Update(Id, model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *User) Delete(context fiber.Ctx) error {

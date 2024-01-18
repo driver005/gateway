@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/driver005/gateway/core"
@@ -449,14 +450,30 @@ func (s *PaymentProviderService) RetrieveRefund(id uuid.UUID, config *sql.Option
 func (s *PaymentProviderService) buildPaymentProcessorContext(data *types.PaymentSessionInput) *interfaces.PaymentProcessorContext {
 	var processor *interfaces.PaymentProcessorContext
 
-	processor.Id = data.Cart.Id
-	processor.Amount = data.Amount
-	processor.BillingAddress = data.Customer.BillingAddress
-	processor.Context = data.Context
-	processor.Customer = data.Customer
-	processor.Email = data.Customer.Email
-	processor.PaymentSessionData = data.PaymentSessionData
-	processor.ResourceId = data.ResourceId
+	if !reflect.ValueOf(data.Cart.Id).IsZero() {
+		processor.Id = data.Cart.Id
+	}
+	if !reflect.ValueOf(data.Amount).IsZero() {
+		processor.Amount = data.Amount
+	}
+	if !reflect.ValueOf(data.Customer.BillingAddress).IsZero() {
+		processor.BillingAddress = data.Customer.BillingAddress
+	}
+	if !reflect.ValueOf(data.Context).IsZero() {
+		processor.Context = data.Context
+	}
+	if !reflect.ValueOf(data.Customer).IsZero() {
+		processor.Customer = data.Customer
+	}
+	if !reflect.ValueOf(data.Customer.Email).IsZero() {
+		processor.Email = data.Customer.Email
+	}
+	if !reflect.ValueOf(data.PaymentSessionData).IsZero() {
+		processor.PaymentSessionData = data.PaymentSessionData
+	}
+	if !reflect.ValueOf(data.ResourceId).IsZero() {
+		processor.ResourceId = data.ResourceId
+	}
 
 	return processor
 }
@@ -468,11 +485,21 @@ func (s *PaymentProviderService) SaveSession(id uuid.UUID, providerId uuid.UUID,
 			return nil, err
 		}
 
-		session.Data = data.Data
-		session.Status = data.Status
-		session.Amount = data.Amount
-		session.IsInitiated = data.IsInitiated
-		session.IsSelected = data.IsSelected
+		if !reflect.ValueOf(data.Data).IsZero() {
+			session.Data = data.Data
+		}
+		if !reflect.ValueOf(data.Status).IsZero() {
+			session.Status = data.Status
+		}
+		if !reflect.ValueOf(data.Amount).IsZero() {
+			session.Amount = data.Amount
+		}
+		if !reflect.ValueOf(data.IsInitiated).IsZero() {
+			session.IsInitiated = data.IsInitiated
+		}
+		if !reflect.ValueOf(data.IsSelected).IsZero() {
+			session.IsSelected = data.IsSelected
+		}
 
 		if err := s.r.PaymentSessionRepository().Save(s.ctx, session); err != nil {
 			return nil, err

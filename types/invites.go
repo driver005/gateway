@@ -6,3 +6,8 @@ type ListInvite struct {
 	*models.Invite
 	Token string `json:"token"`
 }
+
+type CreateInviteInput struct {
+	Email string          `json:"email"`
+	Role  models.UserRole `json:"role"`
+}

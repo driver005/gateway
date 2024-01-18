@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 
 	"github.com/driver005/gateway/core"
@@ -179,25 +180,63 @@ func (s *ProductVariantService) UpdateBatch(data []types.UpdateProductVariantDat
 			s.UpdateOptionValue(d.Variant.Id, option.OptionId, option.Value)
 		}
 
-		d.Variant.Metadata = utils.MergeMaps(d.Variant.Metadata, d.UpdateData.Metadata)
-		d.Variant.Title = d.UpdateData.Title
-		d.Variant.ProductId = uuid.NullUUID{UUID: d.UpdateData.ProductId}
-		d.Variant.Sku = d.UpdateData.SKU
-		d.Variant.Barcode = d.UpdateData.Barcode
-		d.Variant.Ean = d.UpdateData.EAN
-		d.Variant.Upc = d.UpdateData.UPC
-		d.Variant.VariantRank = d.UpdateData.VariantRank
-		d.Variant.InventoryQuantity = d.UpdateData.InventoryQuantity
-		d.Variant.AllowBackorder = d.UpdateData.AllowBackorder
-		d.Variant.ManageInventory = d.UpdateData.ManageInventory
-		d.Variant.HsCode = d.UpdateData.HSCode
-		d.Variant.OriginCountry = d.UpdateData.OriginCountry
-		d.Variant.MIdCode = d.UpdateData.MIdCode
-		d.Variant.Material = d.UpdateData.Material
-		d.Variant.Weight = d.UpdateData.Weight
-		d.Variant.Length = d.UpdateData.Length
-		d.Variant.Height = d.UpdateData.Height
-		d.Variant.Width = d.UpdateData.Width
+		if !reflect.ValueOf(d.Variant.Metadata).IsZero() {
+			d.Variant.Metadata = utils.MergeMaps(d.Variant.Metadata, d.UpdateData.Metadata)
+		}
+		if !reflect.ValueOf(d.Variant.Title).IsZero() {
+			d.Variant.Title = d.UpdateData.Title
+		}
+		if !reflect.ValueOf(d.Variant.ProductId).IsZero() {
+			d.Variant.ProductId = uuid.NullUUID{UUID: d.UpdateData.ProductId}
+		}
+		if !reflect.ValueOf(d.Variant.Sku).IsZero() {
+			d.Variant.Sku = d.UpdateData.SKU
+		}
+		if !reflect.ValueOf(d.Variant.Barcode).IsZero() {
+			d.Variant.Barcode = d.UpdateData.Barcode
+		}
+		if !reflect.ValueOf(d.Variant.Ean).IsZero() {
+			d.Variant.Ean = d.UpdateData.EAN
+		}
+		if !reflect.ValueOf(d.Variant.Upc).IsZero() {
+			d.Variant.Upc = d.UpdateData.UPC
+		}
+		if !reflect.ValueOf(d.Variant.VariantRank).IsZero() {
+			d.Variant.VariantRank = d.UpdateData.VariantRank
+		}
+		if !reflect.ValueOf(d.Variant.InventoryQuantity).IsZero() {
+			d.Variant.InventoryQuantity = d.UpdateData.InventoryQuantity
+		}
+		if !reflect.ValueOf(d.Variant.AllowBackorder).IsZero() {
+			d.Variant.AllowBackorder = d.UpdateData.AllowBackorder
+		}
+		if !reflect.ValueOf(d.Variant.ManageInventory).IsZero() {
+			d.Variant.ManageInventory = d.UpdateData.ManageInventory
+		}
+		if !reflect.ValueOf(d.Variant.HsCode).IsZero() {
+			d.Variant.HsCode = d.UpdateData.HSCode
+		}
+		if !reflect.ValueOf(d.Variant.OriginCountry).IsZero() {
+			d.Variant.OriginCountry = d.UpdateData.OriginCountry
+		}
+		if !reflect.ValueOf(d.Variant.MIdCode).IsZero() {
+			d.Variant.MIdCode = d.UpdateData.MIdCode
+		}
+		if !reflect.ValueOf(d.Variant.Material).IsZero() {
+			d.Variant.Material = d.UpdateData.Material
+		}
+		if !reflect.ValueOf(d.Variant.Weight).IsZero() {
+			d.Variant.Weight = d.UpdateData.Weight
+		}
+		if !reflect.ValueOf(d.Variant.Length).IsZero() {
+			d.Variant.Length = d.UpdateData.Length
+		}
+		if !reflect.ValueOf(d.Variant.Height).IsZero() {
+			d.Variant.Height = d.UpdateData.Height
+		}
+		if !reflect.ValueOf(d.Variant.Width).IsZero() {
+			d.Variant.Width = d.UpdateData.Width
+		}
 
 		if err := s.r.ProductVariantRepository().Update(s.ctx, d.Variant); err != nil {
 			return nil, err

@@ -210,14 +210,14 @@ func (s *CustomerService) Create(data *types.CreateCustomerInput) (*models.Custo
 
 	if len(existing) != 0 {
 		for _, exit := range existing {
-			if exit.HasAccount && data.Password != "" {
+			if exit.HasAccount && reflect.ValueOf(data.Password).IsZero() {
 				return nil, utils.NewApplictaionError(
 					utils.INVALID_DATA,
 					`a customer with the given email already has an account. Log in instead`,
 					"500",
 					nil,
 				)
-			} else if !exit.HasAccount && data.Password == "" {
+			} else if !exit.HasAccount && reflect.ValueOf(data.Password).IsZero() {
 				return nil, utils.NewApplictaionError(
 					utils.INVALID_DATA,
 					`guest customer with email already exists`,
@@ -228,7 +228,7 @@ func (s *CustomerService) Create(data *types.CreateCustomerInput) (*models.Custo
 		}
 	}
 
-	if data.Password != "" {
+	if !reflect.ValueOf(data.Password).IsZero() {
 		hashedPassword, err := s.HashPassword(data.Password)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
@@ -246,17 +246,17 @@ func (s *CustomerService) Create(data *types.CreateCustomerInput) (*models.Custo
 		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
 	}
 
-	if data.HasAccount != model.HasAccount {
+	if !reflect.ValueOf(data.HasAccount).IsZero() {
 		model.HasAccount = data.HasAccount
 	}
 
-	if data.FirstName != "" {
+	if !reflect.ValueOf(data.FirstName).IsZero() {
 		model.FirstName = data.FirstName
 	}
-	if data.LastName != "" {
+	if !reflect.ValueOf(data.LastName).IsZero() {
 		model.LastName = data.LastName
 	}
-	if data.Phone != "" {
+	if !reflect.ValueOf(data.Phone).IsZero() {
 		model.Phone = data.Phone
 	}
 
@@ -273,7 +273,7 @@ func (s *CustomerService) Update(userId uuid.UUID, data *types.UpdateCustomerInp
 		return nil, err
 	}
 
-	if data.Email != "" {
+	if !reflect.ValueOf(data.Email).IsZero() {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"You are not allowed to Update email"`,
@@ -289,7 +289,7 @@ func (s *CustomerService) Update(userId uuid.UUID, data *types.UpdateCustomerInp
 		)
 	}
 
-	if data.Password != "" {
+	if !reflect.ValueOf(data.Password).IsZero() {
 		hashedPassword, err := s.HashPassword(data.Password)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
@@ -313,7 +313,7 @@ func (s *CustomerService) Update(userId uuid.UUID, data *types.UpdateCustomerInp
 			addr.Id = data.BillingAddressId
 		}
 		if err := s.UpdateBillingAddress(model, uuid.Nil, addr); err != nil {
-
+			return nil, err
 		}
 	}
 	if data.Groups != nil {
@@ -324,13 +324,13 @@ func (s *CustomerService) Update(userId uuid.UUID, data *types.UpdateCustomerInp
 		}
 	}
 
-	if data.FirstName != "" {
+	if !reflect.ValueOf(data.FirstName).IsZero() {
 		model.FirstName = data.FirstName
 	}
-	if data.LastName != "" {
+	if !reflect.ValueOf(data.LastName).IsZero() {
 		model.LastName = data.LastName
 	}
-	if data.Phone != "" {
+	if !reflect.ValueOf(data.Phone).IsZero() {
 		model.Phone = data.Phone
 	}
 

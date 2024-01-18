@@ -1,6 +1,10 @@
 package admin
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/types"
+	"github.com/gofiber/fiber/v3"
+)
 
 type GiftCard struct {
 	r Registry
@@ -20,7 +24,17 @@ func (m *GiftCard) List(context fiber.Ctx) error {
 }
 
 func (m *GiftCard) Create(context fiber.Ctx) error {
-	return nil
+	model, err := api.BindCreate[types.CreateGiftCardInput](context, m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.GiftCardService().SetContext(context.Context()).Create(model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *GiftCard) Update(context fiber.Ctx) error {

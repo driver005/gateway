@@ -266,7 +266,7 @@ func (s *CartService) Create(data *types.CartCreateProps) (*models.Cart, *utils.
 		cart.BillingAddressId = uuid.NullUUID{UUID: data.BillingAddressId}
 	}
 
-	if data.Type != "" {
+	if !reflect.ValueOf(data.Type).IsZero() {
 		cart.Type = data.Type
 	}
 

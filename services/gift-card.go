@@ -92,19 +92,32 @@ func (s *GiftCardService) Create(data *types.CreateGiftCardInput) (*models.GiftC
 	model.RegionId = uuid.NullUUID{UUID: region.Id}
 
 	model.Code = s.GenerateCode()
-	model.TaxRate = s.ResolveTaxRate(data.TaxRate, region)
+	if !reflect.ValueOf(data.TaxRate).IsZero() {
+		model.TaxRate = s.ResolveTaxRate(data.TaxRate, region)
+	}
 
 	// s.eventBus_.WithTransaction(manager).Emit(GiftCardService.Events.CREATED, {
 	// 	id: result.id,
 	// })
 
-	model.OrderId = uuid.NullUUID{UUID: data.OrderId}
-	model.Value = data.Value
-	model.Balance = data.Balance
-	model.EndsAt = data.EndsAt
-	model.IsDisabled = data.IsDisabled
-	model.RegionId = uuid.NullUUID{UUID: data.RegionId}
-	model.TaxRate = data.TaxRate
+	if !reflect.ValueOf(data.OrderId).IsZero() {
+		model.OrderId = uuid.NullUUID{UUID: data.OrderId}
+	}
+	if !reflect.ValueOf(data.Value).IsZero() {
+		model.Value = data.Value
+	}
+	if !reflect.ValueOf(data.Balance).IsZero() {
+		model.Balance = data.Balance
+	}
+	if !reflect.ValueOf(data.EndsAt).IsZero() {
+		model.EndsAt = data.EndsAt
+	}
+	if !reflect.ValueOf(data.IsDisabled).IsZero() {
+		model.IsDisabled = data.IsDisabled
+	}
+	if !reflect.ValueOf(data.RegionId).IsZero() {
+		model.RegionId = uuid.NullUUID{UUID: data.RegionId}
+	}
 	if data.Metadata != nil {
 		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
 	}
@@ -173,7 +186,7 @@ func (s *GiftCardService) Update(id uuid.UUID, data *types.UpdateGiftCardInput) 
 		}
 		giftCard.RegionId = uuid.NullUUID{UUID: region.Id}
 	}
-	if data.Balance != 0.0 {
+	if !reflect.ValueOf(data.Balance).IsZero() {
 		if data.Balance < 0 || giftCard.Value < data.Balance {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_ARGUMENT,
@@ -182,13 +195,18 @@ func (s *GiftCardService) Update(id uuid.UUID, data *types.UpdateGiftCardInput) 
 				nil,
 			)
 		}
-		giftCard.Balance = giftCard.Balance
+		giftCard.Balance = data.Balance
 	}
 
-	giftCard.Balance = data.Balance
-	giftCard.EndsAt = data.EndsAt
-	giftCard.IsDisabled = data.IsDisabled
-	giftCard.RegionId = uuid.NullUUID{UUID: data.RegionId}
+	if !reflect.ValueOf(data.EndsAt).IsZero() {
+		giftCard.EndsAt = data.EndsAt
+	}
+	if !reflect.ValueOf(data.IsDisabled).IsZero() {
+		giftCard.IsDisabled = data.IsDisabled
+	}
+	if !reflect.ValueOf(data.RegionId).IsZero() {
+		giftCard.RegionId = uuid.NullUUID{UUID: data.RegionId}
+	}
 	if data.Metadata != nil {
 		giftCard.Metadata = utils.MergeMaps(giftCard.Metadata, data.Metadata)
 	}

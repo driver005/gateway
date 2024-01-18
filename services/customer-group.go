@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 	"strings"
 
 	"github.com/driver005/gateway/core"
@@ -52,7 +53,13 @@ func (s *CustomerGroupService) Retrieve(customerGroupId uuid.UUID, config *sql.O
 	return res, nil
 }
 
-func (s *CustomerGroupService) Create(model *models.CustomerGroup) (*models.CustomerGroup, *utils.ApplictaionError) {
+func (s *CustomerGroupService) Create(data *types.CreateCustomerGroup) (*models.CustomerGroup, *utils.ApplictaionError) {
+	model := &models.CustomerGroup{
+		Model: core.Model{
+			Metadata: data.Metadata,
+		},
+		Name: data.Name,
+	}
 	if err := s.r.CustomerGroupRepository().Save(s.ctx, model); err != nil {
 		return nil, err
 	}
@@ -68,7 +75,7 @@ func (s *CustomerGroupService) AddCustomers(id uuid.UUID, customerIds uuid.UUIDs
 	return res, nil
 }
 
-func (s *CustomerGroupService) Update(customerGroupId uuid.UUID, data *types.CustomerGroupUpdate) (*models.CustomerGroup, *utils.ApplictaionError) {
+func (s *CustomerGroupService) Update(customerGroupId uuid.UUID, data *types.UpdateCustomerGroup) (*models.CustomerGroup, *utils.ApplictaionError) {
 	model, err := s.Retrieve(customerGroupId, &sql.Options{})
 	if err != nil {
 		return nil, err
@@ -78,7 +85,7 @@ func (s *CustomerGroupService) Update(customerGroupId uuid.UUID, data *types.Cus
 		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
 	}
 
-	if data.Name != "" {
+	if !reflect.ValueOf(data.Name).IsZero() {
 		model.Name = data.Name
 	}
 

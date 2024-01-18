@@ -1,6 +1,10 @@
 package admin
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/types"
+	"github.com/gofiber/fiber/v3"
+)
 
 type DraftOrder struct {
 	r Registry
@@ -20,7 +24,17 @@ func (m *DraftOrder) List(context fiber.Ctx) error {
 }
 
 func (m *DraftOrder) Create(context fiber.Ctx) error {
-	return nil
+	model, err := api.BindCreate[types.DraftOrderCreate](context, m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.DraftOrderService().SetContext(context.Context()).Create(model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *DraftOrder) Update(context fiber.Ctx) error {

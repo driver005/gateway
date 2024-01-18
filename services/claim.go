@@ -124,7 +124,7 @@ func (s *ClaimService) Update(id uuid.UUID, data *types.UpdateClaimInput) (*mode
 		}
 	}
 
-	if data.NoNotification != claim.NoNotification {
+	if !reflect.ValueOf(data.NoNotification).IsZero() {
 		claim.NoNotification = data.NoNotification
 	}
 
@@ -319,7 +319,7 @@ func (s *ClaimService) Create(data *types.CreateClaimInput) (*models.ClaimOrder,
 	}
 
 	evaluatedNoNotification := data.NoNotification
-	if !evaluatedNoNotification {
+	if !reflect.ValueOf(data.NoNotification).IsZero() {
 		evaluatedNoNotification = data.Order.NoNotification
 	}
 

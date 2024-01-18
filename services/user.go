@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 	"strings"
 
 	"github.com/driver005/gateway/core"
@@ -127,7 +128,7 @@ func (s *UserService) Create(data *types.CreateUserInput) (*models.User, *utils.
 		Role:      data.Role,
 	}
 
-	if data.Password != "" {
+	if !reflect.ValueOf(data.Password).IsZero() {
 		hashedPassword, err := s.HashPassword(data.Password)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
@@ -149,7 +150,7 @@ func (s *UserService) Create(data *types.CreateUserInput) (*models.User, *utils.
 }
 
 func (s *UserService) Update(userId uuid.UUID, data *types.UpdateUserInput) (*models.User, *utils.ApplictaionError) {
-	if data.Email != "" {
+	if !reflect.ValueOf(data.Email).IsZero() {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`"You are not allowed to Update email"`,
@@ -157,7 +158,7 @@ func (s *UserService) Update(userId uuid.UUID, data *types.UpdateUserInput) (*mo
 		)
 	}
 
-	if data.PasswordHash != "" {
+	if !reflect.ValueOf(data.PasswordHash).IsZero() {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"use dedicated methods, `setPassword`, `generateResetPasswordToken` for password operations",
@@ -178,13 +179,27 @@ func (s *UserService) Update(userId uuid.UUID, data *types.UpdateUserInput) (*mo
 		return nil, err
 	}
 
-	user.Email = data.Email
-	user.FirstName = data.FirstName
-	user.LastName = data.LastName
-	user.PasswordHash = data.PasswordHash
-	user.ApiToken = data.APIToken
-	user.Role = data.Role
-	user.Metadata = utils.MergeMaps(user.Metadata, data.Metadata)
+	if !reflect.ValueOf(data.Email).IsZero() {
+		user.Email = data.Email
+	}
+	if !reflect.ValueOf(data.FirstName).IsZero() {
+		user.FirstName = data.FirstName
+	}
+	if !reflect.ValueOf(data.LastName).IsZero() {
+		user.LastName = data.LastName
+	}
+	if !reflect.ValueOf(data.PasswordHash).IsZero() {
+		user.PasswordHash = data.PasswordHash
+	}
+	if !reflect.ValueOf(data.APIToken).IsZero() {
+		user.ApiToken = data.APIToken
+	}
+	if !reflect.ValueOf(data.Role).IsZero() {
+		user.Role = data.Role
+	}
+	if data.Metadata != nil {
+		user.Metadata = utils.MergeMaps(user.Metadata, data.Metadata)
+	}
 
 	if err := s.r.UserRepository().Update(s.ctx, user); err != nil {
 		return nil, err

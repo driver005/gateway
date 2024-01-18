@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
@@ -93,10 +94,18 @@ func (s *TaxRateService) Update(id uuid.UUID, data types.UpdateTaxRateInput) (*m
 		return nil, err
 	}
 
-	taxRate.Code = data.Code
-	taxRate.Name = data.Name
-	taxRate.Rate = data.Rate
-	taxRate.RegionId = uuid.NullUUID{UUID: data.RegionId}
+	if !reflect.ValueOf(data.Code).IsZero() {
+		taxRate.Code = data.Code
+	}
+	if !reflect.ValueOf(data.Name).IsZero() {
+		taxRate.Name = data.Name
+	}
+	if !reflect.ValueOf(data.Rate).IsZero() {
+		taxRate.Rate = data.Rate
+	}
+	if !reflect.ValueOf(data.RegionId).IsZero() {
+		taxRate.RegionId = uuid.NullUUID{UUID: data.RegionId}
+	}
 
 	if err := s.r.TaxRateRepository().Save(s.ctx, taxRate); err != nil {
 		return nil, err

@@ -1,6 +1,10 @@
 package admin
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/types"
+	"github.com/gofiber/fiber/v3"
+)
 
 type SalesChannel struct {
 	r Registry
@@ -20,7 +24,17 @@ func (m *SalesChannel) List(context fiber.Ctx) error {
 }
 
 func (m *SalesChannel) Create(context fiber.Ctx) error {
-	return nil
+	model, err := api.BindCreate[types.CreateSalesChannelInput](context, m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.SalesChannelService().SetContext(context.Context()).Create(model)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *SalesChannel) Update(context fiber.Ctx) error {

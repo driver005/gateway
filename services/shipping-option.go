@@ -35,7 +35,7 @@ func (s *ShippingOptionService) SetContext(context context.Context) *ShippingOpt
 }
 
 func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirementTypeInput, optionId uuid.UUID) (*models.ShippingOptionRequirement, *utils.ApplictaionError) {
-	if data.Type == "" {
+	if !reflect.ValueOf(data.Type).IsZero() {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"A Shipping Requirement must have a type field",
@@ -84,8 +84,12 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 	}
 	if existingReq != nil {
 		model = existingReq
-		model.Type = data.Type
-		model.Amount = data.Amount
+		if !reflect.ValueOf(data.Type).IsZero() {
+			model.Type = data.Type
+		}
+		if !reflect.ValueOf(data.Amount).IsZero() {
+			model.Amount = data.Amount
+		}
 	}
 	if err := s.r.ShippingOptionRequirementRepository().Save(s.ctx, model); err != nil {
 		return nil, err
@@ -148,12 +152,24 @@ func (s *ShippingOptionService) UpdateShippingMethod(id uuid.UUID, data *types.S
 		return nil, err
 	}
 
-	model.Data = data.Data
-	model.Price = data.Price
-	model.ReturnId = uuid.NullUUID{UUID: data.ReturnId}
-	model.SwapId = uuid.NullUUID{UUID: data.SwapId}
-	model.OrderId = uuid.NullUUID{UUID: data.OrderId}
-	model.ClaimOrderId = uuid.NullUUID{UUID: data.ClaimOrderId}
+	if !reflect.ValueOf(data.Data).IsZero() {
+		model.Data = data.Data
+	}
+	if !reflect.ValueOf(data.Price).IsZero() {
+		model.Price = data.Price
+	}
+	if !reflect.ValueOf(data.ReturnId).IsZero() {
+		model.ReturnId = uuid.NullUUID{UUID: data.ReturnId}
+	}
+	if !reflect.ValueOf(data.SwapId).IsZero() {
+		model.SwapId = uuid.NullUUID{UUID: data.SwapId}
+	}
+	if !reflect.ValueOf(data.OrderId).IsZero() {
+		model.OrderId = uuid.NullUUID{UUID: data.OrderId}
+	}
+	if !reflect.ValueOf(data.ClaimOrderId).IsZero() {
+		model.ClaimOrderId = uuid.NullUUID{UUID: data.ClaimOrderId}
+	}
 
 	if err := s.r.ShippingMethodRepository().Upsert(s.ctx, model); err != nil {
 		return nil, err
@@ -394,14 +410,14 @@ func (s *ShippingOptionService) Update(optionId uuid.UUID, data *types.UpdateShi
 	if data.Metadata != nil {
 		option.Metadata = utils.MergeMaps(option.Metadata, data.Metadata)
 	}
-	if data.RegionId != uuid.Nil || data.ProviderId != uuid.Nil || data.Data != "" {
+	if data.RegionId != uuid.Nil || data.ProviderId != uuid.Nil || reflect.ValueOf(data.Data).IsZero() {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Region and Provider cannot be updated after creation",
 			nil,
 		)
 	}
-	if data.IsReturn {
+	if !reflect.ValueOf(data.IsReturn).IsZero() {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"is_return cannot be changed after creation",
@@ -450,13 +466,21 @@ func (s *ShippingOptionService) Update(optionId uuid.UUID, data *types.UpdateShi
 		return nil, err
 	}
 
-	optionWithValidatedPrice.Name = data.Name
-	optionWithValidatedPrice.AdminOnly = data.AdminOnly
-	optionWithValidatedPrice.ProfileId = uuid.NullUUID{UUID: data.ProfileId}
+	if !reflect.ValueOf(data.Name).IsZero() {
+		optionWithValidatedPrice.Name = data.Name
+	}
+	if !reflect.ValueOf(data.AdminOnly).IsZero() {
+		optionWithValidatedPrice.AdminOnly = data.AdminOnly
+	}
+	if !reflect.ValueOf(data.ProfileId).IsZero() {
+		optionWithValidatedPrice.ProfileId = uuid.NullUUID{UUID: data.ProfileId}
+	}
 
 	feature := true
 	if feature {
-		optionWithValidatedPrice.IncludesTax = data.IncludesTax
+		if !reflect.ValueOf(data.IncludesTax).IsZero() {
+			optionWithValidatedPrice.IncludesTax = data.IncludesTax
+		}
 	}
 	if err = s.r.ShippingOptionRepository().Save(s.ctx, optionWithValidatedPrice); err != nil {
 		return nil, err

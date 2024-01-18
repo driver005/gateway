@@ -1,12 +1,12 @@
 package admin
 
 import (
+	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -67,19 +67,14 @@ func (m *Batch) List(context fiber.Ctx) error {
 }
 
 func (m *Batch) Create(context fiber.Ctx) error {
-	var req AdminPostBatchesReq
-	if err := context.Bind().Body(&req); err != nil {
+	model, err := api.BindCreate[types.CreateBatchJobInput](context, m.r.Validator())
+	if err != nil {
 		return err
 	}
 
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		return err
-	}
+	_ = utils.GetUser(context)
 
-	userId := utils.GetUser(context)
-
-	m.r.BatchJobService().PrepareBatchJobForProcessing()
+	m.r.BatchJobService().PrepareBatchJobForProcessing(model)
 	return nil
 }
 

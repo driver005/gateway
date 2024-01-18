@@ -43,12 +43,12 @@ func (s *InviteService) List(selector models.Invite, config *sql.Options) ([]mod
 	return res, nil
 }
 
-func (s *InviteService) Create(email string, role models.UserRole, validDuration int) *utils.ApplictaionError {
+func (s *InviteService) Create(data *types.CreateInviteInput, validDuration int) *utils.ApplictaionError {
 	if validDuration == 0 {
 		validDuration = DEFAULT_VALID_DURATION
 	}
 
-	if err := s.r.UserRepository().FindOne(s.ctx, &models.User{Email: email}, sql.Query{}); err == nil {
+	if err := s.r.UserRepository().FindOne(s.ctx, &models.User{Email: data.Email}, sql.Query{}); err == nil {
 		return utils.NewApplictaionError(
 			utils.CONFLICT,
 			"Can't invite a user with an existing account",
@@ -58,22 +58,22 @@ func (s *InviteService) Create(email string, role models.UserRole, validDuration
 
 	var invite *models.Invite
 
-	invite.UserEmail = email
+	invite.UserEmail = data.Email
 
 	if err := s.r.InviteRepository().FindOne(s.ctx, invite, sql.Query{}); err != nil {
-		invite.Role = role
+		invite.Role = data.Role
 
 		invite.Token = ""
 	}
 
-	if !invite.Accepted && invite.Role != role {
-		invite.Role = role
+	if !invite.Accepted && invite.Role != data.Role {
+		invite.Role = data.Role
 	}
 
 	tocken, err := s.r.TockenService().SetContext(s.ctx).SignToken(map[string]interface{}{
 		"invite_id":  invite.Id,
-		"role":       role,
-		"user_email": email,
+		"role":       data.Role,
+		"user_email": data.Email,
 	})
 	if err != nil {
 		return utils.NewApplictaionError(

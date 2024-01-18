@@ -150,13 +150,27 @@ func (s *PriceListService) Update(id uuid.UUID, data *types.UpdatePriceListInput
 		}
 	}
 
-	priceList.Name = data.Name
-	priceList.Description = data.Description
-	priceList.StartsAt = data.StartsAt
-	priceList.EndsAt = data.EndsAt
-	priceList.Status = data.Status
-	priceList.Type = data.Type
-	priceList.IncludesTax = data.IncludesTax
+	if !reflect.ValueOf(data.Name).IsZero() {
+		priceList.Name = data.Name
+	}
+	if !reflect.ValueOf(data.Description).IsZero() {
+		priceList.Description = data.Description
+	}
+	if !reflect.ValueOf(data.StartsAt).IsZero() {
+		priceList.StartsAt = data.StartsAt
+	}
+	if !reflect.ValueOf(data.EndsAt).IsZero() {
+		priceList.EndsAt = data.EndsAt
+	}
+	if !reflect.ValueOf(data.Status).IsZero() {
+		priceList.Status = data.Status
+	}
+	if !reflect.ValueOf(data.Type).IsZero() {
+		priceList.Type = data.Type
+	}
+	if !reflect.ValueOf(data.IncludesTax).IsZero() {
+		priceList.IncludesTax = data.IncludesTax
+	}
 
 	if err := s.r.PriceListRepository().Save(s.ctx, priceList); err != nil {
 		return nil, err

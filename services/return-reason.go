@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
@@ -68,10 +69,18 @@ func (s *ReturnReasonService) Update(id uuid.UUID, data *types.UpdateReturnReaso
 		return nil, err
 	}
 
-	reason.Description = data.Description
-	reason.Label = data.Label
-	reason.ParentReturnReasonId = uuid.NullUUID{UUID: data.ParentReturnReasonId}
-	reason.Metadata = data.Metadata
+	if !reflect.ValueOf(data.Description).IsZero() {
+		reason.Description = data.Description
+	}
+	if !reflect.ValueOf(data.Label).IsZero() {
+		reason.Label = data.Label
+	}
+	if !reflect.ValueOf(data.ParentReturnReasonId).IsZero() {
+		reason.ParentReturnReasonId = uuid.NullUUID{UUID: data.ParentReturnReasonId}
+	}
+	if data.Metadata != nil {
+		reason.Metadata = utils.MergeMaps(reason.Metadata, data.Metadata)
+	}
 
 	if err := s.r.ReturnReasonRepository().Save(s.ctx, reason); err != nil {
 		return nil, err

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"reflect"
 	"strings"
 	"time"
 
@@ -100,14 +101,30 @@ func (s *DiscountService) Create(data *types.CreateDiscountInput) (*models.Disco
 		)
 	}
 
-	discount.Code = data.Code
-	discount.IsDynamic = data.IsDynamic
-	discount.IsDisabled = data.IsDisabled
-	discount.StartsAt = data.StartsAt
-	discount.EndsAt = data.EndsAt
-	discount.ValidDuration = data.ValidDuration
-	discount.UsageLimit = data.UsageLimit
-	discount.Metadata = data.Metadata
+	if !reflect.ValueOf(data.Code).IsZero() {
+		discount.Code = data.Code
+	}
+	if !reflect.ValueOf(data.IsDynamic).IsZero() {
+		discount.IsDynamic = data.IsDynamic
+	}
+	if !reflect.ValueOf(data.IsDisabled).IsZero() {
+		discount.IsDisabled = data.IsDisabled
+	}
+	if !reflect.ValueOf(data.StartsAt).IsZero() {
+		discount.StartsAt = data.StartsAt
+	}
+	if !reflect.ValueOf(data.EndsAt).IsZero() {
+		discount.EndsAt = data.EndsAt
+	}
+	if !reflect.ValueOf(data.ValidDuration).IsZero() {
+		discount.ValidDuration = data.ValidDuration
+	}
+	if !reflect.ValueOf(data.UsageLimit).IsZero() {
+		discount.UsageLimit = data.UsageLimit
+	}
+	if data.Metadata != nil {
+		discount.Metadata = utils.MergeMaps(discount.Metadata, data.Metadata)
+	}
 
 	rule := &models.DiscountRule{
 		Type:        validatedRule.Type,
@@ -266,13 +283,24 @@ func (s *DiscountService) Update(discountId uuid.UUID, data *types.UpdateDiscoun
 		}
 	}
 
-	model.Code = strings.ToUpper(data.Code)
-
-	model.IsDisabled = data.IsDisabled
-	model.StartsAt = data.StartsAt
-	model.EndsAt = data.EndsAt
-	model.ValidDuration = data.ValidDuration
-	model.UsageLimit = data.UsageLimit
+	if !reflect.ValueOf(data.Code).IsZero() {
+		model.Code = strings.ToUpper(data.Code)
+	}
+	if !reflect.ValueOf(data.IsDisabled).IsZero() {
+		model.IsDisabled = data.IsDisabled
+	}
+	if !reflect.ValueOf(data.StartsAt).IsZero() {
+		model.StartsAt = data.StartsAt
+	}
+	if !reflect.ValueOf(data.EndsAt).IsZero() {
+		model.EndsAt = data.EndsAt
+	}
+	if !reflect.ValueOf(data.ValidDuration).IsZero() {
+		model.ValidDuration = data.ValidDuration
+	}
+	if !reflect.ValueOf(data.UsageLimit).IsZero() {
+		model.UsageLimit = data.UsageLimit
+	}
 
 	if data.Metadata != nil {
 		model.Metadata = utils.MergeMaps(model.Metadata, data.Metadata)
@@ -296,31 +324,40 @@ func (s *DiscountService) CreateDynamicCode(discountId uuid.UUID, data *types.Cr
 			nil,
 		)
 	}
-	if data.Code == "" {
+	if !reflect.ValueOf(data.Code).IsZero() {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"models.Discount must have a code",
 			nil,
 		)
 	}
-	toCreate := &models.Discount{
-		// ...data,
-		RuleId:           discount.RuleId,
-		IsDynamic:        true,
-		IsDisabled:       false,
-		Code:             strings.ToUpper(data.Code),
-		ParentDiscountId: uuid.NullUUID{UUID: discount.Id},
-		UsageLimit:       discount.UsageLimit,
+
+	discount.IsDynamic = true
+	discount.IsDisabled = false
+	discount.ParentDiscountId = uuid.NullUUID{UUID: discount.Id}
+
+	if !reflect.ValueOf(data.Code).IsZero() {
+		discount.Code = strings.ToUpper(data.Code)
 	}
+	if !reflect.ValueOf(data.EndsAt).IsZero() {
+		discount.EndsAt = data.EndsAt
+	}
+	if !reflect.ValueOf(data.UsageLimit).IsZero() {
+		discount.UsageLimit = data.UsageLimit
+	}
+	if data.Metadata != nil {
+		discount.Metadata = utils.MergeMaps(discount.Metadata, data.Metadata)
+	}
+
 	if discount.ValidDuration != nil {
 		lastValidDate := time.Now()
 		lastValidDate = lastValidDate.Add(time.Second * time.Duration(discount.ValidDuration.Second()))
-		toCreate.EndsAt = &lastValidDate
+		discount.EndsAt = &lastValidDate
 	}
-	if err := s.r.DiscountRepository().Save(s.ctx, toCreate); err != nil {
+	if err := s.r.DiscountRepository().Save(s.ctx, discount); err != nil {
 		return nil, err
 	}
-	return toCreate, nil
+	return discount, nil
 
 }
 

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 	"strings"
 
 	"github.com/driver005/gateway/models"
@@ -124,7 +125,7 @@ func (s *StoreService) Update(data *types.UpdateStoreInput) (*models.Store, *uti
 		}
 		store.Currencies = currencies
 	}
-	if data.DefaultCurrencyCode != "" {
+	if !reflect.ValueOf(data.DefaultCurrencyCode).IsZero() {
 		hasDefCurrency := false
 		for _, c := range store.Currencies {
 			if strings.EqualFold(c.Code, data.DefaultCurrencyCode) {
@@ -150,11 +151,21 @@ func (s *StoreService) Update(data *types.UpdateStoreInput) (*models.Store, *uti
 		store.DefaultCurrencyCode = currency.Code
 	}
 
-	store.Name = data.Name
-	store.SwapLinkTemplate = data.SwapLinkTemplate
-	store.PaymentLinkTemplate = data.PaymentLinkTemplate
-	store.InviteLinkTemplate = data.InviteLinkTemplate
-	store.Metadata = utils.MergeMaps(store.Metadata, data.Metadata)
+	if !reflect.ValueOf(data.Name).IsZero() {
+		store.Name = data.Name
+	}
+	if !reflect.ValueOf(data.SwapLinkTemplate).IsZero() {
+		store.SwapLinkTemplate = data.SwapLinkTemplate
+	}
+	if !reflect.ValueOf(data.PaymentLinkTemplate).IsZero() {
+		store.PaymentLinkTemplate = data.PaymentLinkTemplate
+	}
+	if !reflect.ValueOf(data.InviteLinkTemplate).IsZero() {
+		store.InviteLinkTemplate = data.InviteLinkTemplate
+	}
+	if data.Metadata != nil {
+		store.Metadata = utils.MergeMaps(store.Metadata, data.Metadata)
+	}
 
 	if err := s.r.StoreRepository().Update(s.ctx, store); err != nil {
 		return nil, err

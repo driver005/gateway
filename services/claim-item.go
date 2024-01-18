@@ -77,11 +77,11 @@ func (s *ClaimItemService) Update(id uuid.UUID, data *types.UpdateClaimItemInput
 		return nil, err
 	}
 
-	if data.Note != "" {
+	if !reflect.ValueOf(data.Note).IsZero() {
 		item.Note = data.Note
 	}
 
-	if data.Reason != "" {
+	if !reflect.ValueOf(data.Reason).IsZero() {
 		item.Reason = data.Reason
 	}
 

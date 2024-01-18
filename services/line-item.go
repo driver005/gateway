@@ -343,13 +343,9 @@ func (s *LineItemService) CloneTo(ids uuid.UUIDs, data *models.LineItem, options
 	if err != nil {
 		return nil, err
 	}
-	orderId := data.OrderId
-	swapId := data.SwapId
-	claimOrderId := data.ClaimOrderId
-	cartId := data.CartId
-	orderEditId := data.OrderEditId
+
 	var originalItemId uuid.NullUUID
-	if orderId.UUID == uuid.Nil && swapId.UUID == uuid.Nil && claimOrderId.UUID == uuid.Nil && cartId.UUID == uuid.Nil && orderEditId.UUID == uuid.Nil {
+	if data.OrderId.UUID == uuid.Nil && data.SwapId.UUID == uuid.Nil && data.ClaimOrderId.UUID == uuid.Nil && data.CartId.UUID == uuid.Nil && data.OrderEditId.UUID == uuid.Nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Unable to clone a line item that is not attached to at least one of: order_edit, order, swap, claim or cart.",
@@ -361,12 +357,25 @@ func (s *LineItemService) CloneTo(ids uuid.UUIDs, data *models.LineItem, options
 			originalItemId = uuid.NullUUID{UUID: item.Id}
 		}
 		item.Id = uuid.Nil
-		item.OrderId = orderId
-		item.SwapId = swapId
-		item.ClaimOrderId = claimOrderId
-		item.CartId = cartId
-		item.OrderEditId = orderEditId
-		item.OriginalItemId = originalItemId
+
+		if !reflect.ValueOf(data.OrderId).IsZero() {
+			item.OrderId = data.OrderId
+		}
+		if !reflect.ValueOf(data.SwapId).IsZero() {
+			item.SwapId = data.SwapId
+		}
+		if !reflect.ValueOf(data.ClaimOrderId).IsZero() {
+			item.ClaimOrderId = data.ClaimOrderId
+		}
+		if !reflect.ValueOf(data.CartId).IsZero() {
+			item.CartId = data.CartId
+		}
+		if !reflect.ValueOf(data.OrderEditId).IsZero() {
+			item.OrderEditId = data.OrderEditId
+		}
+		if !reflect.ValueOf(originalItemId).IsZero() {
+			item.OriginalItemId = originalItemId
+		}
 		item.TaxLines = []models.LineItemTaxLine{}
 		for _, taxLine := range item.TaxLines {
 			taxLine.Id = uuid.Nil

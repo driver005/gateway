@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 	"slices"
 
 	"github.com/driver005/gateway/core"
@@ -220,10 +221,10 @@ func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product
 	var err *utils.ApplictaionError
 	var product *models.Product
 
-	if data.Thumbnail == "" && len(data.Images) > 0 {
+	if !reflect.ValueOf(data.Thumbnail).IsZero() && len(data.Images) > 0 {
 		product.Thumbnail = data.Images[0]
 	}
-	if data.IsGiftcard {
+	if !reflect.ValueOf(data.IsGiftcard).IsZero() {
 		product.Discountable = false
 	}
 
@@ -360,7 +361,7 @@ func (s *ProductService) Update(id uuid.UUID, data *types.UpdateProductInput) (*
 		return nil, err
 	}
 
-	if product.Thumbnail == "" && data.Thumbnail == "" && len(data.Images) > 0 {
+	if product.Thumbnail == "" && reflect.ValueOf(data.Thumbnail).IsZero() && len(data.Images) > 0 {
 		data.Thumbnail = data.Images[0]
 	}
 
@@ -448,27 +449,69 @@ func (s *ProductService) Update(id uuid.UUID, data *types.UpdateProductInput) (*
 	// 	product.Variants = variants
 	// }
 
-	product.Title = data.Title
-	product.Subtitle = data.Subtitle
-	product.ProfileId = uuid.NullUUID{UUID: data.ProfileId}
-	product.Description = data.Description
-	product.IsGiftcard = data.IsGiftcard
-	product.Discountable = data.Discountable
-	product.Thumbnail = data.Thumbnail
-	product.Handle = data.Handle
-	product.Status = data.Status
-	product.CollectionId = uuid.NullUUID{UUID: data.CollectionId}
-	product.Options = options
-	product.Weight = data.Weight
-	product.Length = data.Length
-	product.Height = data.Height
-	product.Width = data.Width
-	product.HsCode = data.HSCode
-	product.OriginCountry = data.OriginCountry
-	product.MIdCode = data.MIdCode
-	product.Material = data.Material
-	product.Metadata = data.Metadata
-	product.ExternalId = data.ExternalId
+	if !reflect.ValueOf(data.Title).IsZero() {
+		product.Title = data.Title
+	}
+	if !reflect.ValueOf(data.Subtitle).IsZero() {
+		product.Subtitle = data.Subtitle
+	}
+	if !reflect.ValueOf(data.ProfileId).IsZero() {
+		product.ProfileId = uuid.NullUUID{UUID: data.ProfileId}
+	}
+	if !reflect.ValueOf(data.Description).IsZero() {
+		product.Description = data.Description
+	}
+	if !reflect.ValueOf(data.IsGiftcard).IsZero() {
+		product.IsGiftcard = data.IsGiftcard
+	}
+	if !reflect.ValueOf(data.Discountable).IsZero() {
+		product.Discountable = data.Discountable
+	}
+	if !reflect.ValueOf(data.Thumbnail).IsZero() {
+		product.Thumbnail = data.Thumbnail
+	}
+	if !reflect.ValueOf(data.Handle).IsZero() {
+		product.Handle = data.Handle
+	}
+	if !reflect.ValueOf(data.Status).IsZero() {
+		product.Status = data.Status
+	}
+	if !reflect.ValueOf(data.CollectionId).IsZero() {
+		product.CollectionId = uuid.NullUUID{UUID: data.CollectionId}
+	}
+	if !reflect.ValueOf(data.Options).IsZero() {
+		product.Options = options
+	}
+	if !reflect.ValueOf(data.Weight).IsZero() {
+		product.Weight = data.Weight
+	}
+	if !reflect.ValueOf(data.Length).IsZero() {
+		product.Length = data.Length
+	}
+	if !reflect.ValueOf(data.Height).IsZero() {
+		product.Height = data.Height
+	}
+	if !reflect.ValueOf(data.Width).IsZero() {
+		product.Width = data.Width
+	}
+	if !reflect.ValueOf(data.HSCode).IsZero() {
+		product.HsCode = data.HSCode
+	}
+	if !reflect.ValueOf(data.OriginCountry).IsZero() {
+		product.OriginCountry = data.OriginCountry
+	}
+	if !reflect.ValueOf(data.MIdCode).IsZero() {
+		product.MIdCode = data.MIdCode
+	}
+	if !reflect.ValueOf(data.Material).IsZero() {
+		product.Material = data.Material
+	}
+	if data.Metadata != nil {
+		product.Metadata = utils.MergeMaps(product.Metadata, data.Metadata)
+	}
+	if !reflect.ValueOf(data.ExternalId).IsZero() {
+		product.ExternalId = data.ExternalId
+	}
 
 	if err = s.r.ProductRepository().Save(s.ctx, product); err != nil {
 		return nil, err

@@ -9,7 +9,12 @@ type CustomerGroupsBatchCustomer struct {
 	Id uuid.UUID `json:"id"`
 }
 
-type CustomerGroupUpdate struct {
+type CreateCustomerGroup struct {
+	Name     string     `json:"name,omitempty" validate:"omitempty"`
+	Metadata core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
+}
+
+type UpdateCustomerGroup struct {
 	Name     string     `json:"name,omitempty" validate:"omitempty"`
 	Metadata core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
 }

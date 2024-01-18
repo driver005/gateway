@@ -217,8 +217,12 @@ func (s *ShippingProfileService) Update(profileId uuid.UUID, data *types.UpdateS
 		profile.Metadata = utils.MergeMaps(profile.Metadata, data.Metadata)
 	}
 
-	profile.Name = data.Name
-	profile.Type = data.Type
+	if !reflect.ValueOf(data.Name).IsZero() {
+		profile.Name = data.Name
+	}
+	if !reflect.ValueOf(data.Type).IsZero() {
+		profile.Type = data.Type
+	}
 
 	if err := s.r.ShippingProfileRepository().Save(s.ctx, profile); err != nil {
 		return nil, err

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/driver005/gateway/config"
@@ -17,6 +19,7 @@ import (
 	"github.com/driver005/gateway/services"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/sarulabs/di"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -28,7 +31,6 @@ import (
 	dbLogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
-	_ "github.com/driver005/gateway/docs"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/session"
@@ -55,6 +57,7 @@ type Base struct {
 	router       *fiber.App
 	routes       *routes.Routes
 	migrations   *migrations.Handler
+	validator    *validator.Validate
 
 	//Interfaces
 	priceSelectionStrategy interfaces.IPriceSelectionStrategy
@@ -319,6 +322,25 @@ func (m *Base) Config() *config.Config {
 		m.config = con
 	}
 	return m.config
+}
+
+func (m *Base) Validator() *validator.Validate {
+	if m.validator == nil {
+		validate := validator.New()
+
+		// register function to get tag name from json tags.
+		validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
+
+		m.validator = validate
+	}
+
+	return m.validator
 }
 
 func (m *Base) Tracer(ctx context.Context) trace.Tracer {

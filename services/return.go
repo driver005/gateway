@@ -227,23 +227,31 @@ func (s *ReturnService) Update(returnId uuid.UUID, data *types.UpdateReturnInput
 		)
 	}
 
-	var returns []models.ReturnItem
-	for _, r := range data.Items {
-		returns = append(returns, models.ReturnItem{
-			ItemId:   uuid.NullUUID{UUID: r.ItemId},
-			Quantity: r.Quantity,
-			ReasonId: uuid.NullUUID{UUID: r.ReasonId},
-			Note:     r.Note,
-		})
-	}
+	if !reflect.ValueOf(data.Items).IsZero() {
+		var returns []models.ReturnItem
+		for _, r := range data.Items {
+			returns = append(returns, models.ReturnItem{
+				ItemId:   uuid.NullUUID{UUID: r.ItemId},
+				Quantity: r.Quantity,
+				ReasonId: uuid.NullUUID{UUID: r.ReasonId},
+				Note:     r.Note,
+			})
+		}
 
-	ret.Items = returns
-	ret.ShippingMethod = &models.ShippingMethod{
-		ShippingOptionId: uuid.NullUUID{UUID: data.ShippingMethod.OptionId},
-		Price:            data.ShippingMethod.Price,
+		ret.Items = returns
 	}
-	ret.NoNotification = data.NoNotification
-	ret.Metadata = data.Metadata
+	if data.ShippingMethod != nil {
+		ret.ShippingMethod = &models.ShippingMethod{
+			ShippingOptionId: uuid.NullUUID{UUID: data.ShippingMethod.OptionId},
+			Price:            data.ShippingMethod.Price,
+		}
+	}
+	if !reflect.ValueOf(data.NoNotification).IsZero() {
+		ret.NoNotification = data.NoNotification
+	}
+	if data.Metadata != nil {
+		ret.Metadata = utils.MergeMaps(ret.Metadata, data.Metadata)
+	}
 
 	if err := s.r.ReturnRepository().Update(s.ctx, ret); err != nil {
 		return nil, err
@@ -257,18 +265,21 @@ func (s *ReturnService) Create(data *types.CreateReturnInput) (*models.Return, *
 	if data.SwapId == uuid.Nil {
 		data.OrderId = uuid.Nil
 	}
-	for _, item := range data.Items {
-		line, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(item.ItemId, &sql.Options{Relations: []string{"order", "swap", "claim_order"}})
-		if err != nil {
-			return nil, err
-		}
-		if line.Order.CanceledAt != nil || line.Swap.CanceledAt != nil || line.ClaimOrder.CanceledAt != nil {
-			return nil, utils.NewApplictaionError(
-				utils.INVALID_DATA,
-				"Cannot Create a return for a canceled item.",
-				"500",
-				nil,
-			)
+
+	if data.Items != nil {
+		for _, item := range data.Items {
+			line, err := s.r.LineItemService().SetContext(s.ctx).Retrieve(item.ItemId, &sql.Options{Relations: []string{"order", "swap", "claim_order"}})
+			if err != nil {
+				return nil, err
+			}
+			if line.Order.CanceledAt != nil || line.Swap.CanceledAt != nil || line.ClaimOrder.CanceledAt != nil {
+				return nil, utils.NewApplictaionError(
+					utils.INVALID_DATA,
+					"Cannot Create a return for a canceled item.",
+					"500",
+					nil,
+				)
+			}
 		}
 	}
 	order, err := s.r.OrderService().SetContext(s.ctx).RetrieveById(orderId, &sql.Options{Selects: []string{"refunded_total", "total", "refundable_amount"}, Relations: []string{"swaps", "swaps.additional_items", "swaps.additional_items.tax_lines", "claims", "claims.additional_items", "claims.additional_items.tax_lines", "items", "items.tax_lines", "region", "region.tax_rates"}})
@@ -287,15 +298,18 @@ func (s *ReturnService) Create(data *types.CreateReturnInput) (*models.Return, *
 		ids = append(ids, item.ReturnId.UUID)
 	}
 
-	toRefund := data.RefundAmount
-	if toRefund == 0.0 {
-		toRefund, err = s.r.TotalsService().GetRefundTotal(order, lineItem)
-		if err != nil {
-			return nil, err
+	toRefund := 0.0
+	if !reflect.ValueOf(data.RefundAmount).IsZero() {
+		toRefund = data.RefundAmount
+		if toRefund == 0.0 {
+			refund, err := s.r.TotalsService().GetRefundTotal(order, lineItem)
+			if err != nil {
+				return nil, err
+			}
+			toRefund = refund
 		}
 	}
-	method := data.ShippingMethod
-	data.ShippingMethod = nil
+
 	returnObject := &models.Return{
 		OrderId:      uuid.NullUUID{UUID: orderId},
 		Status:       models.ReturnRequested,
@@ -336,8 +350,8 @@ func (s *ReturnService) Create(data *types.CreateReturnInput) (*models.Return, *
 		return nil, err
 	}
 
-	if method != nil && method.OptionId != uuid.Nil {
-		shippingMethod, err := s.r.ShippingOptionService().SetContext(s.ctx).CreateShippingMethod(method.OptionId, map[string]interface{}{}, &types.CreateShippingMethodDto{CreateShippingMethod: types.CreateShippingMethod{Price: method.Price, ReturnId: returnObject.Id}})
+	if data.ShippingMethod != nil && data.ShippingMethod.OptionId != uuid.Nil {
+		shippingMethod, err := s.r.ShippingOptionService().SetContext(s.ctx).CreateShippingMethod(data.ShippingMethod.OptionId, map[string]interface{}{}, &types.CreateShippingMethodDto{CreateShippingMethod: types.CreateShippingMethod{Price: data.ShippingMethod.Price, ReturnId: returnObject.Id}})
 		if err != nil {
 			return nil, err
 		}
@@ -378,7 +392,7 @@ func (s *ReturnService) Create(data *types.CreateReturnInput) (*models.Return, *
 		for _, tl := range taxLines {
 			shippingTotal += math.Round(float64(shippingPriceWithoutTax) * (tl.Rate / 100))
 		}
-		if data.RefundAmount == 0.0 {
+		if !reflect.ValueOf(data.RefundAmount).IsZero() {
 			returnObject.RefundAmount = math.Floor(toRefund) - shippingTotal
 			if err := s.r.ReturnRepository().Save(s.ctx, returnObject); err != nil {
 				return nil, err

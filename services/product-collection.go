@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
@@ -121,9 +122,15 @@ func (s *ProductCollectionService) Update(collectionId uuid.UUID, data *types.Up
 		return nil, err
 	}
 
-	productCollection.Metadata = data.Metadata
-	productCollection.Title = data.Title
-	productCollection.Handle = data.Handle
+	if data.Metadata != nil {
+		productCollection.Metadata = utils.MergeMaps(productCollection.Metadata, data.Metadata)
+	}
+	if !reflect.ValueOf(data.Title).IsZero() {
+		productCollection.Title = data.Title
+	}
+	if !reflect.ValueOf(data.Handle).IsZero() {
+		productCollection.Handle = data.Handle
+	}
 
 	if err := s.r.ProductCollectionRepository().Save(s.ctx, productCollection); err != nil {
 		return nil, err

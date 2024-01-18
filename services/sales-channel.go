@@ -117,9 +117,15 @@ func (s *SalesChannelService) Update(salesChannelId uuid.UUID, data *types.Updat
 		return nil, err
 	}
 
-	salesChannel.Name = data.Name
-	salesChannel.Description = data.Description
-	salesChannel.IsDisabled = data.IsDisabled
+	if !reflect.ValueOf(data.Name).IsZero() {
+		salesChannel.Name = data.Name
+	}
+	if !reflect.ValueOf(data.Description).IsZero() {
+		salesChannel.Description = data.Description
+	}
+	if !reflect.ValueOf(data.IsDisabled).IsZero() {
+		salesChannel.IsDisabled = data.IsDisabled
+	}
 
 	if err := s.r.SalesChannelRepository().Save(s.ctx, salesChannel); err != nil {
 		return nil, err

@@ -4,6 +4,7 @@ import (
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/middlewares"
 	"github.com/driver005/gateway/services"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3/middleware/session"
 )
 
@@ -11,6 +12,8 @@ type Registry interface {
 	Session() *session.Store
 
 	Middleware() *middlewares.Handler
+
+	Validator() *validator.Validate
 
 	//Services
 	AnalyticsConfigService() *services.AnalyticsConfigService

@@ -100,7 +100,9 @@ func (s *PublishableApiKeyService) Update(id uuid.UUID, data *types.UpdatePublis
 		return nil, err
 	}
 
-	pubKey.Title = data.Title
+	if !reflect.ValueOf(data.Title).IsZero() {
+		pubKey.Title = data.Title
+	}
 
 	if err := s.r.PublishableApiKeyRepository().Save(s.ctx, pubKey); err != nil {
 		return nil, err

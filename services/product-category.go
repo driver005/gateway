@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
@@ -150,14 +151,30 @@ func (s *ProductCategoryService) Update(productCategoryId uuid.UUID, data *types
 		return productCategory, err
 	}
 
-	productCategory.Metadata = data.Metadata
-	productCategory.Handle = data.Handle
-	productCategory.IsInternal = data.IsInternal
-	productCategory.IsActive = data.IsActive
-	productCategory.ParentCategoryId = uuid.NullUUID{UUID: data.ParentCategoryId}
-	productCategory.ParentCategory = data.ParentCategory
-	productCategory.Rank = data.Rank
-	productCategory.Name = data.Name
+	if data.Metadata != nil {
+		productCategory.Metadata = utils.MergeMaps(productCategory.Metadata, data.Metadata)
+	}
+	if !reflect.ValueOf(data.Handle).IsZero() {
+		productCategory.Handle = data.Handle
+	}
+	if !reflect.ValueOf(data.IsInternal).IsZero() {
+		productCategory.IsInternal = data.IsInternal
+	}
+	if !reflect.ValueOf(data.IsActive).IsZero() {
+		productCategory.IsActive = data.IsActive
+	}
+	if !reflect.ValueOf(data.ParentCategoryId).IsZero() {
+		productCategory.ParentCategoryId = uuid.NullUUID{UUID: data.ParentCategoryId}
+	}
+	if !reflect.ValueOf(data.ParentCategory).IsZero() {
+		productCategory.ParentCategory = data.ParentCategory
+	}
+	if !reflect.ValueOf(data.Rank).IsZero() {
+		productCategory.Rank = data.Rank
+	}
+	if !reflect.ValueOf(data.Name).IsZero() {
+		productCategory.Name = data.Name
+	}
 
 	if err := s.r.ProductCategoryRepository().Save(s.ctx, productCategory); err != nil {
 		return nil, err

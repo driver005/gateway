@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/interfaces"
@@ -96,7 +97,9 @@ func (s *OAuthService) Update(id uuid.UUID, data *types.UpdateOauthInput) (*mode
 		return nil, err
 	}
 
-	oauth.Data = data.Data
+	if !reflect.ValueOf(data.Data).IsZero() {
+		oauth.Data = data.Data
+	}
 
 	if err := s.r.OAuthRepository().Save(s.ctx, oauth); err != nil {
 		return nil, err
