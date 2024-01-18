@@ -2,10 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"reflect"
-
-	"github.com/driver005/gateway/models"
 	// "github.com/gofiber/fiber/v3"
 	// "github.com/gofiber/fiber/v3/middleware/cors"
 	// "github.com/gofiber/fiber/v3/middleware/logger"
@@ -34,13 +30,6 @@ func main() {
 	// r := registry.New(ctx)
 
 	// r.Setup()
-
-	model := models.Address{
-		Address1: "TEST",
-	}
-
-	fmt.Println(reflect.ValueOf(model.Address1).IsZero())
-	fmt.Println(reflect.ValueOf(model.Address2).IsZero())
 }
 
 // var testUUID = uuid.Must(uuid.Parse("f47ac10b-58cc-0372-8567-0e02b2c3d479"))
