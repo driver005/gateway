@@ -23,6 +23,11 @@ func (m *DraftOrder) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Delete("/:id/line-items/:line_id", m.DeleteLineItem)
+	route.Post("/:id/line-items", m.CreateLineItem)
+	route.Post("/:id/line-items/:line_id", m.UpdateLineItem)
+	route.Post("/:id/pay", m.RegisterPayment)
 }
 
 func (m *DraftOrder) Get(context fiber.Ctx) error {
@@ -110,5 +115,9 @@ func (m *DraftOrder) RegisterPayment(context fiber.Ctx) error {
 }
 
 func (m *DraftOrder) UpdateLineItem(context fiber.Ctx) error {
+	return nil
+}
+
+func (m *DraftOrder) DeleteLineItem(context fiber.Ctx) error {
 	return nil
 }

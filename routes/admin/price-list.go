@@ -22,6 +22,13 @@ func (m *PriceList) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Get("/:id/products", m.ListPriceListProducts)
+	route.Delete("/:id/products/:product_id/prices", m.DeleteProductPrices)
+	route.Delete("/:id/products/prices/batch", m.DeleteProductPricesBatch)
+	route.Delete("/:id/variants/:variant_id/prices", m.DeleteVariantPrices)
+	route.Delete("/:id/prices/batch", m.DeletePricesBatch)
+	route.Post("/:id/prices/batch", m.AddPricesBatch)
 }
 
 func (m *PriceList) Get(context fiber.Ctx) error {

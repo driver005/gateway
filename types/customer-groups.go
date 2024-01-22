@@ -5,6 +5,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type CustomersToCustomerGroup struct {
+	CustomerIds []uuid.UUID `json:"customer_ids"`
+}
+
 type CustomerGroupsBatchCustomer struct {
 	Id uuid.UUID `json:"id"`
 }

@@ -10,7 +10,7 @@ func New(r Registry) *Routes {
 	}
 }
 
-func (r Routes) SetAdminRoutes() {
+func (r Routes) SetRoutes() {
 	admin := r.r.AdminRouter()
 	r.r.AdminAuth().SetRoutes(admin)
 	r.r.AdminBatch().SetRoutes(admin)

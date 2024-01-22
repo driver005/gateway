@@ -24,6 +24,11 @@ func (m *PublishableApiKey) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/:id/revoke", m.Revoke)
+	route.Get("/:id/sales-channels", m.ListChannels)
+	route.Post("/:id/sales-channels/batch", m.AddChannelsBatch)
+	route.Delete("/:id/sales-channels/batch", m.DeleteChannelsBatch)
 }
 
 func (m *PublishableApiKey) Get(context fiber.Ctx) error {

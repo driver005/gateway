@@ -2,6 +2,7 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
 )
@@ -22,6 +23,10 @@ func (m *CustomerGroup) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Get("/:id/customers", m.GetBatch)
+	route.Post("/:id/customers/batch", m.AddCustomers)
+	route.Delete("/:id/customers/batch", m.DeleteCustomers)
 }
 
 func (m *CustomerGroup) Get(context fiber.Ctx) error {
@@ -101,13 +106,52 @@ func (m *CustomerGroup) Delete(context fiber.Ctx) error {
 }
 
 func (m *CustomerGroup) AddCustomers(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.CustomersToCustomerGroup](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.CustomerGroupService().SetContext(context.Context()).AddCustomers(id, model.CustomerIds)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *CustomerGroup) GetBatch(context fiber.Ctx) error {
-	return nil
+	model, config, err := api.BindList[types.FilterableCustomerGroup](context)
+	if err != nil {
+		return err
+	}
+	groups, count, err := m.r.CustomerGroupService().SetContext(context.Context()).ListAndCount(model, config)
+	if err != nil {
+		return err
+	}
+
+	var result []models.Customer
+	for _, group := range groups {
+		result = append(result, group.Customers...)
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }
 
-func (m *CustomerGroup) DeleteBatch(context fiber.Ctx) error {
-	return nil
+func (m *CustomerGroup) DeleteCustomers(context fiber.Ctx) error {
+	model, id, err := api.BindUpdate[types.CustomersToCustomerGroup](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.CustomerGroupService().SetContext(context.Context()).RemoveCustomer(id, model.CustomerIds)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

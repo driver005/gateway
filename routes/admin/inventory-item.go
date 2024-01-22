@@ -18,6 +18,11 @@ func (m *InventoryItem) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Get("/:id/location-levels", m.ListLocationLevels)
+	route.Post("/:id/location-levels", m.CreateLocationLevel)
+	route.Post("/:id/location-levels/:location_id", m.UpdateLocationLevel)
+	route.Delete("/:id/location-levels/:location_id", m.DeleteLocationLevels)
 }
 
 func (m *InventoryItem) Get(context fiber.Ctx) error {

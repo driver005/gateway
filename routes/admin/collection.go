@@ -22,6 +22,9 @@ func (m *Collection) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/:id/products", m.AddProducts)
+	route.Delete("/:id/products", m.RemoveProducts)
 }
 
 func (m *Collection) Get(context fiber.Ctx) error {
@@ -101,9 +104,32 @@ func (m *Collection) Delete(context fiber.Ctx) error {
 }
 
 func (m *Collection) AddProducts(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.AddProductsToCollectionInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.ProductCollectionService().AddProducts(id, model.ProductIds)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Collection) RemoveProducts(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.AddProductsToCollectionInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.ProductCollectionService().RemoveProducts(id, model.ProductIds); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":               id,
+		"object":           "product-collection",
+		"removed_products": model.ProductIds,
+	})
 }

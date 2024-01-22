@@ -17,6 +17,9 @@ func NewPayment(r Registry) *Payment {
 func (m *Payment) SetRoutes(router fiber.Router) {
 	route := router.Group("/payments")
 	route.Get("/:id", m.Get)
+
+	route.Post("/:id/capture", m.Capture)
+	route.Post("/:id/refund", m.Refund)
 }
 
 func (m *Payment) Get(context fiber.Ctx) error {

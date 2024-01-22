@@ -18,6 +18,9 @@ func NewReturn(r Registry) *Return {
 func (m *Return) SetRoutes(router fiber.Router) {
 	route := router.Group("/returns")
 	route.Get("/", m.List)
+
+	route.Post("/:id/receive", m.Receive)
+	route.Post("/:id/cancel", m.Cancel)
 }
 
 func (m *Return) List(context fiber.Ctx) error {

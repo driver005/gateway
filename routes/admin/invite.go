@@ -20,6 +20,8 @@ func (m *Invite) SetRoutes(router fiber.Router) {
 	route.Get("/", m.List)
 	route.Post("/", m.Create)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/:id/resend", m.Resend)
 }
 
 func (m *Invite) List(context fiber.Ctx) error {

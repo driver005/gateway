@@ -22,6 +22,13 @@ func (m *TaxRate) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/:id/products/batch", m.AddToProducts)
+	route.Post("/:id/product-types/batch", m.AddProductTypes)
+	route.Post("/:id/shipping-options/batch", m.AddToShippingOptions)
+	route.Delete("/:id/products/batch", m.RemoveFromProducts)
+	route.Delete("/:id/product-types/batch", m.RemoveFromProductTypes)
+	route.Delete("/:id/shipping-options/batch", m.RemoveFromShippingOptions)
 }
 
 func (m *TaxRate) Get(context fiber.Ctx) error {

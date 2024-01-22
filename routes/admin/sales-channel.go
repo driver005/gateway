@@ -22,6 +22,11 @@ func (m *SalesChannel) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/stock-locations", m.AddStockLocation)
+	route.Delete("/stock-locations", m.RemoveStockLocation)
+	route.Post("/products/batch", m.AddProductsBatch)
+	route.Delete("/products/batch", m.DeleteProductsBatch)
 }
 
 func (m *SalesChannel) Get(context fiber.Ctx) error {

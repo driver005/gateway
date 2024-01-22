@@ -22,6 +22,14 @@ func (m *Region) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Get("/:id/fulfillment-options", m.GetFulfillmentOptions)
+	route.Post("/:id/countries", m.AddCountry)
+	route.Delete("/:id/countries:country_code", m.RemoveCountry)
+	route.Post("/:id/payment-providers", m.AddPaymentProvider)
+	route.Delete("/:id/payment-providers/:provider_id", m.RemovePaymentProvider)
+	route.Post("/:id/fulfillment-providers", m.AddFullfilmentProvider)
+	route.Delete("/:id/fulfillment-providers/:provider_id", m.RemoveFullfilmentProvider)
 }
 
 func (m *Region) Get(context fiber.Ctx) error {

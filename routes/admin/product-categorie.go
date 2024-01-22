@@ -22,6 +22,9 @@ func (m *ProductCategory) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/:id/products/batch", m.AddProductsBatch)
+	route.Delete("/:id/products/batch", m.DeleteProductsBatch)
 }
 
 func (m *ProductCategory) Get(context fiber.Ctx) error {

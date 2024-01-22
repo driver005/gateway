@@ -498,7 +498,7 @@ func (m *Base) Routes() *routes.Routes {
 
 func (m *Base) AddRoutes(router *fiber.App) {
 	m.NewRouter(router)
-	m.Routes().SetAdminRoutes()
+	m.Routes().SetRoutes()
 }
 
 func (m *Base) Setup() {

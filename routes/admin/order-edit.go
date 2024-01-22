@@ -23,6 +23,14 @@ func (m *OrderEdit) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/:id/cancel", m.Cancel)
+	route.Post("/:id/confirm", m.Confirm)
+	route.Post("/:id/request", m.RequestConfirmation)
+	route.Post("/:id/items", m.AddLineItem)
+	route.Post("/:id/items/:item_id", m.UpdateLineItem)
+	route.Delete("/:id/items/:item_id", m.DeleteLineItem)
+	route.Delete("/:id/changes/:change_id", m.DeleteItemChange)
 }
 
 func (m *OrderEdit) Get(context fiber.Ctx) error {

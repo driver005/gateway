@@ -20,6 +20,35 @@ func (m *Order) SetRoutes(router fiber.Router) {
 	route.Get("/:id", m.Get)
 	route.Get("/", m.List)
 	route.Post("/:id", m.Update)
+
+	route.Post("/:id/complete", m.Complete)
+	route.Post("/:id/cancel", m.Cancel)
+	route.Post("/:id/archive", m.Archive)
+	route.Post("/:id/refund", m.RefundPayment)
+	route.Post("/:id/capture", m.CapturePayment)
+	route.Post("/:id/shipment", m.CreateShipment)
+	route.Post("/:id/return", m.RequestReturn)
+	route.Post("/:id/shipping-methods", m.AddShippingMethod)
+
+	route.Post("/:id/swaps", m.CreateSwap)
+	route.Post("/:id/swaps/:swap_id/cancel", m.CancelSwap)
+	route.Post("/:id/swaps/:swap_id/fulfillments", m.FulfillSwap)
+	route.Post("/:id/swaps/:swap_id/shipments", m.CreateSwapShipment)
+	route.Post("/:id/swaps/:swap_id/process-payment", m.ProcessSwapPayment)
+
+	route.Post("/:id/claims", m.CreateClaim)
+	route.Post("/:id/claims/:claim_id/cancel", m.CancelClaim)
+	route.Post("/:id/claims/:claim_id", m.UpdateClaim)
+	route.Post("/:id/claims/:claim_id/fulfillments", m.FulfillClaim)
+	route.Post("/:id/claims/:claim_id/shipments", m.CreateClaimShippment)
+
+	route.Post("/:id/reservations", m.GetReservations)
+	route.Post("/:id/line-items/:line_item_id/reserve", m.CreateReservationForLineItem)
+
+	route.Post("/:id/fulfillment", m.CreateFulfillment)
+	route.Post("/:id/fulfillments/:fulfillment_id/cancel", m.CancelFullfillment)
+	route.Post("/:id/swaps/:swap_id/fulfillments/:fulfillment_id/cancel", m.CancelFullfillmentSwap)
+	route.Post("/:id/claims/:claim_id/fulfillments/:fulfillment_id/cancel", m.CancelFullfillmentClaim)
 }
 
 func (m *Order) Get(context fiber.Ctx) error {

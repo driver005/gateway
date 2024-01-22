@@ -2,29 +2,11 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
-	"github.com/driver005/gateway/core"
-	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
 )
-
-type AdminCreateUserRequest struct {
-	Email     string          `validate:"email"`
-	FirstName string          `validate:"omitempty"`
-	LastName  string          `validate:"omitempty"`
-	Role      models.UserRole `validate:"omitempty"`
-	Password  string          `validate:"required"`
-}
-
-type AdminUpdateUserRequest struct {
-	FirstName string          `json:"first_name,omitempty"`
-	LastName  string          `json:"last_name,omitempty"`
-	Role      models.UserRole `json:"role,omitempty"`
-	ApiToken  string          `json:"api_token,omitempty"`
-	Metadata  core.JSONB      `json:"metadata,omitempty"`
-}
 
 type User struct {
 	r Registry

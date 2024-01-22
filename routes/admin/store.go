@@ -19,8 +19,13 @@ func NewStore(r Registry) *Store {
 
 func (m *Store) SetRoutes(router fiber.Router) {
 	route := router.Group("/store")
-	route.Get("/:id", m.Get)
-	route.Post("/:id", m.Update)
+	route.Get("/", m.Get)
+	route.Post("/", m.Update)
+
+	route.Get("/payment-providers", m.ListPaymentProviders)
+	route.Get("/tax-providers", m.ListTaxProviders)
+	route.Post("/currencies/:currency_code", m.AddCurrency)
+	route.Delete("/currencies/:currency_code", m.RemoveCurrency)
 }
 
 func (m *Store) Get(context fiber.Ctx) error {

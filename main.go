@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+
+	"github.com/driver005/gateway/registry"
 	// "github.com/gofiber/fiber/v3"
 	// "github.com/gofiber/fiber/v3/middleware/cors"
 	// "github.com/gofiber/fiber/v3/middleware/logger"
@@ -27,9 +29,9 @@ var ctx = context.Background()
 // @BasePath /api
 // @schemes http
 func main() {
-	// r := registry.New(ctx)
+	r := registry.New(ctx)
 
-	// r.Setup()
+	r.Setup()
 }
 
 // var testUUID = uuid.Must(uuid.Parse("f47ac10b-58cc-0372-8567-0e02b2c3d479"))

@@ -18,6 +18,8 @@ func NewNotification(r Registry) *Notification {
 func (m *Notification) SetRoutes(router fiber.Router) {
 	route := router.Group("/notifications")
 	route.Get("/", m.List)
+
+	route.Post("/:id/resend", m.Resend)
 }
 
 func (m *Notification) List(context fiber.Ctx) error {

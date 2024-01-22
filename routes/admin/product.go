@@ -22,6 +22,17 @@ func (m *Product) SetRoutes(router fiber.Router) {
 	route.Post("/", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Get("/types", m.ListTypes)
+	route.Get("/tag-usage", m.ListTagUsageCount)
+	route.Get("/:id/variants", m.ListVariants)
+	route.Post("/:id/variants", m.CreateVariant)
+	route.Delete("/:id/variants/:variant_id", m.DeletOption)
+	route.Post("/:id/variants/:variant_id", m.UpdateVariant)
+	route.Post("/:id/options/:option_id", m.UpdateOption)
+	route.Delete("/:id/options/:option_id", m.DeletOption)
+	route.Post("/:id/options/", m.AddOption)
+	route.Post("/:id/metadata", m.SetMetadata)
 }
 
 func (m *Product) Get(context fiber.Ctx) error {

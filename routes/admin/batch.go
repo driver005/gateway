@@ -7,6 +7,7 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type AdminPostBatchesReq struct {
@@ -26,11 +27,12 @@ func NewBatch(r Registry) *Batch {
 
 func (m *Batch) SetRoutes(router fiber.Router) {
 	route := router.Group("/batch-jobs")
+	route.Get("/:id", m.Get, m.r.Middleware().CanAccessBatchJob)
 	route.Get("/", m.List)
 	route.Post("/", m.Create)
-	route.Get("/:id", m.Get, m.r.Middleware().CanAccessBatchJob)
-	route.Post("/:id/confirm", m.Confirm, m.r.Middleware().CanAccessBatchJob)
-	route.Delete("/:id/cancel", m.Cancel, m.r.Middleware().CanAccessBatchJob)
+
+	route.Post("/confirm", m.Confirm, m.r.Middleware().CanAccessBatchJob)
+	route.Post("/cancel", m.Cancel, m.r.Middleware().CanAccessBatchJob)
 }
 
 func (m *Batch) Get(context fiber.Ctx) error {
@@ -74,9 +76,23 @@ func (m *Batch) Create(context fiber.Ctx) error {
 }
 
 func (m *Batch) Cancel(context fiber.Ctx) error {
-	return nil
+	batch := context.Locals("batch-job").(*models.BatchJob)
+
+	model, err := m.r.BatchJobService().Cancel(uuid.Nil, batch)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(model)
 }
 
 func (m *Batch) Confirm(context fiber.Ctx) error {
-	return nil
+	batch := context.Locals("batch-job").(*models.BatchJob)
+
+	model, err := m.r.BatchJobService().Confirm(uuid.Nil, batch)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(model)
 }

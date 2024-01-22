@@ -20,6 +20,8 @@ func (m *PaymentCollection) SetRoutes(router fiber.Router) {
 	route.Get("/:id", m.Get)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
+
+	route.Post("/:id/authorize", m.MarkAuthorized)
 }
 
 func (m *PaymentCollection) Get(context fiber.Ctx) error {

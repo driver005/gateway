@@ -5,6 +5,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type AddProductsToCollectionInput struct {
+	ProductIds []uuid.UUID `json:"product_ids"`
+}
+
 type FilterableCollectionProps struct {
 	core.FilterModel
 	Title               string    `json:"title,omitempty" validate:"omitempty"`
