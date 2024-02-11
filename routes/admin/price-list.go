@@ -2,8 +2,10 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type PriceList struct {
@@ -18,8 +20,8 @@ func NewPriceList(r Registry) *PriceList {
 func (m *PriceList) SetRoutes(router fiber.Router) {
 	route := router.Group("/price-lists")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 
@@ -108,25 +110,126 @@ func (m *PriceList) Delete(context fiber.Ctx) error {
 }
 
 func (m *PriceList) AddPricesBatch(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.AddPriceListPrices](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.PriceListService().SetContext(context.Context()).AddPrices(id, model.Prices, model.Override); err != nil {
+		return err
+	}
+
+	result, err := m.r.PriceListService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *PriceList) DeletePricesBatch(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.DeletePriceListPrices](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.PriceListService().SetContext(context.Context()).DeletePrices(id, model.PriceIds); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"ids":     model.PriceIds,
+		"object":  "money-amount",
+		"deleted": true,
+	})
 }
 
 func (m *PriceList) DeleteProductPrices(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	productId, err := api.BindDelete(context, "product_id")
+	if err != nil {
+		return err
+	}
+
+	deletedIds, _, err := m.r.PriceListService().SetContext(context.Context()).DeleteProductPrices(id, uuid.UUIDs{productId})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"ids":     deletedIds,
+		"object":  "money-amount",
+		"deleted": true,
+	})
 }
 
 func (m *PriceList) DeleteProductPricesBatch(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.DeletePriceListPricesBatch](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	deletedIds, _, err := m.r.PriceListService().SetContext(context.Context()).DeleteProductPrices(id, model.ProductIds)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"ids":     deletedIds,
+		"object":  "money-amount",
+		"deleted": true,
+	})
 }
 
 func (m *PriceList) DeleteVariantPrices(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	variantId, err := api.BindDelete(context, "variant_id")
+	if err != nil {
+		return err
+	}
+
+	deletedIds, _, err := m.r.PriceListService().SetContext(context.Context()).DeleteVariantPrices(id, uuid.UUIDs{variantId})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"ids":     deletedIds,
+		"object":  "money-amount",
+		"deleted": true,
+	})
 }
 
 func (m *PriceList) ListPriceListProducts(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	model, config, err := api.BindList[types.FilterableProduct](context)
+	if err != nil {
+		return err
+	}
+
+	model.PriceListId = uuid.UUIDs{id}
+
+	result, count, err := m.r.PriceListService().SetContext(context.Context()).ListProducts(id, model, config, false)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data":   result,
+		"count":  count,
+		"offset": config.Skip,
+		"limit":  config.Take,
+	})
 }

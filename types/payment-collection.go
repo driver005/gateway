@@ -11,7 +11,7 @@ type CreatePaymentCollectionInput struct {
 	Type         models.PaymentCollectionType `json:"type"`
 	CurrencyCode string                       `json:"currency_code"`
 	Amount       float64                      `json:"amount"`
-	CreatedBy    string                       `json:"created_by"`
+	CreatedBy    uuid.UUID                    `json:"created_by"`
 	Metadata     core.JSONB                   `json:"metadata,omitempty" validate:"omitempty"`
 	Description  string                       `json:"description,omitempty" validate:"omitempty"`
 }

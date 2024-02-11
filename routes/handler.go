@@ -1,5 +1,10 @@
 package routes
 
+import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+)
+
 type Routes struct {
 	r Registry
 }
@@ -12,7 +17,20 @@ func New(r Registry) *Routes {
 
 func (r Routes) SetRoutes() {
 	admin := r.r.AdminRouter()
+
+	adminCors := r.r.Config().Server.AdminCors
+	admin.Use(cors.New(cors.Config{
+		AllowOrigins: adminCors,
+	}))
+
 	r.r.AdminAuth().SetRoutes(admin)
+	r.r.AdminUser().UnauthenticatedUserRoutes(admin)
+	r.r.AdminInvite().UnauthenticatedInviteRoutes(admin)
+
+	admin.Use(convertMiddleware(r.r.Middleware().Authenticate())...)
+
+	r.r.AdminAnalyticsConfig().SetRoutes(admin)
+	r.r.AdminApp().SetRoutes(admin)
 	r.r.AdminBatch().SetRoutes(admin)
 	r.r.AdminCollection().SetRoutes(admin)
 	r.r.AdminCurrencie().SetRoutes(admin)
@@ -49,4 +67,12 @@ func (r Routes) SetRoutes() {
 	r.r.AdminUpload().SetRoutes(admin)
 	r.r.AdminUser().SetRoutes(admin)
 	r.r.AdminVariant().SetRoutes(admin)
+}
+
+func convertMiddleware(m []func(fiber.Ctx) error) []any {
+	var result []any
+	for _, v := range m {
+		result = append(result, v)
+	}
+	return result
 }

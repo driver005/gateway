@@ -170,7 +170,7 @@ func (s *SwapService) ListAndCount(selector *types.FilterableSwap, config *sql.O
 	return res, count, nil
 }
 
-func (s *SwapService) Create(order *models.Order, returnItems []types.OrderReturnItem, additionalItems []models.LineItem, returnShipping *types.CreateClaimReturnShippingInput, custom map[string]interface{}) (*models.Swap, *utils.ApplictaionError) {
+func (s *SwapService) Create(order *models.Order, returnItems []types.OrderReturnItem, additionalItems []types.CreateClaimItemAdditionalItemInput, returnShipping *types.CreateClaimReturnShippingInput, custom map[string]interface{}) (*models.Swap, *utils.ApplictaionError) {
 	noNotification, _ := custom["no_notification"].(bool)
 	idempotencyKey, _ := custom["idempotency_key"].(string)
 	allowBackorder, _ := custom["allow_backorder"].(bool)
@@ -202,7 +202,7 @@ func (s *SwapService) Create(order *models.Order, returnItems []types.OrderRetur
 
 	var newItems []models.LineItem
 	for _, item := range additionalItems {
-		if item.VariantId.UUID == uuid.Nil {
+		if item.VariantId == uuid.Nil {
 			return nil, utils.NewApplictaionError(
 				utils.CONFLICT,
 				"You must include a variant when creating additional items on a swap",
@@ -211,7 +211,7 @@ func (s *SwapService) Create(order *models.Order, returnItems []types.OrderRetur
 			)
 		}
 		newItem, _ := s.r.LineItemService().SetContext(s.ctx).Generate(
-			item.VariantId.UUID,
+			item.VariantId,
 			nil,
 			order.RegionId.UUID,
 			item.Quantity,

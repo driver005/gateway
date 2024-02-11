@@ -30,7 +30,7 @@ func (s *SalesChannelLocationService) SetContext(context context.Context) *Sales
 	return s
 }
 
-func (s *SalesChannelLocationService) RemoveLocation(locationId uuid.UUID, salesChannelId uuid.UUID) *utils.ApplictaionError {
+func (s *SalesChannelLocationService) RemoveLocation(salesChannelId uuid.UUID, locationId uuid.UUID) *utils.ApplictaionError {
 	var res []models.SalesChannelLocation
 	query := sql.BuildQuery(
 		models.SalesChannelLocation{

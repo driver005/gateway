@@ -456,7 +456,7 @@ func (s *ProductVariantInventoryService) AdjustReservationsQuantityByLineItem(li
 		)
 	}
 
-	reservations, reservationCount, err := s.r.InventoryService().ListReservationItems(s.ctx, interfaces.FilterableReservationItemProps{LineItemId: lineItemId}, &sql.Options{Order: gox.NewString("created_at DESC")})
+	reservations, reservationCount, err := s.r.InventoryService().ListReservationItems(s.ctx, interfaces.FilterableReservationItemProps{LineItemId: []uuid.UUID{lineItemId}}, &sql.Options{Order: gox.NewString("created_at DESC")})
 	if err != nil {
 		return err
 	}
@@ -618,7 +618,7 @@ func (s *ProductVariantInventoryService) DeleteReservationsByLineItem(lineItemId
 	return nil
 }
 
-func (s *ProductVariantInventoryService) AdjustInventory(variantId uuid.UUID, locationId string, quantity int) *utils.ApplictaionError {
+func (s *ProductVariantInventoryService) AdjustInventory(variantId uuid.UUID, locationId uuid.UUID, quantity int) *utils.ApplictaionError {
 	if s.r.InventoryService() == nil {
 		variant, err := s.r.ProductVariantService().SetContext(s.ctx).Retrieve(variantId, &sql.Options{
 			Selects: []string{"id", "inventory_quantity", "manage_inventory"},
@@ -649,7 +649,7 @@ func (s *ProductVariantInventoryService) AdjustInventory(variantId uuid.UUID, lo
 	for _, inventoryPart := range variantInventory {
 		itemQuantity := inventoryPart.RequiredQuantity * quantity
 		wg.Add(1)
-		err := func(inventoryItemId uuid.UUID, locationId string, itemQuantity int) *utils.ApplictaionError {
+		err := func(inventoryItemId uuid.UUID, locationId uuid.UUID, itemQuantity int) *utils.ApplictaionError {
 			defer wg.Done()
 			_, err := s.r.InventoryService().AdjustInventory(s.ctx, inventoryItemId, locationId, itemQuantity)
 			if err != nil {

@@ -2,8 +2,10 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type SalesChannel struct {
@@ -18,8 +20,8 @@ func NewSalesChannel(r Registry) *SalesChannel {
 func (m *SalesChannel) SetRoutes(router fiber.Router) {
 	route := router.Group("/sales-channels")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 
@@ -106,17 +108,74 @@ func (m *SalesChannel) Delete(context fiber.Ctx) error {
 }
 
 func (m *SalesChannel) AddProductsBatch(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.AddProductsToCollectionInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	var productIds uuid.UUIDs
+	for _, p := range model.ProductIds {
+		productIds = append(productIds, p)
+	}
+
+	result, err := m.r.SalesChannelService().SetContext(context.Context()).AddProducts(id, productIds)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *SalesChannel) DeleteProductsBatch(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.AddProductsToCollectionInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	var productIds uuid.UUIDs
+	for _, p := range model.ProductIds {
+		productIds = append(productIds, p)
+	}
+
+	result, err := m.r.SalesChannelService().SetContext(context.Context()).RemoveProducts(id, productIds)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *SalesChannel) AddStockLocation(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.SalesChannelStockLocations](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.SalesChannelLocationService().SetContext(context.Context()).AssociateLocation(id, model.LocationId); err != nil {
+		return err
+	}
+
+	result, err := m.r.SalesChannelService().SetContext(context.Context()).RetrieveById(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *SalesChannel) RemoveStockLocation(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.SalesChannelStockLocations](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.SalesChannelLocationService().SetContext(context.Context()).RemoveLocation(id, model.LocationId); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      id,
+		"object":  "sales-channel",
+		"deleted": true,
+	})
 }

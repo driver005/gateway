@@ -49,7 +49,7 @@ type InventoryLevelDTO struct {
 type FilterableReservationItemProps struct {
 	ID              string
 	Type            string
-	LineItemId      uuid.UUID
+	LineItemId      []uuid.UUID
 	InventoryItemId uuid.UUID
 	LocationId      uuid.UUID
 	Description     string
@@ -170,7 +170,7 @@ type IInventoryService interface {
 	DeleteInventoryItemLevelByLocationID(context context.Context, locationId string) *utils.ApplictaionError
 	DeleteReservationItemByLocationID(context context.Context, locationId string) *utils.ApplictaionError
 	DeleteInventoryLevel(context context.Context, inventoryItemId uuid.UUID, locationId string) *utils.ApplictaionError
-	AdjustInventory(context context.Context, inventoryItemId uuid.UUID, locationId string, adjustment int) (InventoryLevelDTO, *utils.ApplictaionError)
+	AdjustInventory(context context.Context, inventoryItemId uuid.UUID, locationId uuid.UUID, adjustment int) (InventoryLevelDTO, *utils.ApplictaionError)
 	ConfirmInventory(context context.Context, inventoryItemId uuid.UUID, locationIds uuid.UUIDs, quantity int) (bool, *utils.ApplictaionError)
 	RetrieveAvailableQuantity(context context.Context, inventoryItemId uuid.UUID, locationIds uuid.UUIDs) (int, *utils.ApplictaionError)
 	RetrieveStockedQuantity(context context.Context, inventoryItemId uuid.UUID, locationIds uuid.UUIDs) (int, *utils.ApplictaionError)

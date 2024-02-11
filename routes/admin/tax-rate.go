@@ -18,8 +18,8 @@ func NewTaxRate(r Registry) *TaxRate {
 func (m *TaxRate) SetRoutes(router fiber.Router) {
 	route := router.Group("/store")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 
@@ -108,25 +108,109 @@ func (m *TaxRate) Delete(context fiber.Ctx) error {
 }
 
 func (m *TaxRate) AddProductTypes(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.TaxRateProductTypes](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.TaxRateService().SetContext(context.Context()).AddToProductType(id, model.ProductTypes, false); err != nil {
+		return err
+	}
+
+	result, err := m.r.TaxRateService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *TaxRate) AddToProducts(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.TaxRateProducts](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.TaxRateService().SetContext(context.Context()).AddToProduct(id, model.Products, false); err != nil {
+		return err
+	}
+
+	result, err := m.r.TaxRateService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *TaxRate) AddToShippingOptions(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.TaxRateShippingOptions](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.TaxRateService().SetContext(context.Context()).AddToShippingOption(id, model.ShippingOptions, false); err != nil {
+		return err
+	}
+
+	result, err := m.r.TaxRateService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *TaxRate) RemoveFromProductTypes(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.TaxRateProductTypes](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.TaxRateService().SetContext(context.Context()).RemoveFromProductType(id, model.ProductTypes); err != nil {
+		return err
+	}
+
+	result, err := m.r.TaxRateService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *TaxRate) RemoveFromProducts(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.TaxRateProducts](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.TaxRateService().SetContext(context.Context()).RemoveFromProduct(id, model.Products); err != nil {
+		return err
+	}
+
+	result, err := m.r.TaxRateService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *TaxRate) RemoveFromShippingOptions(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.TaxRateShippingOptions](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.TaxRateService().SetContext(context.Context()).RemoveFromShippingOption(id, model.ShippingOptions); err != nil {
+		return err
+	}
+
+	result, err := m.r.TaxRateService().SetContext(context.Context()).Retrieve(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

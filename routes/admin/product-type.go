@@ -17,7 +17,7 @@ func NewProductType(r Registry) *ProductType {
 
 func (m *ProductType) SetRoutes(router fiber.Router) {
 	route := router.Group("/product-types")
-	route.Get("/", m.List)
+	route.Get("", m.List)
 }
 
 func (m *ProductType) List(context fiber.Ctx) error {

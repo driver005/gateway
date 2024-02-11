@@ -17,7 +17,7 @@ func NewCurrencie(r Registry) *Currencie {
 
 func (m *Currencie) SetRoutes(router fiber.Router) {
 	route := router.Group("/currencies")
-	route.Get("/", m.List)
+	route.Get("", m.List)
 	route.Post("/:id", m.Update)
 }
 

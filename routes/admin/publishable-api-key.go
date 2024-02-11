@@ -3,6 +3,7 @@ package admin
 import (
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -20,8 +21,8 @@ func NewPublishableApiKey(r Registry) *PublishableApiKey {
 func (m *PublishableApiKey) SetRoutes(router fiber.Router) {
 	route := router.Group("/publishable-api-keys")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 
@@ -108,17 +109,81 @@ func (m *PublishableApiKey) Delete(context fiber.Ctx) error {
 }
 
 func (m *PublishableApiKey) AddChannelsBatch(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.PublishableApiKeySalesChannelsBatch](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	var ids uuid.UUIDs
+	for _, f := range model.SalesChannelIds {
+		ids = append(ids, f.Id)
+	}
+
+	if err := m.r.PublishableApiKeyService().SetContext(context.Context()).AddSalesChannels(id, ids); err != nil {
+		return err
+	}
+
+	result, err := m.r.PublishableApiKeyService().SetContext(context.Context()).RetrieveById(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *PublishableApiKey) DeleteChannelsBatch(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.PublishableApiKeySalesChannelsBatch](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	var ids uuid.UUIDs
+	for _, f := range model.SalesChannelIds {
+		ids = append(ids, f.Id)
+	}
+
+	if err := m.r.PublishableApiKeyService().SetContext(context.Context()).RemoveSalesChannels(id, ids); err != nil {
+		return err
+	}
+
+	result, err := m.r.PublishableApiKeyService().SetContext(context.Context()).RetrieveById(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *PublishableApiKey) ListChannels(context fiber.Ctx) error {
-	return nil
+	id, config, err := api.BindGet(context, "id")
+	if err != nil {
+		return err
+	}
+	result, err := m.r.PublishableApiKeyService().SetContext(context.Context()).ListSalesChannels(id, config.Q)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *PublishableApiKey) Revoke(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	user := api.GetUser(context)
+
+	if err := m.r.PublishableApiKeyService().SetContext(context.Context()).Revoke(id, user); err != nil {
+		return err
+	}
+
+	result, err := m.r.PublishableApiKeyService().SetContext(context.Context()).RetrieveById(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
+
 }

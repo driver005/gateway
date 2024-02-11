@@ -12,3 +12,9 @@ type CreateOauthInput struct {
 type UpdateOauthInput struct {
 	Data core.JSONB `json:"data"`
 }
+
+type OauthAuthorize struct {
+	ApplicationName string `json:"application_name"`
+	State           string `json:"state"`
+	Code            string `json:"code"`
+}

@@ -355,7 +355,7 @@ func (s *PaymentProviderService) CapturePayment(data *models.Payment) (*models.P
 	return nil, err
 }
 
-func (s *PaymentProviderService) RefundPayments(data []models.Payment, amount float64, reason string, note *string) (*models.Refund, *utils.ApplictaionError) {
+func (s *PaymentProviderService) RefundPayments(data []models.Payment, amount float64, reason models.RefundReason, note *string) (*models.Refund, *utils.ApplictaionError) {
 	var ids uuid.UUIDs
 	for _, d := range data {
 		ids = append(ids, d.Id)
@@ -427,7 +427,7 @@ func (s *PaymentProviderService) RefundPayments(data []models.Payment, amount fl
 	return res, nil
 }
 
-func (s *PaymentProviderService) RefundFromPayment(payment *models.Payment, amount float64, reason string, note *string) (*models.Refund, *utils.ApplictaionError) {
+func (s *PaymentProviderService) RefundFromPayment(payment *models.Payment, amount float64, reason models.RefundReason, note *string) (*models.Refund, *utils.ApplictaionError) {
 	return s.RefundPayments([]models.Payment{*payment}, amount, reason, note)
 }
 

@@ -19,3 +19,8 @@ type FindParams struct {
 	Expand string `json:"expand,omitempty" validate:"omitempty"`
 	Fields string `json:"fields,omitempty" validate:"omitempty"`
 }
+
+type Metadata struct {
+	Key   string `json:"key,omitempty" validate:"omitempty"`
+	Value string `json:"value,omitempty" validate:"omitempty"`
+}

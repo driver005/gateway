@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
@@ -11,6 +12,7 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -236,4 +238,59 @@ func (s *UserService) Delete(userId uuid.UUID) *utils.ApplictaionError {
 	}
 
 	return nil
+}
+
+func (s *UserService) SetPassword(userId uuid.UUID, password string) (*models.User, *utils.ApplictaionError) {
+	data, err := s.Retrieve(userId, &sql.Options{})
+	if err != nil {
+		return nil, err
+	}
+
+	hashedPassword, er := s.HashPassword(password)
+	if er != nil {
+		return nil, utils.NewApplictaionError(
+			utils.DB_ERROR,
+			"An error occurred while hashing password",
+		)
+	}
+
+	data.PasswordHash = hashedPassword
+
+	if err := s.r.UserRepository().Save(s.ctx, data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (s *UserService) GenerateResetPasswordToken(userId uuid.UUID) (*string, *utils.ApplictaionError) {
+	user, err := s.Retrieve(userId, &sql.Options{Selects: []string{"id", "email", "password_hash"}})
+	if err != nil {
+		return nil, err
+	}
+
+	secret := user.PasswordHash
+	expiry := time.Now().Add(15 * time.Minute).Unix()
+	payload := jwt.MapClaims{
+		"user_id": user.Id,
+		"email":   user.Email,
+		"exp":     expiry,
+	}
+
+	tocken, er := s.r.TockenService().SignTokenWithSecret(payload, []byte(secret))
+	if er != nil {
+		return nil, utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			er.Error(),
+		)
+	}
+	// Notify subscribers
+	// err = s.eventBus.WithTransaction(transactionManager).Emit(UserServiceEventsPasswordReset, map[string]interface{}{
+	// 	"email": user.Email,
+	// 	"token": signedToken,
+	// })
+	// if err != nil {
+	// 	return "", err
+	// }
+	return tocken, nil
 }

@@ -43,7 +43,7 @@ type PaymentCollection struct {
 	Payments []Payment `json:"payments,omitempty"`
 
 	// The ID of the user that created the payment collection.
-	CreatedBy string `json:"created_by"`
+	CreatedBy uuid.UUID `json:"created_by"`
 }
 
 type PaymentCollectionStatus string

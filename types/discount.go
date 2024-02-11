@@ -42,14 +42,14 @@ var DiscountConditionMapTypeToProperty = map[models.DiscountConditionType]string
 
 // DiscountConditionInput represents the input for a discount condition.
 type DiscountConditionInput struct {
-	RuleId             uuid.UUID `json:"rule_id,omitempty" validate:"omitempty"`
-	Id                 uuid.UUID `json:"id,omitempty" validate:"omitempty"`
-	Operator           string    `json:"operator,omitempty" validate:"omitempty"`
-	Products           []string  `json:"products,omitempty" validate:"omitempty"`
-	ProductCollections []string  `json:"product_collections,omitempty" validate:"omitempty"`
-	ProductTypes       []string  `json:"product_types,omitempty" validate:"omitempty"`
-	ProductTags        []string  `json:"product_tags,omitempty" validate:"omitempty"`
-	CustomerGroups     []string  `json:"customer_groups,omitempty" validate:"omitempty"`
+	RuleId             uuid.UUID                        `json:"rule_id,omitempty" validate:"omitempty"`
+	Id                 uuid.UUID                        `json:"id,omitempty" validate:"omitempty"`
+	Operator           models.DiscountConditionOperator `json:"operator,omitempty" validate:"omitempty"`
+	Products           []string                         `json:"products,omitempty" validate:"omitempty"`
+	ProductCollections []string                         `json:"product_collections,omitempty" validate:"omitempty"`
+	ProductTypes       []string                         `json:"product_types,omitempty" validate:"omitempty"`
+	ProductTags        []string                         `json:"product_tags,omitempty" validate:"omitempty"`
+	CustomerGroups     []string                         `json:"customer_groups,omitempty" validate:"omitempty"`
 }
 
 // CreateDiscountRuleInput represents the input for creating a discount rule.
@@ -103,4 +103,12 @@ type CreateDynamicDiscountInput struct {
 	EndsAt     *time.Time `json:"ends_at,omitempty" validate:"omitempty"`
 	UsageLimit int        `json:"usage_limit"`
 	Metadata   core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
+}
+
+type AddResourcesToConditionBatch struct {
+	Resources []string `json:"resources"`
+}
+
+type CreateConditon struct {
+	Operator models.DiscountConditionOperator `json:"operator"`
 }

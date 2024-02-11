@@ -7,9 +7,9 @@ toolchain go1.21.1
 require (
 	github.com/fatih/structs v1.1.0
 	github.com/go-playground/validator/v10 v10.17.0
-	github.com/gofiber/fiber/v3 v3.0.0-20240115101839-f2e9c1f21d1e
+	github.com/gofiber/fiber/v3 v3.0.0-20240210213649-92dd8d691702
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/icza/gox v0.0.0-20230924165045-adcb03233bb5
 	github.com/jinzhu/copier v0.4.0
 	github.com/lib/pq v1.10.9
@@ -70,6 +70,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.6.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
+	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -78,6 +79,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect

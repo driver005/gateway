@@ -16,6 +16,12 @@ func (h *Handler) Authenticate() []fiber.Handler {
 	}
 }
 
+func (h *Handler) AuthenticateCustomer() []fiber.Handler {
+	return []fiber.Handler{
+		h.StoreBearer(),
+	}
+}
+
 func (h *Handler) AdminBasic() fiber.Handler {
 	return keyauth.New(keyauth.Config{
 		KeyLookup:  "header:Authorization",

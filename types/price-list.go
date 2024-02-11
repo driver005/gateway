@@ -92,3 +92,16 @@ type PriceListLoadConfig struct {
 	RegionId              uuid.UUID `json:"region_id,omitempty" validate:"omitempty"`
 	CurrencyCode          string    `json:"currency_code,omitempty" validate:"omitempty"`
 }
+
+type AddPriceListPrices struct {
+	Prices   []PriceListPriceCreateInput `json:"prices"`
+	Override bool                        `json:"override,omitempty" validate:"omitempty"`
+}
+
+type DeletePriceListPrices struct {
+	PriceIds uuid.UUIDs `json:"price_ids"`
+}
+
+type DeletePriceListPricesBatch struct {
+	ProductIds []uuid.UUID `json:"product_ids"`
+}

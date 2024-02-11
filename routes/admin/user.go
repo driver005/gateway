@@ -17,16 +17,20 @@ func NewUser(r Registry) *User {
 	return &m
 }
 
-func (m *User) SetRoutes(router fiber.Router) {
+func (m *User) UnauthenticatedUserRoutes(router fiber.Router) {
 	route := router.Group("/users")
-	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
-	route.Post("/:id", m.Update)
-	route.Delete("/:id", m.Delete)
 
 	route.Post("/password-tocken", m.ResetPasswordTocken)
 	route.Post("/reste-password", m.ResetPassword)
+}
+
+func (m *User) SetRoutes(router fiber.Router) {
+	route := router.Group("/users")
+	route.Get("/:id", m.Get)
+	route.Get("", m.List)
+	route.Post("", m.Create)
+	route.Post("/:id", m.Update)
+	route.Delete("/:id", m.Delete)
 }
 
 func (m *User) Get(context fiber.Ctx) error {
@@ -108,9 +112,53 @@ func (m *User) Delete(context fiber.Ctx) error {
 }
 
 func (m *User) ResetPassword(context fiber.Ctx) error {
-	return nil
+	model, err := api.BindCreate[types.UserResetPasswordRequest](context, m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	user, err := m.r.UserService().SetContext(context.Context()).RetrieveByEmail(model.Email, &sql.Options{Selects: []string{"id", "password_hash"}})
+	if err != nil {
+		return err
+	}
+
+	tocken, claims, er := m.r.TockenService().VerifyTokenWithSecret(model.Token, []byte(user.PasswordHash))
+	if er != nil {
+		return utils.NewApplictaionError(
+			utils.INVALID_DATA,
+			er.Error(),
+		)
+	}
+
+	if tocken == nil || claims["user_id"] != user.Id {
+		return context.Status(fiber.StatusUnauthorized).SendString("Invalid or expired password reset token")
+	}
+
+	result, err := m.r.UserService().SetContext(context.Context()).SetPassword(user.Id, model.Password)
+	if err != nil {
+		return err
+	}
+
+	result.PasswordHash = ""
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *User) ResetPasswordTocken(context fiber.Ctx) error {
-	return nil
+	model, err := api.BindCreate[types.UserResetPasswordToken](context, m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	user, err := m.r.UserService().SetContext(context.Context()).RetrieveByEmail(model.Email, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	if user != nil {
+		if _, err := m.r.UserService().SetContext(context.Context()).GenerateResetPasswordToken(user.Id); err != nil {
+			return err
+		}
+	}
+
+	return context.SendStatus(204)
 }

@@ -119,7 +119,7 @@ func (s *PaymentService) Capture(id uuid.UUID, payment *models.Payment) (*models
 	return capturedPayment, nil
 }
 
-func (s *PaymentService) Refund(id uuid.UUID, payment *models.Payment, amount float64, reason string, note *string) (*models.Refund, *utils.ApplictaionError) {
+func (s *PaymentService) Refund(id uuid.UUID, payment *models.Payment, amount float64, reason models.RefundReason, note *string) (*models.Refund, *utils.ApplictaionError) {
 	if id != uuid.Nil {
 		p, err := s.Retrieve(id, &sql.Options{})
 		if err != nil {

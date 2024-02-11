@@ -107,7 +107,7 @@ func (s *InviteService) Delete(inviteId uuid.UUID) *utils.ApplictaionError {
 	return nil
 }
 
-func (s *InviteService) Accept(token string, user models.User) (*models.User, *utils.ApplictaionError) {
+func (s *InviteService) Accept(token string, user *models.User) (*models.User, *utils.ApplictaionError) {
 	var invite *models.Invite
 	_, claim, er := s.r.TockenService().SetContext(s.ctx).VerifyToken(token)
 	if er != nil {

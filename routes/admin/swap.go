@@ -18,7 +18,7 @@ func NewSwap(r Registry) *Swap {
 func (m *Swap) SetRoutes(router fiber.Router) {
 	route := router.Group("/swaps")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
+	route.Get("", m.List)
 }
 
 func (m *Swap) Get(context fiber.Ctx) error {

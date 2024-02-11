@@ -4,6 +4,7 @@ import (
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type ProductCategory struct {
@@ -18,8 +19,8 @@ func NewProductCategory(r Registry) *ProductCategory {
 func (m *ProductCategory) SetRoutes(router fiber.Router) {
 	route := router.Group("/product-categories")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 
@@ -104,9 +105,47 @@ func (m *ProductCategory) Delete(context fiber.Ctx) error {
 }
 
 func (m *ProductCategory) AddProductsBatch(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.AddProductsToCollectionInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	var productIds uuid.UUIDs
+	for _, p := range model.ProductIds {
+		productIds = append(productIds, p)
+	}
+
+	if err := m.r.ProductCategoryService().SetContext(context.Context()).AddProducts(id, productIds); err != nil {
+		return err
+	}
+
+	result, err := m.r.ProductCategoryService().SetContext(context.Context()).RetrieveById(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *ProductCategory) DeleteProductsBatch(context fiber.Ctx) error {
-	return nil
+	model, id, config, err := api.BindAll[types.AddProductsToCollectionInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	var productIds uuid.UUIDs
+	for _, p := range model.ProductIds {
+		productIds = append(productIds, p)
+	}
+
+	if err := m.r.ProductCategoryService().SetContext(context.Context()).RemoveProducts(id, productIds); err != nil {
+		return err
+	}
+
+	result, err := m.r.ProductCategoryService().SetContext(context.Context()).RetrieveById(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

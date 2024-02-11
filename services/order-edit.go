@@ -76,7 +76,7 @@ func (s *OrderEditService) List(selector *types.FilterableOrderEdit, config *sql
 	return orderEdits, nil
 }
 
-func (s *OrderEditService) Create(data *types.CreateOrderEditInput, createdBy string) (*models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) Create(data *types.CreateOrderEditInput, createdBy uuid.UUID) (*models.OrderEdit, *utils.ApplictaionError) {
 	activeOrderEdit, err := s.RetrieveActive(data.OrderId, &sql.Options{})
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (s *OrderEditService) Delete(id uuid.UUID) *utils.ApplictaionError {
 	return nil
 }
 
-func (s *OrderEditService) Decline(id uuid.UUID, declinedBy string, declinedReason string) (*models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) Decline(id uuid.UUID, declinedBy uuid.UUID, declinedReason string) (*models.OrderEdit, *utils.ApplictaionError) {
 	orderEdit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
@@ -378,7 +378,7 @@ func (s *OrderEditService) DecorateTotals(orderEdit *models.OrderEdit) (*models.
 	return orderEdit, nil
 }
 
-func (s *OrderEditService) AddLineItem(id uuid.UUID, data types.AddOrderEditLineItemInput) *utils.ApplictaionError {
+func (s *OrderEditService) AddLineItem(id uuid.UUID, data *types.AddOrderEditLineItemInput) *utils.ApplictaionError {
 	orderEdit, err := s.Retrieve(id, &sql.Options{Relations: []string{"order", "order.region"}})
 	if err != nil {
 		return err
@@ -473,7 +473,7 @@ func (s *OrderEditService) DeleteItemChange(id uuid.UUID, itemChangeId uuid.UUID
 	return s.r.OrderItemChangeService().Delete(uuid.UUIDs{itemChangeId})
 }
 
-func (s *OrderEditService) RequestConfirmation(id uuid.UUID, requestedBy string) (*models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) RequestConfirmation(id uuid.UUID, requestedBy uuid.UUID) (*models.OrderEdit, *utils.ApplictaionError) {
 	orderEdit, err := s.Retrieve(id, &sql.Options{Relations: []string{"changes", "changes.original_line_item", "changes.original_line_item.variant"}, Selects: []string{"id", "order_id", "requested_at"}})
 	if err != nil {
 		return nil, err
@@ -506,7 +506,7 @@ func (s *OrderEditService) RequestConfirmation(id uuid.UUID, requestedBy string)
 	return orderEdit, nil
 }
 
-func (s *OrderEditService) Cancel(id uuid.UUID, canceledBy string) (*models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) Cancel(id uuid.UUID, canceledBy uuid.UUID) (*models.OrderEdit, *utils.ApplictaionError) {
 	orderEdit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err
@@ -541,7 +541,7 @@ func (s *OrderEditService) Cancel(id uuid.UUID, canceledBy string) (*models.Orde
 	return orderEdit, nil
 }
 
-func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy string) (*models.OrderEdit, *utils.ApplictaionError) {
+func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy uuid.UUID) (*models.OrderEdit, *utils.ApplictaionError) {
 	orderEdit, err := s.Retrieve(id, &sql.Options{})
 	if err != nil {
 		return nil, err

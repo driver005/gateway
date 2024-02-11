@@ -14,8 +14,8 @@ func NewReservation(r Registry) *Reservation {
 func (m *Reservation) SetRoutes(router fiber.Router) {
 	route := router.Group("/reservations")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 }

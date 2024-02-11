@@ -18,8 +18,8 @@ func NewShippingProfile(r Registry) *ShippingProfile {
 func (m *ShippingProfile) SetRoutes(router fiber.Router) {
 	route := router.Group("/shipping-profiles")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 }

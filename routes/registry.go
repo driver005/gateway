@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"github.com/driver005/gateway/config"
+	"github.com/driver005/gateway/middlewares"
 	"github.com/driver005/gateway/routes/admin"
 	"github.com/gofiber/fiber/v3"
 )
@@ -9,7 +11,12 @@ type Registry interface {
 	AdminRouter() fiber.Router
 	StoreRouter() fiber.Router
 
+	Config() *config.Config
+	Middleware() *middlewares.Handler
+
 	//Admin
+	AdminAnalyticsConfig() *admin.AnalyticsConfig
+	AdminApp() *admin.App
 	AdminAuth() *admin.Auth
 	AdminBatch() *admin.Batch
 	AdminCollection() *admin.Collection

@@ -17,7 +17,7 @@ func NewProductTag(r Registry) *ProductTag {
 
 func (m *ProductTag) SetRoutes(router fiber.Router) {
 	route := router.Group("/product-tags")
-	route.Get("/", m.List)
+	route.Get("", m.List)
 }
 
 func (m *ProductTag) List(context fiber.Ctx) error {

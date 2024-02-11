@@ -20,16 +20,16 @@ type IdempotencyKey struct {
 	RequestMethod string `json:"request_method" gorm:"default:null"`
 
 	// The parameters passed to the request
-	RequestParams JSONB `json:"request_params" gorm:"default:null"`
+	RequestParams core.JSONB `json:"request_params" gorm:"default:null"`
 
 	// The request's path
 	RequestPath string `json:"request_path" gorm:"default:null"`
 
 	// The response's code.
-	ResponseCode string `json:"response_code" gorm:"default:null"`
+	ResponseCode int `json:"response_code" gorm:"default:null"`
 
 	// The response's body
-	ResponseBody JSONB `json:"response_body" gorm:"default:null"`
+	ResponseBody core.JSONB `json:"response_body" gorm:"default:null"`
 
 	// Where to continue from.
 	RecoveryPoint string `json:"recovery_point" gorm:"default:null"`

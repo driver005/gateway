@@ -7,6 +7,8 @@ import (
 
 type FilterableReturn struct {
 	core.FilterModel
+
+	IdempotencyKey string `json:"idempotency_key,omitempty" validate:"omitempty"`
 }
 
 type OrderReturnItem struct {
@@ -33,4 +35,10 @@ type UpdateReturnInput struct {
 	ShippingMethod *CreateClaimReturnShippingInput `json:"shipping_method,omitempty" validate:"omitempty"`
 	NoNotification bool                            `json:"no_notification,omitempty" validate:"omitempty"`
 	Metadata       core.JSONB                      `json:"metadata,omitempty" validate:"omitempty"`
+}
+
+type ReturnReceive struct {
+	Items      []OrderReturnItem `json:"items"`
+	Refund     float64           `json:"refund,omitempty" validate:"omitempty"`
+	LocationId uuid.UUID         `json:"location_id,omitempty" validate:"omitempty"`
 }

@@ -41,20 +41,21 @@ func (s *TockenService) VerifyToken(tocken string) (*jwt.Token, jwt.MapClaims, e
 	return token, claims, err
 }
 
-func (s *TockenService) VerifyTokenWithSecret(tocken string, secret []byte) (*jwt.Token, error) {
-	token, err := jwt.Parse(tocken, func(token *jwt.Token) (interface{}, error) {
+func (s *TockenService) VerifyTokenWithSecret(tocken string, secret []byte) (*jwt.Token, jwt.MapClaims, error) {
+	var claims jwt.MapClaims
+	token, err := jwt.ParseWithClaims(tocken, claims, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, nil, fmt.Errorf("invalid token")
 	}
 
-	return token, nil
+	return token, claims, nil
 }
 
 func (s *TockenService) SignToken(data map[string]interface{}) (*string, error) {

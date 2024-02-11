@@ -52,7 +52,7 @@ func (s *ClaimService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Clai
 	return res, nil
 }
 
-func (s *ClaimService) List(selector models.ClaimOrder, config *sql.Options) ([]models.ClaimOrder, *utils.ApplictaionError) {
+func (s *ClaimService) List(selector *models.ClaimOrder, config *sql.Options) ([]models.ClaimOrder, *utils.ApplictaionError) {
 	var res []models.ClaimOrder
 
 	if reflect.DeepEqual(config, &sql.Options{}) {

@@ -19,8 +19,8 @@ func NewCustomerGroup(r Registry) *CustomerGroup {
 func (m *CustomerGroup) SetRoutes(router fiber.Router) {
 	route := router.Group("/customer-groups")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 

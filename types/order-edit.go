@@ -29,3 +29,11 @@ type CreateOrderEditItemChangeInput struct {
 	OriginalLineItemId uuid.UUID                      `json:"original_line_item_id,omitempty" validate:"omitempty"`
 	LineItemId         uuid.UUID                      `json:"line_item_id,omitempty" validate:"omitempty"`
 }
+
+type OrderEditsRequestConfirmation struct {
+	PaymentCollectionDescription string `json:"payment_collection_description,omitempty" validate:"omitempty"`
+}
+
+type OrderEditsEditLineItem struct {
+	Quantity int `json:"quantity"`
+}

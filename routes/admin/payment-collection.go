@@ -69,5 +69,15 @@ func (m *PaymentCollection) Delete(context fiber.Ctx) error {
 }
 
 func (m *PaymentCollection) MarkAuthorized(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.PaymentCollectionService().SetContext(context.Context()).MarkAsAuthorized(id)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

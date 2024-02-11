@@ -2,8 +2,10 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type Region struct {
@@ -18,8 +20,8 @@ func NewRegion(r Registry) *Region {
 func (m *Region) SetRoutes(router fiber.Router) {
 	route := router.Group("/regions")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 
@@ -109,29 +111,145 @@ func (m *Region) Delete(context fiber.Ctx) error {
 }
 
 func (m *Region) AddCountry(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.RegionCountries](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.RegionService().SetContext(context.Context()).AddCountry(id, model.CountryCode); err != nil {
+		return err
+	}
+
+	result, err := m.r.RegionService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Region) AddFullfilmentProvider(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.RegionFulfillmentProvider](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.RegionService().SetContext(context.Context()).AddFulfillmentProvider(id, model.ProviderId); err != nil {
+		return err
+	}
+
+	result, err := m.r.RegionService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Region) AddPaymentProvider(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.RegionPaymentProvider](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.RegionService().SetContext(context.Context()).AddPaymentProvider(id, model.ProviderId); err != nil {
+		return err
+	}
+
+	result, err := m.r.RegionService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Region) GetFulfillmentOptions(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	region, err := m.r.RegionService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	var fpsIds uuid.UUIDs
+	for _, f := range region.FulfillmentProviders {
+		fpsIds = append(fpsIds, f.Id)
+	}
+
+	result, err := m.r.FulfillmentProviderService().SetContext(context.Context()).ListFulfillmentOptions(fpsIds)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Region) RemoveCountry(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	countryCode := context.Params("country_code")
+
+	if _, err := m.r.RegionService().SetContext(context.Context()).RemoveCountry(id, countryCode); err != nil {
+		return err
+	}
+
+	result, err := m.r.RegionService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Region) RemoveFullfilmentProvider(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	providerId, err := api.BindDelete(context, "provider_id")
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.RegionService().SetContext(context.Context()).RemoveFulfillmentProvider(id, providerId); err != nil {
+		return err
+	}
+
+	result, err := m.r.RegionService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Region) RemovePaymentProvider(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	providerId, err := api.BindDelete(context, "provider_id")
+	if err != nil {
+		return err
+	}
+
+	if _, err := m.r.RegionService().SetContext(context.Context()).RemovePaymentProvider(id, providerId); err != nil {
+		return err
+	}
+
+	result, err := m.r.RegionService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

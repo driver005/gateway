@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+
 	"github.com/driver005/gateway/config"
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/repository"
@@ -9,6 +11,7 @@ import (
 
 type Registry interface {
 	Context() *gorm.DB
+	Manager(ctx context.Context) *gorm.DB
 	Config() *config.Config
 
 	//Repository

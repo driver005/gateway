@@ -2,6 +2,7 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/types"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -36,9 +37,29 @@ func (m *Payment) Get(context fiber.Ctx) error {
 }
 
 func (m *Payment) Capture(context fiber.Ctx) error {
-	return nil
+	id, err := api.BindDelete(context, "id")
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.PaymentService().SetContext(context.Context()).Capture(id, nil)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Payment) Refund(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.PaymentRefund](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.PaymentService().SetContext(context.Context()).Refund(id, nil, model.Amount, model.Reason, &model.Note)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

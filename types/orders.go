@@ -84,3 +84,66 @@ type TotalsContext struct {
 	ForceTaxes      bool `json:"force_taxes,omitempty" validate:"omitempty"`
 	ReturnableItems bool `json:"returnable_items,omitempty" validate:"omitempty"`
 }
+
+type OrderShippingMethod struct {
+	OptionId uuid.UUID  `json:"option_id"`
+	Data     core.JSONB `json:"data,omitempty" validate:"omitempty"`
+	Price    float64    `json:"price"`
+}
+
+type OrderClaimShipments struct {
+	FulfillmentId   uuid.UUID `json:"fulfillment_id"`
+	TrackingNumbers []string  `json:"tracking_numbers,omitempty" validate:"omitempty"`
+}
+
+type OrderFulfillments struct {
+	Items          []FulFillmentItemType `json:"items"`
+	LocationId     uuid.UUID             `json:"location_id,omitempty" validate:"omitempty"`
+	NoNotification bool                  `json:"no_notification,omitempty" validate:"omitempty"`
+	Metadata       core.JSONB            `json:"metadata,omitempty" validate:"omitempty"`
+}
+
+type OrderLineItemReservation struct {
+	LocationId uuid.UUID `json:"location_id"`
+	Quantity   int       `json:"quantity,omitempty" validate:"omitempty"`
+}
+
+type CreateOrderShipment struct {
+	FulfillmentId   uuid.UUID `json:"fulfillment_id"`
+	TrackingNumbers []string  `json:"tracking_numbers,omitempty" validate:"omitempty"`
+	NoNotification  bool      `json:"no_notification,omitempty" validate:"omitempty"`
+}
+
+type OrderSwap struct {
+	ReturnItems           []OrderReturnItem                    `json:"return_items" validate:"required,dive"`
+	ReturnShipping        CreateClaimReturnShippingInput       `json:"return_shipping,omitempty" validate:"omitempty,dive"`
+	SalesChannelId        string                               `json:"sales_channel_id,omitempty" validate:"omitempty,uuid"`
+	AdditionalItems       []CreateClaimItemAdditionalItemInput `json:"additional_items,omitempty" validate:"omitempty,dive"`
+	CustomShippingOptions []CreateCustomShippingOptionInput    `json:"custom_shipping_options,omitempty" validate:"omitempty,dive"`
+	NoNotification        bool                                 `json:"no_notification,omitempty" validate:"omitempty"`
+	ReturnLocationId      string                               `json:"return_location_id,omitempty" validate:"omitempty,uuid"`
+	AllowBackorder        bool                                 `json:"allow_backorder,omitempty" validate:"omitempty"`
+}
+
+type OrderClaimFulfillments struct {
+	LocationId     uuid.UUID  `json:"location_id,omitempty" validate:"omitempty"`
+	NoNotification bool       `json:"no_notification,omitempty" validate:"omitempty"`
+	Metadata       core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
+}
+
+type OrderRefunds struct {
+	Amount         float64             `json:"amount"`
+	Reason         models.RefundReason `json:"reason"`
+	Note           string              `json:"note,omitempty" validate:"omitempty"`
+	NoNotification bool                `json:"no_notification,omitempty" validate:"omitempty"`
+}
+
+type OrderReturns struct {
+	Items          []OrderReturnItem              `json:"items" validate:"dive"`
+	ReturnShipping CreateClaimReturnShippingInput `json:"return_shipping,omitempty" validate:"omitempty,nested"`
+	Note           string                         `json:"note,omitempty" validate:"omitempty,alphanum"`
+	ReceiveNow     bool                           `json:"receive_now,omitempty" validate:"omitempty,boolean"`
+	NoNotification bool                           `json:"no_notification,omitempty" validate:"omitempty,boolean"`
+	Refund         float64                        `json:"refund,omitempty" validate:"omitempty,numeric"`
+	LocationId     uuid.UUID                      `json:"location_id,omitempty" validate:"omitempty,alphanum"`
+}

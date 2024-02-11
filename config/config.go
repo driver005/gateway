@@ -3,12 +3,13 @@ package config
 import "github.com/spf13/viper"
 
 type Server struct {
-	Port               int    `mapstructure:"port"`
-	Host               string `mapstructure:"host"`
-	ServerName         string `mapstructure:"server_name"`
-	RequestBodyLimit   int    `mapstructure:"request_body_limit"`
-	Timeout            int    `mapstructure:"timeout"`
-	CorsAllowedOrigins string `mapstructure:"cors_allowed_origins"`
+	Port             int    `mapstructure:"port"`
+	Host             string `mapstructure:"host"`
+	ServerName       string `mapstructure:"server_name"`
+	RequestBodyLimit int    `mapstructure:"request_body_limit"`
+	Timeout          int    `mapstructure:"timeout"`
+	AdminCors        string `mapstructure:"admin_cors"`
+	StoreCors        string `mapstructure:"store_cors"`
 }
 
 type Database struct {

@@ -52,7 +52,7 @@ func NewVariant(r Registry) *Variant {
 func (m *Variant) SetRoutes(router fiber.Router) {
 	route := router.Group("/variants")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
+	route.Get("", m.List)
 
 	route.Post("/:id/inventory", m.GetInventory)
 }

@@ -31,3 +31,15 @@ type CreateTaxRateInput struct {
 type TaxRateListByConfig struct {
 	RegionId uuid.UUID `json:"region_id,omitempty" validate:"omitempty"`
 }
+
+type TaxRateProductTypes struct {
+	ProductTypes uuid.UUIDs `json:"product_types"`
+}
+
+type TaxRateShippingOptions struct {
+	ShippingOptions uuid.UUIDs `json:"shipping_options"`
+}
+
+type TaxRateProducts struct {
+	Products uuid.UUIDs `json:"products"`
+}

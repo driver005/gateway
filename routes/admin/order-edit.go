@@ -3,8 +3,11 @@ package admin
 import (
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
+	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type OrderEdit struct {
@@ -19,8 +22,8 @@ func NewOrderEdit(r Registry) *OrderEdit {
 func (m *OrderEdit) SetRoutes(router fiber.Router) {
 	route := router.Group("/order-edits")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 
@@ -70,7 +73,9 @@ func (m *OrderEdit) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	result, err := m.r.OrderEditService().SetContext(context.Context()).Create(model, "")
+	userId := api.GetUser(context)
+
+	result, err := m.r.OrderEditService().SetContext(context.Context()).Create(model, userId)
 	if err != nil {
 		return err
 	}
@@ -110,29 +115,211 @@ func (m *OrderEdit) Delete(context fiber.Ctx) error {
 }
 
 func (m *OrderEdit) AddLineItem(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.AddOrderEditLineItemInput](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.OrderEditService().SetContext(context.Context()).AddLineItem(id, model); err != nil {
+		return err
+	}
+
+	order, err := m.r.OrderEditService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.OrderEditService().SetContext(context.Context()).DecorateTotals(order)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *OrderEdit) Cancel(context fiber.Ctx) error {
-	return nil
+	id, err := utils.ParseUUID(context.Params("id"))
+	if err != nil {
+		return err
+	}
+
+	userId := api.GetUser(context)
+
+	if _, err := m.r.OrderEditService().SetContext(context.Context()).Cancel(id, userId); err != nil {
+		return err
+	}
+
+	order, err := m.r.OrderEditService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.OrderEditService().SetContext(context.Context()).DecorateTotals(order)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *OrderEdit) Confirm(context fiber.Ctx) error {
-	return nil
+	id, err := utils.ParseUUID(context.Params("id"))
+	if err != nil {
+		return err
+	}
+
+	userId := api.GetUser(context)
+
+	if _, err := m.r.OrderEditService().SetContext(context.Context()).Confirm(id, userId); err != nil {
+		return err
+	}
+
+	order, err := m.r.OrderEditService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.OrderEditService().SetContext(context.Context()).DecorateTotals(order)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *OrderEdit) RequestConfirmation(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindWithUUID[types.OrderEditsRequestConfirmation](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	userId := api.GetUser(context)
+
+	orderEdit, err := m.r.OrderEditService().SetContext(context.Context()).RequestConfirmation(id, userId)
+	if err != nil {
+		return err
+	}
+
+	total, err := m.r.OrderEditService().SetContext(context.Context()).DecorateTotals(orderEdit)
+	if err != nil {
+		return err
+	}
+
+	if total.DifferenceDue > 0 {
+		order, err := m.r.OrderService().SetContext(context.Context()).RetrieveById(orderEdit.OrderId.UUID, &sql.Options{
+			Selects: []string{"currency_code", "region_id"},
+		})
+		if err != nil {
+			return err
+		}
+
+		paymentCollection, err := m.r.PaymentCollectionService().SetContext(context.Context()).Create(&types.CreatePaymentCollectionInput{
+			Type:         models.PaymentCollectionTypeOrderEdit,
+			Amount:       total.DifferenceDue,
+			CurrencyCode: order.CurrencyCode,
+			RegionId:     order.RegionId.UUID,
+			Description:  model.PaymentCollectionDescription,
+			CreatedBy:    userId,
+		})
+		if err != nil {
+			return err
+		}
+
+		orderEdit.PaymentCollectionId = uuid.NullUUID{UUID: paymentCollection.Id}
+
+		_, err = m.r.OrderEditService().SetContext(context.Context()).Update(orderEdit.Id, orderEdit)
+		if err != nil {
+			return err
+		}
+	}
+
+	order, err := m.r.OrderEditService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.OrderEditService().SetContext(context.Context()).DecorateTotals(order)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *OrderEdit) DeleteLineItem(context fiber.Ctx) error {
-	return nil
+	id, err := utils.ParseUUID(context.Params("id"))
+	if err != nil {
+		return err
+	}
+
+	itemId, err := utils.ParseUUID(context.Params("item_id"))
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.OrderEditService().SetContext(context.Context()).RemoveLineItem(id, itemId); err != nil {
+		return err
+	}
+
+	order, err := m.r.OrderEditService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.OrderEditService().SetContext(context.Context()).DecorateTotals(order)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *OrderEdit) DeleteItemChange(context fiber.Ctx) error {
-	return nil
+	id, err := utils.ParseUUID(context.Params("id"))
+	if err != nil {
+		return err
+	}
+
+	changeId, err := utils.ParseUUID(context.Params("change_id"))
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.OrderEditService().SetContext(context.Context()).DeleteItemChange(id, changeId); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":      changeId,
+		"object":  "item-change",
+		"deleted": true,
+	})
 }
 
 func (m *OrderEdit) UpdateLineItem(context fiber.Ctx) error {
-	return nil
+	model, id, err := api.BindUpdate[types.OrderEditsEditLineItem](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	itemId, err := utils.ParseUUID(context.Params("item_id"))
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.OrderEditService().SetContext(context.Context()).UpdateLineItem(id, itemId, model.Quantity); err != nil {
+		return err
+	}
+
+	order, err := m.r.OrderEditService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.OrderEditService().SetContext(context.Context()).DecorateTotals(order)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

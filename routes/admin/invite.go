@@ -3,6 +3,7 @@ package admin
 import (
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/types"
+	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -15,10 +16,15 @@ func NewInvite(r Registry) *Invite {
 	return &m
 }
 
+func (m *Invite) UnauthenticatedInviteRoutes(router fiber.Router) {
+	route := router.Group("/invites")
+	route.Post("/accept", m.Accept)
+}
+
 func (m *Invite) SetRoutes(router fiber.Router) {
 	route := router.Group("/invites")
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Delete("/:id", m.Delete)
 
 	route.Post("/:id/resend", m.Resend)
@@ -75,9 +81,28 @@ func (m *Invite) Delete(context fiber.Ctx) error {
 }
 
 func (m *Invite) Accept(context fiber.Ctx) error {
-	return nil
+	model, err := api.BindCreate[types.AcceptInvite](context, m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	_, err = m.r.InviteService().SetContext(context.Context()).Accept(model.Token, model.User)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).Send(nil)
 }
 
 func (m *Invite) Resend(context fiber.Ctx) error {
-	return nil
+	id, err := utils.ParseUUID(context.Params("id"))
+	if err != nil {
+		return err
+	}
+
+	if err := m.r.InviteService().SetContext(context.Context()).Resend(id); err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).Send(nil)
 }

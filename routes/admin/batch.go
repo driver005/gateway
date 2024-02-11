@@ -28,8 +28,8 @@ func NewBatch(r Registry) *Batch {
 func (m *Batch) SetRoutes(router fiber.Router) {
 	route := router.Group("/batch-jobs")
 	route.Get("/:id", m.Get, m.r.Middleware().CanAccessBatchJob)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 
 	route.Post("/confirm", m.Confirm, m.r.Middleware().CanAccessBatchJob)
 	route.Post("/cancel", m.Cancel, m.r.Middleware().CanAccessBatchJob)

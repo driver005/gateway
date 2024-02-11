@@ -15,7 +15,7 @@ type DiscountCondition struct {
 	Type DiscountConditionType `json:"type" gorm:"type:enum('products','product_types','product_collections','product_tags','customer_groups')"`
 
 	// The operator of the Condition
-	Operator string `json:"operator"`
+	Operator DiscountConditionOperator `json:"operator"`
 
 	// The ID of the discount rule associated with the condition
 	DiscountRuleId uuid.NullUUID `json:"discount_rule_id"`
@@ -56,5 +56,22 @@ func (pl *DiscountConditionType) Scan(value interface{}) error {
 }
 
 func (pl DiscountConditionType) Value() (driver.Value, error) {
+	return string(pl), nil
+}
+
+type DiscountConditionOperator string
+
+// Defines values for DiscountConditionType.
+const (
+	DiscountConditionOperatorIn    DiscountConditionType = "in"
+	DiscountConditionOperatorNotIn DiscountConditionType = "not_in"
+)
+
+func (pl *DiscountConditionOperator) Scan(value interface{}) error {
+	*pl = DiscountConditionOperator(value.([]byte))
+	return nil
+}
+
+func (pl DiscountConditionOperator) Value() (driver.Value, error) {
 	return string(pl), nil
 }

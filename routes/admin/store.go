@@ -2,6 +2,7 @@ package admin
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
@@ -19,8 +20,8 @@ func NewStore(r Registry) *Store {
 
 func (m *Store) SetRoutes(router fiber.Router) {
 	route := router.Group("/store")
-	route.Get("/", m.Get)
-	route.Post("/", m.Update)
+	route.Get("", m.Get)
+	route.Post("", m.Update)
 
 	route.Get("/payment-providers", m.ListPaymentProviders)
 	route.Get("/tax-providers", m.ListTaxProviders)
@@ -61,17 +62,45 @@ func (m *Store) Update(context fiber.Ctx) error {
 }
 
 func (m *Store) AddCurrency(context fiber.Ctx) error {
-	return nil
+	currencyCode := context.Params("currency_code")
+
+	result, err := m.r.StoreService().SetContext(context.Context()).AddCurrency(currencyCode)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Store) RemoveCurrency(context fiber.Ctx) error {
-	return nil
+	currencyCode := context.Params("currency_code")
+
+	result, err := m.r.StoreService().SetContext(context.Context()).RemoveCurrency(currencyCode)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }
 
 func (m *Store) ListPaymentProviders(context fiber.Ctx) error {
-	return nil
+	result, err := m.r.PaymentProviderService().SetContext(context.Context()).List()
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"payment_providers": result,
+	})
 }
 
 func (m *Store) ListTaxProviders(context fiber.Ctx) error {
-	return nil
+	result, err := m.r.TaxProviderService().SetContext(context.Context()).List(&models.TaxProvider{}, &sql.Options{})
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"tax_providers": result,
+	})
 }

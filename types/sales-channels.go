@@ -22,3 +22,7 @@ type UpdateSalesChannelInput CreateSalesChannelInput
 type ProductBatchSalesChannel struct {
 	Id uuid.UUID `json:"id"`
 }
+
+type SalesChannelStockLocations struct {
+	LocationId uuid.UUID `json:"location_id"`
+}

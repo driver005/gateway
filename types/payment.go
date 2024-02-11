@@ -36,3 +36,9 @@ type CreatePaymentInput struct {
 	PaymentSession *models.PaymentSession `json:"payment_session"`
 	ResourceId     uuid.UUID              `json:"resource_id,omitempty" validate:"omitempty"`
 }
+
+type PaymentRefund struct {
+	Amount float64             `json:"amount"`
+	Reason models.RefundReason `json:"reason,omitempty"`
+	Note   string              `json:"note,omitempty" validate:"omitempty"`
+}

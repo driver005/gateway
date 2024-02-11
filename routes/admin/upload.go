@@ -24,9 +24,9 @@ func NewUpload(r Registry) *Upload {
 
 func (m *Upload) SetRoutes(router fiber.Router) {
 	route := router.Group("/uploads")
-	route.Post("/", m.Create)
+	route.Post("", m.Create)
 	route.Post("/protected", m.CreateProtectedUpload)
-	route.Delete("/", m.Delete)
+	route.Delete("", m.Delete)
 	route.Post("/download-url", m.Get)
 }
 

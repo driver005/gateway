@@ -36,3 +36,15 @@ type CreateRegionInput struct {
 	IncludesTax          bool       `json:"includes_tax,omitempty" validate:"omitempty"`
 	Metadata             core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
 }
+
+type RegionCountries struct {
+	CountryCode string `json:"country_code"`
+}
+
+type RegionFulfillmentProvider struct {
+	ProviderId uuid.UUID `json:"provider_id"`
+}
+
+type RegionPaymentProvider struct {
+	ProviderId uuid.UUID `json:"provider_id"`
+}

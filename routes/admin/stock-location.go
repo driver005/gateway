@@ -18,8 +18,8 @@ func NewStockLocation(r Registry) *StockLocation {
 func (m *StockLocation) SetRoutes(router fiber.Router) {
 	route := router.Group("/stock-locations")
 	route.Get("/:id", m.Get)
-	route.Get("/", m.List)
-	route.Post("/", m.Create)
+	route.Get("", m.List)
+	route.Post("", m.Create)
 	route.Post("/:id", m.Update)
 	route.Delete("/:id", m.Delete)
 }

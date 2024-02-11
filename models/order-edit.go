@@ -26,25 +26,25 @@ type OrderEdit struct {
 	InternalNote string `json:"internal_note" gorm:"default:null"`
 
 	// The unique identifier of the user or customer who created the order edit.
-	CreatedBy string `json:"created_by"`
+	CreatedBy uuid.UUID `json:"created_by"`
 
 	// The unique identifier of the user or customer who requested the order edit.
-	RequestedBy string `json:"requested_by" gorm:"default:null"`
+	RequestedBy uuid.UUID `json:"requested_by" gorm:"default:null"`
 
 	// The date with timezone at which the edit was requested.
 	RequestedAt *time.Time `json:"requested_at" gorm:"default:null"`
 
 	// The unique identifier of the user or customer who confirmed the order edit.
-	ConfirmedBy string `json:"confirmed_by" gorm:"default:null"`
+	ConfirmedBy uuid.UUID `json:"confirmed_by" gorm:"default:null"`
 
 	// The date with timezone at which the edit was confirmed.
 	ConfirmedAt *time.Time `json:"confirmed_at" gorm:"default:null"`
 
 	// The unique identifier of the user or customer who declined the order edit.
-	DeclinedBy string `json:"declined_by" gorm:"default:null"`
+	DeclinedBy uuid.UUID `json:"declined_by" gorm:"default:null"`
 
 	// The unique identifier of the user or customer who declined the order edit.
-	CanceledBy string `json:"canceled_by" gorm:"default:null"`
+	CanceledBy uuid.UUID `json:"canceled_by" gorm:"default:null"`
 
 	// The date with timezone at which the edit was declined.
 	DeclinedAt *time.Time `json:"declined_at" gorm:"default:null"`
@@ -75,6 +75,10 @@ type OrderEdit struct {
 
 	// Computed line items from the changes.
 	Items []LineItem `json:"items" gorm:"foreignKey:id"`
+
+	PaymentCollectionId uuid.NullUUID `json:"payment_collection_id"`
+
+	PaymentCollection *PaymentCollection `json:"region,omitempty" gorm:"foreignKey:id;references:payment_collection_id"`
 
 	// The total of gift cards
 	GiftCardTotal float64 `json:"gift_card_total" gorm:"default:null"`

@@ -17,7 +17,7 @@ func NewNotification(r Registry) *Notification {
 
 func (m *Notification) SetRoutes(router fiber.Router) {
 	route := router.Group("/notifications")
-	route.Get("/", m.List)
+	route.Get("", m.List)
 
 	route.Post("/:id/resend", m.Resend)
 }
@@ -41,5 +41,15 @@ func (m *Notification) List(context fiber.Ctx) error {
 }
 
 func (m *Notification) Resend(context fiber.Ctx) error {
-	return nil
+	_, id, config, err := api.BindAll[types.ResendNotification](context, "id", m.r.Validator())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.r.NotificationService().SetContext(context.Context()).Resend(id, config)
+	if err != nil {
+		return err
+	}
+
+	return context.Status(fiber.StatusOK).JSON(result)
 }

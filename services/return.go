@@ -528,7 +528,7 @@ func (s *ReturnService) Receive(returnId uuid.UUID, receivedItems []types.OrderR
 	}
 	now := time.Now()
 	updateObj := returnObj
-	updateObj.LocationId = context["locationId"].(string)
+	updateObj.LocationId = context["locationId"].(uuid.UUID)
 	updateObj.Status = returnStatus
 	updateObj.Items = newLines
 	updateObj.RefundAmount = math.Floor(*totalRefundableAmount)

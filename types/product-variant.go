@@ -90,7 +90,7 @@ type CreateProductVariantInput struct {
 	ManageInventory   bool                   `json:"manage_inventory,omitempty" validate:"omitempty"`
 	HSCode            string                 `json:"hs_code,omitempty" validate:"omitempty"`
 	OriginCountry     string                 `json:"origin_country,omitempty" validate:"omitempty"`
-	MIdCode           uuid.UUID              `json:"mid_code,omitempty" validate:"omitempty"`
+	MIdCode           string                 `json:"mid_code,omitempty" validate:"omitempty"`
 	Material          string                 `json:"material,omitempty" validate:"omitempty"`
 	Weight            float64                `json:"weight,omitempty" validate:"omitempty"`
 	Length            float64                `json:"length,omitempty" validate:"omitempty"`
@@ -114,7 +114,7 @@ type UpdateProductVariantInput struct {
 	HSCode            string                 `json:"hs_code,omitempty" validate:"omitempty"`
 	OriginCountry     string                 `json:"origin_country,omitempty" validate:"omitempty"`
 	VariantRank       int                    `json:"variant_rank,omitempty" validate:"omitempty"`
-	MIdCode           uuid.UUID              `json:"mid_code,omitempty" validate:"omitempty"`
+	MIdCode           string                 `json:"mid_code,omitempty" validate:"omitempty"`
 	Material          string                 `json:"material,omitempty" validate:"omitempty"`
 	Weight            float64                `json:"weight,omitempty" validate:"omitempty"`
 	Length            float64                `json:"length,omitempty" validate:"omitempty"`

@@ -14,3 +14,7 @@ type FilterableNotification struct {
 	To             string    `json:"to,omitempty"`
 	IncludeResends bool      `json:"include_resends,omitempty"`
 }
+
+type ResendNotification struct {
+	To string `json:"to,omitempty" validate:"omitempty"`
+}

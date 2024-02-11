@@ -2,6 +2,20 @@ package registry
 
 import "github.com/driver005/gateway/routes/admin"
 
+func (m *Base) AdminAnalyticsConfig() *admin.AnalyticsConfig {
+	if m.adminAnalyticsConfig == nil {
+		m.adminAnalyticsConfig = admin.NewAnalyticsConfig(m)
+	}
+	return m.adminAnalyticsConfig
+}
+
+func (m *Base) AdminApp() *admin.App {
+	if m.adminApp == nil {
+		m.adminApp = admin.NewApp(m)
+	}
+	return m.adminApp
+}
+
 func (m *Base) AdminAuth() *admin.Auth {
 	if m.adminAuth == nil {
 		m.adminAuth = admin.NewAuth(m)

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/interfaces"
@@ -11,6 +12,7 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
+	"github.com/icza/gox/gox"
 	"github.com/sarulabs/di"
 )
 
@@ -47,6 +49,33 @@ func (s *TaxProviderService) RetrieveProvider(region models.Region) interfaces.I
 	}
 
 	return provider
+}
+
+func (s *TaxProviderService) List(selector *models.TaxProvider, config *sql.Options) ([]models.TaxProvider, *utils.ApplictaionError) {
+	res, _, err := s.ListAndCount(selector, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *TaxProviderService) ListAndCount(selector *models.TaxProvider, config *sql.Options) ([]models.TaxProvider, *int64, *utils.ApplictaionError) {
+	if reflect.DeepEqual(config, &sql.Options{}) {
+		config.Skip = gox.NewInt(0)
+		config.Take = gox.NewInt(50)
+		config.Order = gox.NewString("created_at DESC")
+	}
+
+	var res []models.TaxProvider
+
+	query := sql.BuildQuery(selector, config)
+
+	count, err := s.r.TaxProviderRepository().FindAndCount(s.ctx, res, query)
+	if err != nil {
+		return nil, nil, err
+	}
+	return res, count, nil
 }
 
 func (s *TaxProviderService) ClearLineItemsTaxLines(itemIds uuid.UUIDs) *utils.ApplictaionError {

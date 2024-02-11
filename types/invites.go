@@ -18,3 +18,8 @@ type CreateInviteInput struct {
 	Email string          `json:"email"`
 	Role  models.UserRole `json:"role"`
 }
+
+type AcceptInvite struct {
+	Token string       `json:"token"`
+	User  *models.User `json:"user"`
+}

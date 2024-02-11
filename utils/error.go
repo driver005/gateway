@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -88,6 +89,8 @@ func ErrorHandler(ctx fiber.Ctx, err error) error {
 			e.Type = "unknown_error"
 		}
 	}
+
+	fmt.Println(err)
 
 	// Set Content-Type: application/json; charset=utf-8
 	ctx.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSONCharsetUTF8)

@@ -33,3 +33,13 @@ type FilterableUser struct {
 	FirstName string `json:"first_name,omitempty" validate:"omitempty"`
 	LastName  string `json:"last_name,omitempty" validate:"omitempty"`
 }
+
+type UserResetPasswordToken struct {
+	Email string `json:"email"`
+}
+
+type UserResetPasswordRequest struct {
+	Email    string `json:"email,omitempty" validate:"omitempty"`
+	Token    string `json:"token"`
+	Password string `json:"password"`
+}

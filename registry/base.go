@@ -32,7 +32,6 @@ import (
 	"gorm.io/gorm/schema"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/session"
 
 	// "github.com/gofiber/fiber/v3/middleware/csrf"
@@ -212,6 +211,8 @@ type Base struct {
 	flagRouter                     *services.FlagRouter
 
 	//Routes
+	adminAnalyticsConfig   *admin.AnalyticsConfig
+	adminApp               *admin.App
 	adminAuth              *admin.Auth
 	adminBatch             *admin.Batch
 	adminCollection        *admin.Collection
@@ -522,9 +523,6 @@ func (m *Base) Setup() {
 	}()
 
 	app.Use(favicon.New())
-	app.Use(cors.New(
-		cors.Config{AllowOrigins: m.Config().Server.CorsAllowedOrigins},
-	))
 
 	m.AddRoutes(app)
 

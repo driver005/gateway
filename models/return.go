@@ -48,7 +48,7 @@ type Return struct {
 	// When set to true, no notification will be sent related to this return.
 	NoNotification bool `json:"no_notification" gorm:"default:null"`
 
-	LocationId string `json:"location_id"`
+	LocationId uuid.UUID `json:"location_id"`
 
 	// Randomly generated key used to continue the completion of the return in case of failure.
 	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`

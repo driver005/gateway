@@ -1168,7 +1168,7 @@ func (s *OrderService) Archive(id uuid.UUID) (*models.Order, *utils.ApplictaionE
 	return order, nil
 }
 
-func (s *OrderService) CreateRefund(id uuid.UUID, refundAmount float64, reason string, note *string, noNotification *bool) (*models.Order, *utils.ApplictaionError) {
+func (s *OrderService) CreateRefund(id uuid.UUID, refundAmount float64, reason models.RefundReason, note *string, noNotification *bool) (*models.Order, *utils.ApplictaionError) {
 	order, err := s.RetrieveById(id, &sql.Options{
 		Selects: []string{
 			"refundable_amount",

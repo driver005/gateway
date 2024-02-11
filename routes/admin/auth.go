@@ -1,9 +1,9 @@
 package admin
 
 import (
+	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/utils"
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -23,25 +23,20 @@ func NewAuth(r Registry) *Auth {
 
 func (m *Auth) SetRoutes(router fiber.Router) {
 	route := router.Group("/auth")
-	route.Get("/", m.GetSession, m.r.Middleware().Authenticate()...)
-	route.Post("/", m.CreateSession)
-	route.Delete("/", m.DeleteSession, m.r.Middleware().Authenticate()...)
+	route.Get("", m.GetSession, m.r.Middleware().Authenticate()...)
+	route.Post("", m.CreateSession)
+	route.Delete("", m.DeleteSession, m.r.Middleware().Authenticate()...)
 	route.Post("/tocken", m.GetTocken, m.r.Middleware().Authenticate()...)
 }
 
 func (m *Auth) CreateSession(context fiber.Ctx) error {
-	sess, err := m.r.Session().Get(context)
+	sess, er := m.r.Session().Get(context)
+	if er != nil {
+		return er
+	}
+
+	req, err := api.BindCreate[AdminPostAuthReq](context, m.r.Validator())
 	if err != nil {
-		return err
-	}
-
-	var req AdminPostAuthReq
-	if err := context.Bind().Body(&req); err != nil {
-		return err
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
 		return err
 	}
 
@@ -88,13 +83,8 @@ func (m *Auth) GetSession(context fiber.Ctx) error {
 }
 
 func (m *Auth) GetTocken(context fiber.Ctx) error {
-	var req AdminPostAuthReq
-	if err := context.Bind().Body(&req); err != nil {
-		return err
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
+	req, err := api.BindCreate[AdminPostAuthReq](context, m.r.Validator())
+	if err != nil {
 		return err
 	}
 
