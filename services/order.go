@@ -721,7 +721,7 @@ func (s *OrderService) Update(orderId uuid.UUID, update *types.UpdateOrderInput)
 		}
 	}
 
-	if update.NoNotification {
+	if !reflect.ValueOf(update.NoNotification).IsZero() {
 		order.NoNotification = update.NoNotification
 	}
 
@@ -745,18 +745,39 @@ func (s *OrderService) Update(orderId uuid.UUID, update *types.UpdateOrderInput)
 
 	}
 
-	order.Email = update.Email
-	order.Items = update.Items
-	order.Region = &models.Region{Name: update.Region}
-	order.Discounts = update.Discounts
-	order.CustomerId = uuid.NullUUID{UUID: update.CustomerId}
-	// order.PaymentMethod = update.PaymentMethod
-	order.NoNotification = update.NoNotification
-	order.Payments = []models.Payment{*update.Payment}
-	order.Status = update.Status
-	order.FulfillmentStatus = update.FulfillmentStatus
-	order.PaymentStatus = update.PaymentStatus
-	order.Metadata = update.Metadata
+	if !reflect.ValueOf(update.Email).IsZero() {
+		order.Email = update.Email
+	}
+	if !reflect.ValueOf(update.Items).IsZero() {
+		order.Items = update.Items
+	}
+	if !reflect.ValueOf(update.Region).IsZero() {
+		order.Region = &models.Region{Name: update.Region}
+	}
+	if !reflect.ValueOf(update.Discounts).IsZero() {
+		order.Discounts = update.Discounts
+	}
+	if !reflect.ValueOf(update.CustomerId).IsZero() {
+		order.CustomerId = uuid.NullUUID{UUID: update.CustomerId}
+	}
+	// if !reflect.ValueOf(update.PaymentMethod).IsZero() {
+	// 	order.PaymentMethod = update.PaymentMethod
+	// }
+	if !reflect.ValueOf(update.NoNotification).IsZero() {
+		order.NoNotification = update.NoNotification
+	}
+	if !reflect.ValueOf(update.Payment).IsZero() {
+		order.Payments = []models.Payment{*update.Payment}
+	}
+	if !reflect.ValueOf(update.Status).IsZero() {
+		order.Status = update.Status
+	}
+	if !reflect.ValueOf(update.FulfillmentStatus).IsZero() {
+		order.FulfillmentStatus = update.FulfillmentStatus
+	}
+	if !reflect.ValueOf(update.PaymentStatus).IsZero() {
+		order.PaymentStatus = update.PaymentStatus
+	}
 
 	if err := s.r.OrderRepository().Update(s.ctx, order); err != nil {
 		return nil, err

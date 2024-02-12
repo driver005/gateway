@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v3"
+	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 )
 
@@ -27,7 +27,7 @@ func (r Routes) SetRoutes() {
 	r.r.AdminUser().UnauthenticatedUserRoutes(admin)
 	r.r.AdminInvite().UnauthenticatedInviteRoutes(admin)
 
-	admin.Use(convertMiddleware(r.r.Middleware().Authenticate())...)
+	admin.Use(utils.ConvertMiddleware(r.r.Middleware().Authenticate())...)
 
 	r.r.AdminAnalyticsConfig().SetRoutes(admin)
 	r.r.AdminApp().SetRoutes(admin)
@@ -67,12 +67,4 @@ func (r Routes) SetRoutes() {
 	r.r.AdminUpload().SetRoutes(admin)
 	r.r.AdminUser().SetRoutes(admin)
 	r.r.AdminVariant().SetRoutes(admin)
-}
-
-func convertMiddleware(m []func(fiber.Ctx) error) []any {
-	var result []any
-	for _, v := range m {
-		result = append(result, v)
-	}
-	return result
 }

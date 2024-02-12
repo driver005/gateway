@@ -8,6 +8,7 @@ import (
 
 type FilterableProduct struct {
 	core.FilterModel
+	PriceSelectionParams
 	Q                       string                 `json:"q,omitempty" validate:"omitempty"`
 	Status                  []models.ProductStatus `json:"status,omitempty" validate:"omitempty"`
 	PriceListId             uuid.UUIDs             `json:"price_list_id,omitempty" validate:"omitempty"`
@@ -180,6 +181,13 @@ type ProductTagReq struct {
 type ProductTypeReq struct {
 	Id    uuid.UUID `json:"id,omitempty" validate:"omitempty"`
 	Value string    `json:"value"`
+}
+
+type ProductSearch struct {
+	Q      string      `json:"q,omitempty" validate:"omitempty"`
+	Offset int         `json:"offset,omitempty" validate:"omitempty"`
+	Limit  int         `json:"limit,omitempty" validate:"omitempty"`
+	Filter interface{} `json:"filter,omitempty" validate:"omitempty"`
 }
 
 // type ProductFilterOptions struct {

@@ -8,3 +8,8 @@ type AuthenticateResult struct {
 	Customer *models.Customer `json:"customer,omitempty" validate:"omitempty"`
 	Error    string           `json:"error,omitempty" validate:"omitempty"`
 }
+
+type CreateAuth struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}

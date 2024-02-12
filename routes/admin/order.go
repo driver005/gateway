@@ -836,9 +836,16 @@ func (m *Order) CreateSwap(context fiber.Ctx) error {
 		}
 	} else if idempotencyKey.RecoveryPoint == "swap_created" {
 		idempotencyKey, err = m.r.IdempotencyKeyService().SetContext(context.Context()).WorkStage(idempotencyKey.IdempotencyKey, func() (*types.IdempotencyCallbackResult, *utils.ApplictaionError) {
-			_, err := m.r.SwapService().SetContext(context.Context()).List(&types.FilterableSwap{IdempotencyKey: idempotencyKey.IdempotencyKey}, &sql.Options{})
+			swaps, err := m.r.SwapService().SetContext(context.Context()).List(&types.FilterableSwap{IdempotencyKey: idempotencyKey.IdempotencyKey}, &sql.Options{})
 			if err != nil {
 				return nil, err
+			}
+
+			if len(swaps) == 0 {
+				return nil, utils.NewApplictaionError(
+					utils.INVALID_DATA,
+					"Swap not found",
+				)
 			}
 
 			result, err := m.r.OrderService().SetContext(context.Context()).RetrieveByIdWithTotals(id, config, types.TotalsContext{

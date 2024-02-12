@@ -3,14 +3,10 @@ package admin
 import (
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
 )
-
-type AdminPostAuthReq struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
 
 type Auth struct {
 	r Registry
@@ -35,7 +31,7 @@ func (m *Auth) CreateSession(context fiber.Ctx) error {
 		return er
 	}
 
-	req, err := api.BindCreate[AdminPostAuthReq](context, m.r.Validator())
+	req, err := api.BindCreate[types.CreateAuth](context, m.r.Validator())
 	if err != nil {
 		return err
 	}
@@ -83,7 +79,7 @@ func (m *Auth) GetSession(context fiber.Ctx) error {
 }
 
 func (m *Auth) GetTocken(context fiber.Ctx) error {
-	req, err := api.BindCreate[AdminPostAuthReq](context, m.r.Validator())
+	req, err := api.BindCreate[types.CreateAuth](context, m.r.Validator())
 	if err != nil {
 		return err
 	}

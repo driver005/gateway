@@ -42,3 +42,13 @@ type ReturnReceive struct {
 	Refund     float64           `json:"refund,omitempty" validate:"omitempty"`
 	LocationId uuid.UUID         `json:"location_id,omitempty" validate:"omitempty"`
 }
+
+type ReturnShippingMethod struct {
+	OptionId uuid.UUID `json:"option_id"`
+}
+
+type CreateReturn struct {
+	OrderId        uuid.UUID             `json:"order_id"`
+	Items          []OrderReturnItem     `json:"items,omitempty" validate:"omitempty"`
+	ReturnShipping *ReturnShippingMethod `json:"return_shipping,omitempty" validate:"omitempty"`
+}

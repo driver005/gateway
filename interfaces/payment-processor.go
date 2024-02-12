@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"github.com/driver005/gateway/models"
+	"github.com/driver005/gateway/types"
 	"github.com/google/uuid"
 )
 
@@ -40,6 +41,8 @@ type IPaymentProcessor interface {
 	CancelPayment(paymentSessionData map[string]interface{}) (map[string]interface{}, *PaymentProcessorError)
 	GetPaymentStatus(paymentSessionData map[string]interface{}) (*models.PaymentSessionStatus, *PaymentProcessorError)
 	UpdatePaymentData(sessionId uuid.UUID, data map[string]interface{}) (map[string]interface{}, *PaymentProcessorError)
+
+	RetrieveSavedMethods(customer *models.Customer) []types.PaymentMethod
 }
 
 func IsPaymentProcessor(obj interface{}) bool {

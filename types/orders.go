@@ -9,10 +9,21 @@ import (
 type FilterableOrder struct {
 	core.FilterModel
 
+	DisplayId       string           `json:"display_id,omitempty" validate:"omitempty"`
 	Email           string           `json:"email,omitempty" validate:"omitempty"`
 	BillingAddress  *AddressPayload  `json:"billing_address,omitempty" validate:"omitempty"`
 	ShippingAddress *AddressPayload  `json:"shipping_address,omitempty" validate:"omitempty"`
 	Customer        *models.Customer `json:"customer,omitempty" validate:"omitempty"`
+
+	Status            []models.OrderStatus       `json:"status,omitempty" validate:"omitempty"`
+	FulfillmentStatus []models.FulfillmentStatus `json:"fulfillment_status,omitempty" validate:"omitempty"`
+	PaymentStatus     []models.PaymentStatus     `json:"payment_status,omitempty" validate:"omitempty"`
+	CartId            uuid.UUID                  `json:"cart_id,omitempty" validate:"omitempty"`
+	RegionId          uuid.UUID                  `json:"region_id,omitempty" validate:"omitempty"`
+	CurrencyCode      string                     `json:"currency_code,omitempty" validate:"omitempty"`
+	TaxRate           string                     `json:"tax_rate,omitempty" validate:"omitempty"`
+
+	CustomerId uuid.UUID `json:"customer_id,omitempty" validate:"omitempty"`
 }
 type ShippingMethodOrder struct {
 	ProviderId uuid.UUID    `json:"provider_id,omitempty" validate:"omitempty"`
@@ -146,4 +157,18 @@ type OrderReturns struct {
 	NoNotification bool                           `json:"no_notification,omitempty" validate:"omitempty,boolean"`
 	Refund         float64                        `json:"refund,omitempty" validate:"omitempty,numeric"`
 	LocationId     uuid.UUID                      `json:"location_id,omitempty" validate:"omitempty,alphanum"`
+}
+
+type CustomerAcceptClaim struct {
+	Token string `json:"token"`
+}
+
+type OrderLookup struct {
+	DisplayId       string          `json:"display_id"`
+	Email           string          `json:"email" validate:"email"`
+	ShippingAddress *AddressPayload `json:"shipping_address,omitempty" validate:"omitempty"`
+}
+
+type CustomerOrderClaim struct {
+	OrderIds uuid.UUIDs `json:"order_ids"`
 }

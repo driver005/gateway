@@ -34,12 +34,12 @@ func (m *User) SetRoutes(router fiber.Router) {
 }
 
 func (m *User) Get(context fiber.Ctx) error {
-	Id, err := utils.ParseUUID(context.Params("user_id"))
+	id, err := utils.ParseUUID(context.Params("id"))
 	if err != nil {
 		return err
 	}
 
-	user, err := m.r.UserService().SetContext(context.Context()).Retrieve(Id, &sql.Options{})
+	user, err := m.r.UserService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,10 @@ func (m *User) ResetPassword(context fiber.Ctx) error {
 	}
 
 	if tocken == nil || claims["user_id"] != user.Id {
-		return context.Status(fiber.StatusUnauthorized).SendString("Invalid or expired password reset token")
+		return utils.NewApplictaionError(
+			utils.UNAUTHORIZED,
+			"Invalid or expired password reset token",
+		)
 	}
 
 	result, err := m.r.UserService().SetContext(context.Context()).SetPassword(user.Id, model.Password)

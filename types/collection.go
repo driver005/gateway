@@ -9,7 +9,7 @@ type AddProductsToCollectionInput struct {
 	ProductIds []uuid.UUID `json:"product_ids"`
 }
 
-type FilterableCollectionProps struct {
+type FilterableCollection struct {
 	core.FilterModel
 	Title               string    `json:"title,omitempty" validate:"omitempty"`
 	Handle              string    `json:"handle,omitempty" validate:"omitempty"`

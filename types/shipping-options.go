@@ -11,6 +11,8 @@ type FilterableShippingOption struct {
 	RegionId  uuid.UUID `json:"region_id,omitempty" validate:"omitempty"`
 	IsReturn  bool      `json:"is_return,omitempty" validate:"omitempty"`
 	AdminOnly bool      `json:"admin_only,omitempty" validate:"omitempty"`
+
+	ProfileId uuid.UUIDs `json:"profile_id,omitempty" validate:"omitempty"`
 }
 
 type ShippingRequirement struct {
@@ -97,4 +99,10 @@ type UpdateShippingOptionInput struct {
 type ValidatePriceTypeAndAmountInput struct {
 	Amount    float64                        `json:"amount,omitempty" validate:"omitempty"`
 	PriceType models.ShippingOptionPriceType `json:"price_type,omitempty" validate:"omitempty"`
+}
+
+type ShippingOptionParams struct {
+	ProductIds []uuid.UUID `json:"product_ids,omitempty" validate:"omitempty"`
+	RegionId   uuid.UUID   `json:"region_id,omitempty" validate:"omitempty"`
+	IsReturn   string      `json:"is_return,omitempty" validate:"omitempty"`
 }

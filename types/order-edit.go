@@ -37,3 +37,7 @@ type OrderEditsRequestConfirmation struct {
 type OrderEditsEditLineItem struct {
 	Quantity int `json:"quantity"`
 }
+
+type OrderEditsDecline struct {
+	DeclinedReason string `json:"declined_reason,omitempty" validate:"omitempty"`
+}

@@ -47,7 +47,7 @@ func (s *DefaultSearchService) DeleteAllDocuments(indexName string) {
 	s.r.Context().Logger.Warn(s.ctx, "This is an empty method: deleteAllDocuments must be overridden by a child class")
 }
 
-func (s *DefaultSearchService) Search(indexName string, query interface{}, options interface{}) map[string]interface{} {
+func (s *DefaultSearchService) Search(indexName string, query interface{}, options map[string]interface{}) map[string]interface{} {
 	s.r.Context().Logger.Warn(s.ctx, "This is an empty method: search must be overridden a the child class")
 	return map[string]interface{}{
 		"hits": []interface{}{},

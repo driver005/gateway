@@ -10,10 +10,23 @@ func GetUser(context fiber.Ctx) uuid.UUID {
 	var id uuid.UUID
 	user, ok := context.Locals("user").(*models.User)
 	if !ok {
-		id = context.Locals("user_id").(uuid.UUID)
+		if context.Locals("user_id").(uuid.UUID) != uuid.Nil {
+			id = context.Locals("user_id").(uuid.UUID)
+		} else {
+			id = uuid.Nil
+		}
 	} else {
 		id = user.Id
 	}
 
 	return id
+}
+
+func GetUserStore(context fiber.Ctx) uuid.UUID {
+	userId := GetUser(context)
+	if userId == uuid.Nil {
+		userId = context.Locals("customer_id").(uuid.UUID)
+	}
+
+	return userId
 }

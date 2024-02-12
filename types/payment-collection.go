@@ -25,3 +25,11 @@ type PaymentCollectionsSessionsBatchInput struct {
 type PaymentCollectionsSessionsInput struct {
 	ProviderId uuid.UUID `json:"provider_id"`
 }
+
+type PaymentCollectionsAuthorizeBatch struct {
+	SessionIds uuid.UUIDs `json:"session_ids"`
+}
+
+type PaymentCollectionsSessionsBatch struct {
+	Sessions []PaymentCollectionsSessionsBatchInput `json:"sessions"`
+}

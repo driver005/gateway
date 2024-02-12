@@ -44,3 +44,7 @@ type UpdateCustomerInput struct {
 	LastName         string          `json:"last_name,omitempty" validate:"omitempty"`
 	Phone            string          `json:"phone,omitempty" validate:"omitempty"`
 }
+
+type CustomerAddAddress struct {
+	Address *AddressCreatePayload `json:"address"`
+}

@@ -68,7 +68,7 @@ func (s *ProductCollectionService) RetrieveByHandle(collectionHandle string, con
 	return res, nil
 }
 
-func (s *ProductCollectionService) List(selector *types.FilterableCollectionProps, config *sql.Options) ([]models.ProductCollection, *utils.ApplictaionError) {
+func (s *ProductCollectionService) List(selector *types.FilterableCollection, config *sql.Options) ([]models.ProductCollection, *utils.ApplictaionError) {
 	collections, _, err := s.ListAndCount(selector, config)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (s *ProductCollectionService) List(selector *types.FilterableCollectionProp
 	return collections, nil
 }
 
-func (s *ProductCollectionService) ListAndCount(selector *types.FilterableCollectionProps, config *sql.Options) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
+func (s *ProductCollectionService) ListAndCount(selector *types.FilterableCollection, config *sql.Options) ([]models.ProductCollection, *int64, *utils.ApplictaionError) {
 	var res []models.ProductCollection
 
 	if config.Q != nil {

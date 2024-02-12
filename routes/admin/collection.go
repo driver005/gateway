@@ -41,7 +41,7 @@ func (m *Collection) Get(context fiber.Ctx) error {
 }
 
 func (m *Collection) List(context fiber.Ctx) error {
-	model, config, err := api.BindList[types.FilterableCollectionProps](context)
+	model, config, err := api.BindList[types.FilterableCollection](context)
 	if err != nil {
 		return err
 	}
