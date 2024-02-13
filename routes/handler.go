@@ -20,7 +20,8 @@ func (r *Routes) SetAdminRoutes() {
 
 	adminCors := r.r.Config().Server.AdminCors
 	admin.Use(cors.New(cors.Config{
-		AllowOrigins: adminCors,
+		AllowOrigins:     adminCors,
+		AllowCredentials: true,
 	}))
 
 	r.r.AdminAuth().SetRoutes(admin)
@@ -74,7 +75,8 @@ func (r *Routes) SetStoreRoutes() {
 
 	storeCors := r.r.Config().Server.StoreCors
 	store.Use(cors.New(cors.Config{
-		AllowOrigins: storeCors,
+		AllowOrigins:     storeCors,
+		AllowCredentials: true,
 	}))
 
 	store.Use(utils.ConvertMiddleware(r.r.Middleware().AuthenticateCustomer())...)
