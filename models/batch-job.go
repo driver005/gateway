@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/driver005/gateway/core"
-	"github.com/driver005/gateway/helper"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -128,7 +127,7 @@ func (b *BatchJobResult) Scan(value interface{}) error {
 	}
 	s := strings.Split(strings.Trim(string(bytes), "()"), ",")
 	for i := 0; i < reflect.TypeOf(BatchJobResult{}).NumField(); i++ {
-		helper.SetField(&b, reflect.TypeOf(BatchJobResult{}).Field(i).Name, s[i])
+		setField(&b, reflect.TypeOf(BatchJobResult{}).Field(i).Name, s[i])
 	}
 
 	return nil
@@ -155,4 +154,29 @@ func (pl *BatchJobStatus) Scan(value interface{}) error {
 
 func (pl BatchJobStatus) Value() (driver.Value, error) {
 	return string(pl), nil
+}
+
+func setField(obj interface{}, name string, value interface{}) error {
+	// Fetch the field reflect.Value
+	structValue := reflect.ValueOf(obj).Elem()
+	structFieldValue := reflect.Indirect(structValue).FieldByName(name)
+
+	if !structFieldValue.IsValid() {
+		return fmt.Errorf("no such field: %s in obj", name)
+	}
+
+	// If obj field value is not settable an error is thrown
+	if !structFieldValue.CanSet() {
+		return fmt.Errorf("cannot set %s field value", name)
+	}
+
+	structFieldType := structFieldValue.Type()
+	val := reflect.ValueOf(value)
+	if structFieldType != val.Type() {
+		invalidTypeError := errors.New("provided value type didn't match obj field type")
+		return invalidTypeError
+	}
+
+	structFieldValue.Set(val)
+	return nil
 }
