@@ -15,7 +15,7 @@ func New(r Registry) *Routes {
 	}
 }
 
-func (r Routes) SetRoutes() {
+func (r *Routes) SetAdminRoutes() {
 	admin := r.r.AdminRouter()
 
 	adminCors := r.r.Config().Server.AdminCors
@@ -67,4 +67,39 @@ func (r Routes) SetRoutes() {
 	r.r.AdminUpload().SetRoutes(admin)
 	r.r.AdminUser().SetRoutes(admin)
 	r.r.AdminVariant().SetRoutes(admin)
+}
+
+func (r *Routes) SetStoreRoutes() {
+	store := r.r.StoreRouter()
+
+	storeCors := r.r.Config().Server.StoreCors
+	store.Use(cors.New(cors.Config{
+		AllowOrigins: storeCors,
+	}))
+
+	store.Use(utils.ConvertMiddleware(r.r.Middleware().AuthenticateCustomer())...)
+
+	r.r.StoreAuth().SetRoutes(store)
+	r.r.StoreCart().SetRoutes(store)
+	r.r.StoreCollection().SetRoutes(store)
+	r.r.StoreCustomer().SetRoutes(store)
+	r.r.StoreGiftCard().SetRoutes(store)
+	r.r.StoreOrder().SetRoutes(store)
+	r.r.StoreOrderEdit().SetRoutes(store)
+	r.r.StorePaymentCollection().SetRoutes(store)
+	r.r.StoreProduct().SetRoutes(store)
+	r.r.StoreProductCategory().SetRoutes(store)
+	r.r.StoreProductTag().SetRoutes(store)
+	r.r.StoreProductType().SetRoutes(store)
+	r.r.StoreRegion().SetRoutes(store)
+	r.r.StoreReturn().SetRoutes(store)
+	r.r.StoreReturnReason().SetRoutes(store)
+	r.r.StoreShippingOption().SetRoutes(store)
+	r.r.StoreSwap().SetRoutes(store)
+	r.r.StoreVariant().SetRoutes(store)
+}
+
+func (r *Routes) SetRoutes() {
+	r.SetAdminRoutes()
+	r.SetStoreRoutes()
 }

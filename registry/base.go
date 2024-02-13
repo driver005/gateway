@@ -16,6 +16,7 @@ import (
 	"github.com/driver005/gateway/repository"
 	"github.com/driver005/gateway/routes"
 	"github.com/driver005/gateway/routes/admin"
+	"github.com/driver005/gateway/routes/store"
 	"github.com/driver005/gateway/services"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/utils"
@@ -212,6 +213,8 @@ type Base struct {
 	flagRouter                     *services.FlagRouter
 
 	//Routes
+
+	//Admin
 	adminAnalyticsConfig   *admin.AnalyticsConfig
 	adminApp               *admin.App
 	adminAuth              *admin.Auth
@@ -251,6 +254,26 @@ type Base struct {
 	adminUpload            *admin.Upload
 	adminUser              *admin.User
 	adminVariant           *admin.Variant
+
+	//Store
+	storeAuth              *store.Auth
+	storeCart              *store.Cart
+	storeCollection        *store.Collection
+	storeCustomer          *store.Customer
+	storeGiftCard          *store.GiftCard
+	storeOrder             *store.Order
+	storeOrderEdit         *store.OrderEdit
+	storePaymentCollection *store.PaymentCollection
+	storeProduct           *store.Product
+	storeProductCategory   *store.ProductCategory
+	storeProductTag        *store.ProductTag
+	storeProductType       *store.ProductType
+	storeRegion            *store.Region
+	storeReturn            *store.Return
+	storeReturnReason      *store.ReturnReason
+	storeShippingOption    *store.ShippingOption
+	storeSwap              *store.Swap
+	storeVariant           *store.Variant
 }
 
 func NewRegistry() *Base {

@@ -4,6 +4,7 @@ import (
 	"github.com/driver005/gateway/config"
 	"github.com/driver005/gateway/middlewares"
 	"github.com/driver005/gateway/routes/admin"
+	"github.com/driver005/gateway/routes/store"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -54,4 +55,24 @@ type Registry interface {
 	AdminUpload() *admin.Upload
 	AdminUser() *admin.User
 	AdminVariant() *admin.Variant
+
+	//Store
+	StoreAuth() *store.Auth
+	StoreCart() *store.Cart
+	StoreCollection() *store.Collection
+	StoreCustomer() *store.Customer
+	StoreGiftCard() *store.GiftCard
+	StoreOrder() *store.Order
+	StoreOrderEdit() *store.OrderEdit
+	StorePaymentCollection() *store.PaymentCollection
+	StoreProduct() *store.Product
+	StoreProductCategory() *store.ProductCategory
+	StoreProductTag() *store.ProductTag
+	StoreProductType() *store.ProductType
+	StoreRegion() *store.Region
+	StoreReturn() *store.Return
+	StoreReturnReason() *store.ReturnReason
+	StoreShippingOption() *store.ShippingOption
+	StoreSwap() *store.Swap
+	StoreVariant() *store.Variant
 }
