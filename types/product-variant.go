@@ -141,9 +141,9 @@ type ProductVariantVariant struct {
 
 type ProductVariantParams struct {
 	PriceSelectionParams
-	Ids               uuid.UUIDs     `json:"ids,omitempty" validate:"omitempty,alphanum"`
-	SalesChannelId    uuid.UUID      `json:"sales_channel_id,omitempty" validate:"omitempty,alphanum"`
-	Id                uuid.UUID      `json:"id,omitempty" validate:"omitempty"`
-	Title             []string       `json:"title,omitempty" validate:"omitempty"`
-	InventoryQuantity core.TimeModel `json:"inventory_quantity,omitempty" validate:"omitempty"`
+	Ids               uuid.UUIDs       `json:"ids,omitempty" validate:"omitempty,alphanum"`
+	SalesChannelId    uuid.UUID        `json:"sales_channel_id,omitempty" validate:"omitempty,alphanum"`
+	Id                uuid.UUID        `json:"id,omitempty" validate:"omitempty"`
+	Title             []string         `json:"title,omitempty" validate:"omitempty"`
+	InventoryQuantity core.NumberModel `json:"inventory_quantity,omitempty" validate:"omitempty"`
 }

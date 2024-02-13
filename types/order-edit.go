@@ -41,3 +41,8 @@ type OrderEditsEditLineItem struct {
 type OrderEditsDecline struct {
 	DeclinedReason string `json:"declined_reason,omitempty" validate:"omitempty"`
 }
+
+type UpdateLineItem struct {
+	Quantity int        `json:"quantity"`
+	Metadata core.JSONB `json:"metadata,omitempty" validate:"omitempty"`
+}

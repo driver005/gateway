@@ -67,6 +67,7 @@ type Base struct {
 	pricingModuleService   interfaces.IPricingModuleService
 	fileService            interfaces.IFileService
 	batchJobStrategy       interfaces.IBatchJobStrategy
+	cartCompletionStrategy interfaces.ICartCompletionStrategy
 
 	//Repository
 	addressRepo                       *repository.AddressRepo

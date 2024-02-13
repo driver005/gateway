@@ -90,4 +90,5 @@ type Registry interface {
 	CacheService() interfaces.ICacheService
 	PricingModuleService() interfaces.IPricingModuleService
 	FileService() interfaces.IFileService
+	CartCompletionStrategy() interfaces.ICartCompletionStrategy
 }

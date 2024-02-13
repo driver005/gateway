@@ -1432,7 +1432,7 @@ func (s *CartService) RemoveDiscount(cartId uuid.UUID, discountCode string) (*mo
 	}
 
 	if cart.PaymentSessions != nil && len(cart.PaymentSessions) > 0 {
-		err = s.setPaymentSessions(cartId, nil)
+		err = s.SetPaymentSessions(cartId, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -1647,7 +1647,7 @@ func (s *CartService) SetPaymentSession(id uuid.UUID, providerId uuid.UUID) *uti
 	return nil
 }
 
-func (s *CartService) setPaymentSessions(id uuid.UUID, cart *models.Cart) *utils.ApplictaionError {
+func (s *CartService) SetPaymentSessions(id uuid.UUID, cart *models.Cart) *utils.ApplictaionError {
 	if id != uuid.Nil {
 		c, err := s.RetrieveWithTotals(id, &sql.Options{
 			Relations: []string{

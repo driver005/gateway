@@ -1,5 +1,7 @@
 package types
 
+import "github.com/google/uuid"
+
 type CreatePublishableApiKeyInput struct {
 	Title string `json:"title"`
 }
@@ -10,4 +12,8 @@ type UpdatePublishableApiKeyInput struct {
 
 type PublishableApiKeySalesChannelsBatch struct {
 	SalesChannelIds []ProductBatchSalesChannel `json:"sales_channel_ids"`
+}
+
+type PublishableApiKeyScopes struct {
+	SalesChannelIds uuid.UUIDs `json:"sales_channel_ids"`
 }

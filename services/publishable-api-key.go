@@ -183,7 +183,7 @@ func (s *PublishableApiKeyService) ListSalesChannels(id uuid.UUID, q *string) ([
 	return s.r.PublishableApiKeySalesChannelRepository().FindSalesChannels(id, q)
 }
 
-func (s *PublishableApiKeyService) GetResourceScopes(id uuid.UUID) (map[string]uuid.UUIDs, *utils.ApplictaionError) {
+func (s *PublishableApiKeyService) GetResourceScopes(id uuid.UUID) (*types.PublishableApiKeyScopes, *utils.ApplictaionError) {
 	var res []models.PublishableApiKeySalesChannel
 
 	query := sql.BuildQuery(models.PublishableApiKeySalesChannel{PublishableKeyId: uuid.NullUUID{UUID: id}}, &sql.Options{})
@@ -196,5 +196,5 @@ func (s *PublishableApiKeyService) GetResourceScopes(id uuid.UUID) (map[string]u
 	for _, salesChannel := range res {
 		salesChannelIds = append(salesChannelIds, salesChannel.SalesChannelId.UUID)
 	}
-	return map[string]uuid.UUIDs{"sales_channel_ids": salesChannelIds}, nil
+	return &types.PublishableApiKeyScopes{SalesChannelIds: salesChannelIds}, nil
 }

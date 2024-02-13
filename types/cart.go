@@ -56,3 +56,20 @@ type CartUpdateProps struct {
 type FilterableCartProps struct {
 	core.FilterModel
 }
+
+type CreateCart struct {
+	RegionId       uuid.UUID                            `json:"region_id,omitempty" validate:"omitempty,string"`
+	CountryCode    string                               `json:"country_code,omitempty" validate:"omitempty,string"`
+	Items          []CreateClaimItemAdditionalItemInput `json:"items,omitempty" validate:"omitempty,dive"`
+	Context        core.JSONB                           `json:"context,omitempty" validate:"omitempty"`
+	SalesChannelId uuid.UUID                            `json:"sales_channel_id,omitempty" validate:"omitempty,string"`
+}
+
+type UpdatePaymentSession struct {
+	Data core.JSONB `json:"data"`
+}
+
+type AddShippingMethod struct {
+	OptionId uuid.UUID  `json:"option_id"`
+	Data     core.JSONB `json:"data,omitempty" validate:"omitempty"`
+}

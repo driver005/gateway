@@ -22,7 +22,7 @@ type PaymentCollectionsSessionsBatchInput struct {
 	SessionId  uuid.UUID `json:"session_id,omitempty" validate:"omitempty"`
 }
 
-type PaymentCollectionsSessionsInput struct {
+type SessionsInput struct {
 	ProviderId uuid.UUID `json:"provider_id"`
 }
 

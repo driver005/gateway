@@ -55,3 +55,10 @@ func (m *Base) BatchJobStrategy() interfaces.IBatchJobStrategy {
 	}
 	return m.batchJobStrategy
 }
+
+func (m *Base) CartCompletionStrategy() interfaces.ICartCompletionStrategy {
+	if m.cartCompletionStrategy == nil {
+		m.cartCompletionStrategy = nil
+	}
+	return m.cartCompletionStrategy
+}

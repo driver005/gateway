@@ -83,14 +83,14 @@ func (m *PaymentCollection) PaymentSessionAuthorize(context fiber.Ctx) error {
 	if !ok {
 		return utils.NewApplictaionError(
 			utils.NOT_FOUND,
-			fmt.Sprintln("Could not find Payment Session with id %s", id),
+			fmt.Sprintf("Could not find Payment Session with id %s", id),
 		)
 	}
 
 	if result.Status != models.PaymentSessionStatusAuthorized {
 		return utils.NewApplictaionError(
 			utils.PAYMENT_AUTHORIZATION_ERROR,
-			fmt.Sprintln("Failed to authorize Payment Session id %s", id),
+			fmt.Sprintf("Failed to authorize Payment Session id %s", id),
 		)
 	}
 
@@ -114,7 +114,7 @@ func (m *PaymentCollection) PaymentSessionManageBatch(context fiber.Ctx) error {
 }
 
 func (m *PaymentCollection) PaymentSessionManage(context fiber.Ctx) error {
-	model, id, err := api.BindUpdate[types.PaymentCollectionsSessionsInput](context, "id", m.r.Validator())
+	model, id, err := api.BindUpdate[types.SessionsInput](context, "id", m.r.Validator())
 	if err != nil {
 		return err
 	}

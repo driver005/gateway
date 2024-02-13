@@ -240,7 +240,7 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 	return paymentCollection, nil
 }
 
-func (s *PaymentCollectionService) SetPaymentSession(id uuid.UUID, sessionInput *types.PaymentCollectionsSessionsInput, customerId uuid.UUID) (*models.PaymentCollection, *utils.ApplictaionError) {
+func (s *PaymentCollectionService) SetPaymentSession(id uuid.UUID, sessionInput *types.SessionsInput, customerId uuid.UUID) (*models.PaymentCollection, *utils.ApplictaionError) {
 	paymentCollection, err := s.Retrieve(id, &sql.Options{
 		Relations: []string{"region", "region.payment_providers", "payment_sessions"},
 	})

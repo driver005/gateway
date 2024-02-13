@@ -37,14 +37,15 @@ func (m *Product) Get(context fiber.Ctx) error {
 
 	customerId := context.Locals("customer_id").(uuid.UUID)
 
-	product, err := m.r.ProductService().SetContext(context.Context()).Retrieve(id, config)
+	product, err := m.r.ProductService().SetContext(context.Context()).RetrieveById(id, config)
 	if err != nil {
 		return err
 	}
 
 	salesChannelId := model.SalesChannelId
-	if context.Locals("publishableApiKeyScopes").SalesChannelIds != nil {
-		salesChannelId = context.Locals("publishableApiKeyScopes").SalesChannelIds[0]
+	publishableApiKeyScopes, ok := context.Locals("publishableApiKeyScopes").(types.PublishableApiKeyScopes)
+	if ok {
+		salesChannelId = publishableApiKeyScopes.SalesChannelIds[0]
 	}
 
 	regionId := model.RegionId
@@ -103,10 +104,10 @@ func (m *Product) List(context fiber.Ctx) error {
 	currencyCode := model.CurrencyCode
 
 	model.Status = []models.ProductStatus{models.ProductStatusPublished}
-
-	if context.Locals("publishableApiKeyScopes").SalesChannelIds != nil {
+	publishableApiKeyScopes, ok := context.Locals("publishableApiKeyScopes").(types.PublishableApiKeyScopes)
+	if ok {
 		if model.SalesChannelId == nil {
-			model.SalesChannelId = context.Locals("publishableApiKeyScopes").SalesChannelIds[0]
+			model.SalesChannelId = publishableApiKeyScopes.SalesChannelIds
 		}
 
 		if !lo.Contains(config.Relations, "listConfig.relations") {

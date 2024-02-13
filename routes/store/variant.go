@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/driver005/gateway/api"
+	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/interfaces"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/services"
@@ -40,8 +41,9 @@ func (m *Variant) Get(context fiber.Ctx) error {
 	}
 
 	salesChannelId := model.SalesChannelId
-	if context.Locals("publishableApiKeyScopes").SalesChannelIds != nil {
-		salesChannelId = context.Locals("publishableApiKeyScopes").SalesChannelIds[0]
+	publishableApiKeyScopes, ok := context.Locals("publishableApiKeyScopes").(types.PublishableApiKeyScopes)
+	if ok {
+		salesChannelId = publishableApiKeyScopes.SalesChannelIds[0]
 	}
 
 	regionId := model.RegionId
@@ -86,12 +88,18 @@ func (m *Variant) List(context fiber.Ctx) error {
 	}
 
 	customerId := context.Locals("customer_id").(uuid.UUID)
-
-	if context.Locals("publishableApiKeyScopes").SalesChannelIds != nil {
-		model.SalesChannelId = context.Locals("publishableApiKeyScopes").SalesChannelIds[0]
+	publishableApiKeyScopes, ok := context.Locals("publishableApiKeyScopes").(types.PublishableApiKeyScopes)
+	if ok {
+		model.SalesChannelId = publishableApiKeyScopes.SalesChannelIds[0]
 	}
 
-	variants, err := m.r.ProductVariantService().SetContext(context.Context()).List(model, config)
+	variants, err := m.r.ProductVariantService().SetContext(context.Context()).List(&types.FilterableProductVariant{
+		FilterModel: core.FilterModel{
+			Id: []uuid.UUID{model.Id},
+		},
+		Title:             model.Title,
+		InventoryQuantity: model.InventoryQuantity,
+	}, config)
 	if err != nil {
 		return err
 	}
