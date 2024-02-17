@@ -9,7 +9,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type StagedJobService struct {
@@ -33,14 +32,14 @@ func (s *StagedJobService) List(selector models.StagedJob, config *sql.Options) 
 	var res []models.StagedJob
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	if err := s.r.StagedJobRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.StagedJobRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -51,7 +50,7 @@ func (s *StagedJobService) Delete(stagedJobIds uuid.UUIDs) *utils.ApplictaionErr
 	query := sql.BuildQuery(models.StagedJob{}, &sql.Options{
 		Specification: []sql.Specification{sql.In("id", stagedJobIds)},
 	})
-	if err := s.r.StagedJobRepository().Find(s.ctx, data, query); err != nil {
+	if err := s.r.StagedJobRepository().Find(s.ctx, &data, query); err != nil {
 		return err
 	}
 
@@ -73,7 +72,7 @@ func (s *StagedJobService) Create(data []types.EmitData) *utils.ApplictaionError
 		}
 	}
 
-	if err := s.r.StagedJobRepository().InsertSlice(s.ctx, stagedJobs); err != nil {
+	if err := s.r.StagedJobRepository().InsertSlice(s.ctx, &stagedJobs); err != nil {
 		return err
 	}
 

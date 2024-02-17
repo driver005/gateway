@@ -32,7 +32,7 @@ func (r *SalesChannelRepo) GetFreeTextSearchResults(ctx context.Context, q *stri
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := r.FindAndCount(ctx, res, query)
+	count, err := r.FindAndCount(ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

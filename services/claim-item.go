@@ -12,7 +12,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type ClaimItemService struct {
@@ -56,14 +55,14 @@ func (s *ClaimItemService) List(selector models.ClaimItem, config *sql.Options) 
 	var res []models.ClaimItem
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	query := sql.BuildQuery[models.ClaimItem](selector, config)
 
-	if err := s.r.ClaimItemRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ClaimItemRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil

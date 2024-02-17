@@ -7,6 +7,8 @@ import (
 
 type FilterableInvite struct {
 	core.FilterModel
+
+	UserEmail string `json:"user_email,omitempty"`
 }
 
 type ListInvite struct {

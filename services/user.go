@@ -55,7 +55,7 @@ func (s *UserService) ListAndCount(selector *types.FilterableUser, config *sql.O
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.UserRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.UserRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -141,6 +141,10 @@ func (s *UserService) Create(data *types.CreateUserInput) (*models.User, *utils.
 		LastName:  data.LastName,
 		ApiToken:  data.APIToken,
 		Role:      data.Role,
+	}
+
+	if !reflect.ValueOf(data.Id).IsZero() {
+		model.Id = data.Id
 	}
 
 	if !reflect.ValueOf(data.Password).IsZero() {

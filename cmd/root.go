@@ -9,8 +9,8 @@ import (
 
 func (h *Handler) NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "hydra",
-		Short: "Run and manage Ory Hydra",
+		Use:   "medusa",
+		Short: "Run and manage Medusa",
 	}
 	EnableUsageTemplating(cmd)
 	h.RegisterCommandRecursive(cmd)
@@ -18,19 +18,25 @@ func (h *Handler) NewRootCmd() *cobra.Command {
 }
 
 func (h *Handler) RegisterCommandRecursive(parent *cobra.Command) {
-	migrateCmd := h.NewMigrateCmd()
-	migrateCmd.AddCommand(h.NewMigrateGenCmd())
-	// migrateCmd.AddCommand(NewMigrateSqlCmd())
-	// migrateCmd.AddCommand(NewMigrateStatusCmd())
+	migrateCmd := h.NewMigrate()
+	migrateCmd.AddCommand(h.NewMigratUp())
+	migrateCmd.AddCommand(h.NewMigratDown())
+
+	serverCmd := h.NewServer()
+	serverCmd.AddCommand(h.NewServerStart())
+
+	userCmd := h.NewUser()
 
 	parent.AddCommand(
 		migrateCmd,
+		serverCmd,
+		userCmd,
 	)
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
-func (h *Handler) Execute() {
-	if err := h.NewRootCmd().Execute(); err != nil {
+func Execute() {
+	if err := NewHandler().NewRootCmd().Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

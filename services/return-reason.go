@@ -91,7 +91,7 @@ func (s *ReturnReasonService) Update(id uuid.UUID, data *types.UpdateReturnReaso
 func (s *ReturnReasonService) List(selector *types.FilterableReturnReason, config *sql.Options) ([]models.ReturnReason, *utils.ApplictaionError) {
 	var res []models.ReturnReason
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.ReturnReasonRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ReturnReasonRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil

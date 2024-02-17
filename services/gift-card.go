@@ -10,7 +10,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 	"github.com/thanhpk/randstr"
 )
 
@@ -40,16 +39,16 @@ func (s *GiftCardService) GenerateCode() string {
 
 func (s *GiftCardService) ListAndCount(selector *types.FilterableGiftCard, config *sql.Options) ([]models.GiftCard, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	var res []models.GiftCard
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.GiftCardRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.GiftCardRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

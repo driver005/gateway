@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 	"time"
 
@@ -53,14 +54,14 @@ func (s *OrderEditService) Retrieve(id uuid.UUID, config *sql.Options) (*models.
 func (s *OrderEditService) ListAndCount(selector *types.FilterableOrderEdit, config *sql.Options) ([]models.OrderEdit, *int64, *utils.ApplictaionError) {
 	var res []models.OrderEdit
 
-	if config.Q != nil {
-		v := sql.ILike(*config.Q)
+	if !reflect.ValueOf(config.Q).IsZero() {
+		v := sql.ILike(config.Q)
 		selector.InternalNote = v
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.OrderEditRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.OrderEditRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

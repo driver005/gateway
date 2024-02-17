@@ -1139,7 +1139,7 @@ func (m *PublishableApiKey) ListChannels(context fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result, err := m.r.PublishableApiKeyService().SetContext(context.Context()).ListSalesChannels(id, config.Q)
+	result, err := m.r.PublishableApiKeyService().SetContext(context.Context()).ListSalesChannels(id, &config.Q)
 	if err != nil {
 		return err
 	}

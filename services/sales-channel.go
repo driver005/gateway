@@ -10,7 +10,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type SalesChannelService struct {
@@ -76,16 +75,16 @@ func (s *SalesChannelService) List(selector *types.FilterableSalesChannel, confi
 
 func (s *SalesChannelService) ListAndCount(selector *types.FilterableSalesChannel, config *sql.Options) ([]models.SalesChannel, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	var res []models.SalesChannel
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.SalesChannelRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.SalesChannelRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

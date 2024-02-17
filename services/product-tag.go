@@ -10,7 +10,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type ProductTagService struct {
@@ -71,12 +70,12 @@ func (s *ProductTagService) ListAndCount(selector *types.FilterableProductTag, c
 	var res []models.ProductTag
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(20)
+		config.Skip = 0
+		config.Take = 20
 	}
 
-	if config.Q != nil {
-		v := sql.ILike(*config.Q)
+	if !reflect.ValueOf(config.Q).IsZero() {
+		v := sql.ILike(config.Q)
 		selector.Value = v
 	}
 
@@ -86,7 +85,7 @@ func (s *ProductTagService) ListAndCount(selector *types.FilterableProductTag, c
 		return s.r.ProductTagRepository().FindAndCountByDiscountConditionID(selector.DiscountConditionId, query)
 	}
 
-	count, err := s.r.ProductTagRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.ProductTagRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

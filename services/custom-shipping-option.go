@@ -49,7 +49,7 @@ func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config *sql.Options
 func (s *CustomShippingOptionService) List(selector models.CustomShippingOption, config *sql.Options) ([]models.CustomShippingOption, *utils.ApplictaionError) {
 	var res []models.CustomShippingOption
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.CustomShippingOptionRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.CustomShippingOptionRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -67,7 +67,7 @@ func (s *CustomShippingOptionService) Create(data []types.CreateCustomShippingOp
 			ShippingOptionId: uuid.NullUUID{UUID: d.ShippingOptionId},
 		})
 	}
-	if err := s.r.CustomShippingOptionRepository().SaveSlice(s.ctx, model); err != nil {
+	if err := s.r.CustomShippingOptionRepository().SaveSlice(s.ctx, &model); err != nil {
 		return nil, err
 	}
 

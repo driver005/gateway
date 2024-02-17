@@ -75,7 +75,7 @@ func (s *LineItemAdjustmentService) List(selector types.FilterableLineItemAdjust
 	var res []models.LineItemAdjustment
 	query := sql.BuildQuery(selector, config)
 
-	if err := s.r.LineItemAdjustmentRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.LineItemAdjustmentRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 

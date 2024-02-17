@@ -10,7 +10,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type OrderItemChangeService struct {
@@ -54,14 +53,14 @@ func (s *OrderItemChangeService) List(selector models.OrderItemChange, config *s
 	var res []models.OrderItemChange
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	if err := s.r.OrderItemChangeRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.OrderItemChangeRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -99,7 +98,7 @@ func (s *OrderItemChangeService) Delete(itemChangeIds uuid.UUIDs) *utils.Applict
 		Specification: []sql.Specification{sql.In("id", itemChangeIds)},
 	})
 
-	if err := s.r.OrderItemChangeRepository().Find(s.ctx, changes, query); err != nil {
+	if err := s.r.OrderItemChangeRepository().Find(s.ctx, &changes, query); err != nil {
 		return err
 	}
 

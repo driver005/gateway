@@ -30,7 +30,7 @@ func (r *PriceListRepo) ListAndCount(ctx context.Context, selector *types.Filter
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := r.FindAndCount(ctx, res, query)
+	count, err := r.FindAndCount(ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

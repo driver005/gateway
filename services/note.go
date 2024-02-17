@@ -10,7 +10,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type NoteService struct {
@@ -52,16 +51,16 @@ func (s *NoteService) List(selector *types.FilterableNote, config *sql.Options) 
 
 func (s *NoteService) ListAndCount(selector *types.FilterableNote, config *sql.Options) ([]models.Note, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	var res []models.Note
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.NoteRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.NoteRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

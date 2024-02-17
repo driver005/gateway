@@ -49,7 +49,7 @@ func (s *DiscountService) ValidateDiscountRule(discountRule *types.CreateDiscoun
 func (s *DiscountService) List(selector types.FilterableDiscount, config *sql.Options) ([]models.Discount, *utils.ApplictaionError) {
 	var discounts []models.Discount
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.DiscountRepository().Find(s.ctx, discounts, query); err != nil {
+	if err := s.r.DiscountRepository().Find(s.ctx, &discounts, query); err != nil {
 		return nil, err
 	}
 	return discounts, nil
@@ -58,7 +58,7 @@ func (s *DiscountService) List(selector types.FilterableDiscount, config *sql.Op
 func (s *DiscountService) ListAndCount(selector *types.FilterableDiscount, config *sql.Options) ([]models.Discount, *int64, *utils.ApplictaionError) {
 	var discounts []models.Discount
 	query := sql.BuildQuery(selector, config)
-	count, err := s.r.DiscountRepository().FindAndCount(s.ctx, discounts, query)
+	count, err := s.r.DiscountRepository().FindAndCount(s.ctx, &discounts, query)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -210,7 +210,7 @@ func (s *DiscountService) ListByCodes(discountCodes []string, config sql.Query) 
 	}
 	var discounts []models.Discount
 
-	if err := s.r.DiscountRepository().Specification(sql.In("code", normalizedCodes)).Find(s.ctx, discounts, config); err != nil {
+	if err := s.r.DiscountRepository().Specification(sql.In("code", normalizedCodes)).Find(s.ctx, &discounts, config); err != nil {
 		return nil, err
 	}
 	if len(discounts) != len(discountCodes) {

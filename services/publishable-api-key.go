@@ -11,7 +11,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type PublishableApiKeyService struct {
@@ -76,18 +75,18 @@ func (s *PublishableApiKeyService) ListAndCount(selector *models.PublishableApiK
 	var res []models.PublishableApiKey
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(20)
+		config.Skip = 0
+		config.Take = 20
 	}
 
-	if config.Q != nil {
-		v := sql.ILike(*config.Q)
+	if !reflect.ValueOf(config.Q).IsZero() {
+		v := sql.ILike(config.Q)
 		selector.Title = v
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.PublishableApiKeyRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.PublishableApiKeyRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -188,7 +187,7 @@ func (s *PublishableApiKeyService) GetResourceScopes(id uuid.UUID) (*types.Publi
 
 	query := sql.BuildQuery(models.PublishableApiKeySalesChannel{PublishableKeyId: uuid.NullUUID{UUID: id}}, &sql.Options{})
 
-	if err := s.r.PublishableApiKeySalesChannelRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.PublishableApiKeySalesChannelRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 

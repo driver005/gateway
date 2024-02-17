@@ -13,7 +13,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 	"github.com/samber/lo"
 )
 
@@ -95,12 +94,12 @@ func (s *ReturnService) ListAndCount(selector *types.FilterableReturn, config *s
 	var res []models.Return
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(20)
+		config.Skip = 0
+		config.Take = 20
 	}
 
 	query := sql.BuildQuery(selector, config)
-	count, err := s.r.ReturnRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.ReturnRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

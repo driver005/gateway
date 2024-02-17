@@ -39,7 +39,7 @@ func (s *SalesChannelLocationService) RemoveLocation(salesChannelId uuid.UUID, l
 		},
 		&sql.Options{},
 	)
-	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, &res, query); err != nil {
 		return err
 	}
 
@@ -92,7 +92,7 @@ func (s *SalesChannelLocationService) ListLocationIds(salesChannelId uuid.UUIDs)
 			}))},
 		},
 	)
-	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, locations, query); err != nil {
+	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, &locations, query); err != nil {
 		return nil, err
 	}
 
@@ -117,7 +117,7 @@ func (s *SalesChannelLocationService) ListSalesChannelIds(locationId uuid.UUID) 
 			Selects: []string{"sales_channel_id"},
 		},
 	)
-	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, locations, query); err != nil {
+	if err := s.r.SalesChannelLocationRepository().Find(s.ctx, &locations, query); err != nil {
 		return nil, err
 	}
 

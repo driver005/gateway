@@ -11,7 +11,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type ShippingProfileService struct {
@@ -37,14 +36,14 @@ func (s *ShippingProfileService) List(selector *types.FilterableShippingProfile,
 	var res []models.ShippingProfile
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	if err := s.r.ShippingProfileRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ShippingProfileRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -65,7 +64,7 @@ func (s *ShippingProfileService) GetMapProfileIdsByProductIds(productIds uuid.UU
 		Relations: []string{"products"},
 		Selects:   []string{"id", "products.id"},
 	})
-	if err := s.r.ShippingProfileRepository().Specification(sql.In("id", productIds)).Find(s.ctx, shippingProfiles, query); err != nil {
+	if err := s.r.ShippingProfileRepository().Specification(sql.In("id", productIds)).Find(s.ctx, &shippingProfiles, query); err != nil {
 		return nil, err
 	}
 

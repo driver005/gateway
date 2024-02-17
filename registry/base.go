@@ -35,8 +35,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
 
-	// "github.com/gofiber/fiber/v3/middleware/csrf"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
+	_ "github.com/lib/pq" // FIX: https://stackoverflow.com/questions/52789531/how-do-i-solve-panic-sql-unknown-driver-postgres-forgotten-import
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -447,7 +447,7 @@ func (m *Base) Init(ctx context.Context) error {
 				SingularTable: true,
 			},
 			DisableForeignKeyConstraintWhenMigrating: true,
-			Logger:                                   dbLogger.Default.LogMode(dbLogger.Silent),
+			Logger:                                   dbLogger.Default.LogMode(dbLogger.Info),
 		})
 
 		if err != nil {

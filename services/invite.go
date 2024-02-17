@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -36,7 +37,8 @@ func (s *InviteService) SetContext(context context.Context) *InviteService {
 func (s *InviteService) List(selector *types.FilterableInvite, config *sql.Options) ([]models.Invite, *utils.ApplictaionError) {
 	var res []models.Invite
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.InviteRepository().Find(s.ctx, res, query); err != nil {
+	fmt.Println("test")
+	if err := s.r.InviteRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 
@@ -44,7 +46,7 @@ func (s *InviteService) List(selector *types.FilterableInvite, config *sql.Optio
 }
 
 func (s *InviteService) Create(data *types.CreateInviteInput, validDuration int) *utils.ApplictaionError {
-	if validDuration == 0 {
+	if validDuration == -1 {
 		validDuration = DEFAULT_VALID_DURATION
 	}
 
@@ -56,18 +58,28 @@ func (s *InviteService) Create(data *types.CreateInviteInput, validDuration int)
 		)
 	}
 
-	var invite *models.Invite
+	invite := &models.Invite{}
 
 	invite.UserEmail = data.Email
 
 	if err := s.r.InviteRepository().FindOne(s.ctx, invite, sql.Query{}); err != nil {
-		invite.Role = data.Role
+		data := &models.Invite{
+			Role:      data.Role,
+			Token:     "",
+			UserEmail: data.Email,
+		}
 
-		invite.Token = ""
+		if err := s.r.InviteRepository().Save(s.ctx, data); err != nil {
+			return err
+		}
 	}
 
-	if !invite.Accepted && invite.Role != data.Role {
+	if invite != nil && !invite.Accepted && invite.Role != data.Role {
 		invite.Role = data.Role
+
+		if err := s.r.InviteRepository().Save(s.ctx, invite); err != nil {
+			return err
+		}
 	}
 
 	tocken, err := s.r.TockenService().SetContext(s.ctx).SignToken(map[string]interface{}{

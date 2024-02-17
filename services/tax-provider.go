@@ -12,7 +12,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 	"github.com/sarulabs/di"
 )
 
@@ -62,16 +61,16 @@ func (s *TaxProviderService) List(selector *models.TaxProvider, config *sql.Opti
 
 func (s *TaxProviderService) ListAndCount(selector *models.TaxProvider, config *sql.Options) ([]models.TaxProvider, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	var res []models.TaxProvider
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.TaxProviderRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.TaxProviderRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,11 +111,11 @@ func (s *TaxProviderService) CreateTaxLines(cart *models.Cart, lineItems []model
 		return nil, nil, err
 	}
 
-	if err := s.r.LineItemTaxLineRepository().SaveSlice(s.ctx, taxline); err != nil {
+	if err := s.r.LineItemTaxLineRepository().SaveSlice(s.ctx, &taxline); err != nil {
 		return nil, nil, err
 	}
 
-	if err := s.r.ShippingMethodTaxLineRepository().SaveSlice(s.ctx, smTaxLine); err != nil {
+	if err := s.r.ShippingMethodTaxLineRepository().SaveSlice(s.ctx, &smTaxLine); err != nil {
 		return nil, nil, err
 	}
 
@@ -129,7 +128,7 @@ func (s *TaxProviderService) CreateShippingTaxLines(shippingMethod *models.Shipp
 		return nil, err
 	}
 
-	if err := s.r.ShippingMethodTaxLineRepository().SaveSlice(s.ctx, taxline); err != nil {
+	if err := s.r.ShippingMethodTaxLineRepository().SaveSlice(s.ctx, &taxline); err != nil {
 		return nil, err
 	}
 

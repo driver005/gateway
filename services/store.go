@@ -9,7 +9,6 @@ import (
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
-	"github.com/icza/gox/gox"
 )
 
 type StoreService struct {
@@ -56,7 +55,7 @@ func (s *StoreService) Create() (*models.Store, *utils.ApplictaionError) {
 
 func (s *StoreService) Retrieve(config *sql.Options) (*models.Store, *utils.ApplictaionError) {
 	var stores []models.Store
-	if err := s.r.StoreRepository().Find(s.ctx, stores, sql.Query{Where: gox.NewString("NOT id = null")}); err != nil {
+	if err := s.r.StoreRepository().Find(s.ctx, &stores, sql.Query{Where: "NOT id = null"}); err != nil {
 		return nil, err
 	}
 	if len(stores) == 0 {

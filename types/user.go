@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
+	"github.com/google/uuid"
 )
 
 // @oas:schema:AdminCreateUserRequest
@@ -32,7 +33,7 @@ import (
 //	  type: string
 //	  format: password
 type CreateUserInput struct {
-	// Id        uuid.UUID       `json:"id,omitempty" validate:"omitempty"`
+	Id        uuid.UUID       `json:"id,omitempty" validate:"omitempty"`
 	Email     string          `json:"email"`
 	FirstName string          `json:"first_name,omitempty" validate:"omitempty"`
 	LastName  string          `json:"last_name,omitempty" validate:"omitempty"`

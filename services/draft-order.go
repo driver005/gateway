@@ -11,7 +11,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type DraftOrderService struct {
@@ -80,12 +79,12 @@ func (s *DraftOrderService) ListAndCount(selector *types.FilterableDraftOrder, c
 	var res []models.DraftOrder
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(20)
+		config.Skip = 0
+		config.Take = 20
 	}
 
 	query := sql.BuildQuery(selector, config)
-	count, err := s.r.DraftOrderRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.DraftOrderRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -95,7 +94,7 @@ func (s *DraftOrderService) ListAndCount(selector *types.FilterableDraftOrder, c
 func (s *DraftOrderService) List(selector *models.DraftOrder, config *sql.Options) ([]models.DraftOrder, *utils.ApplictaionError) {
 	var res []models.DraftOrder
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.DraftOrderRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.DraftOrderRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil

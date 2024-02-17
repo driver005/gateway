@@ -8,7 +8,6 @@ import (
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
-	"github.com/icza/gox/gox"
 )
 
 type ShippingTaxRateService struct {
@@ -34,14 +33,14 @@ func (s *ShippingTaxRateService) List(selector types.FilterableShippingTaxRate, 
 	var res []models.ShippingTaxRate
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	if err := s.r.ShippingTaxRateRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ShippingTaxRateRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil

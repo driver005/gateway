@@ -9,7 +9,6 @@ import (
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
-	"github.com/icza/gox/gox"
 )
 
 type CurrencyService struct {
@@ -53,12 +52,12 @@ func (s *CurrencyService) ListAndCount(selector *types.FilterableCurrencyProps, 
 	var res []models.Currency
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(20)
+		config.Skip = 0
+		config.Take = 20
 	}
 
 	query := sql.BuildQuery(selector, config)
-	count, err := s.r.CurrencyRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.CurrencyRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

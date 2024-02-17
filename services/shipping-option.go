@@ -12,7 +12,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type ShippingOptionService struct {
@@ -101,7 +100,7 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 func (s *ShippingOptionService) List(selector *types.FilterableShippingOption, config *sql.Options) ([]models.ShippingOption, *utils.ApplictaionError) {
 	var res []models.ShippingOption
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.ShippingOptionRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ShippingOptionRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -111,12 +110,12 @@ func (s *ShippingOptionService) ListAndCount(selector *types.FilterableShippingO
 	var res []models.ShippingOption
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
+		config.Skip = 0
+		config.Take = 50
 	}
 
 	query := sql.BuildQuery(selector, config)
-	count, err := s.r.ShippingOptionRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.ShippingOptionRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

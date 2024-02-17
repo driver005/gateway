@@ -120,8 +120,8 @@ func (s *CustomerGroupService) List(selector *types.FilterableCustomerGroup, con
 func (s *CustomerGroupService) ListAndCount(selector *types.FilterableCustomerGroup, config *sql.Options) ([]models.CustomerGroup, *int64, *utils.ApplictaionError) {
 	var res []models.CustomerGroup
 
-	if config.Q != nil {
-		v := sql.ILike(*config.Q)
+	if !reflect.ValueOf(config.Q).IsZero() {
+		v := sql.ILike(config.Q)
 		selector.Name = append(selector.Name, v)
 	}
 
@@ -129,7 +129,7 @@ func (s *CustomerGroupService) ListAndCount(selector *types.FilterableCustomerGr
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.CustomerGroupRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.CustomerGroupRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

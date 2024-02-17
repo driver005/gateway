@@ -10,7 +10,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type ProductTypeService struct {
@@ -64,18 +63,18 @@ func (s *ProductTypeService) ListAndCount(selector *types.FilterableProductType,
 	var res []models.ProductType
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(20)
+		config.Skip = 0
+		config.Take = 20
 	}
 
-	if config.Q != nil {
-		v := sql.ILike(*config.Q)
+	if !reflect.ValueOf(config.Q).IsZero() {
+		v := sql.ILike(config.Q)
 		selector.Value = v
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.ProductTypeRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.ProductTypeRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

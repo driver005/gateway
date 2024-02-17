@@ -12,7 +12,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 	"github.com/jinzhu/copier"
 	"golang.org/x/exp/slices"
 )
@@ -154,16 +153,16 @@ func (s *SwapService) List(selector *types.FilterableSwap, config *sql.Options) 
 
 func (s *SwapService) ListAndCount(selector *types.FilterableSwap, config *sql.Options) ([]models.Swap, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	var res []models.Swap
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.SwapRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.SwapRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

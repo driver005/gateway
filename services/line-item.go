@@ -14,7 +14,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type LineItemService struct {
@@ -58,14 +57,14 @@ func (s *LineItemService) List(selector models.LineItem, config *sql.Options) ([
 	var res []models.LineItem
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	query := sql.BuildQuery[models.LineItem](selector, config)
 
-	if err := s.r.LineItemRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.LineItemRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -285,7 +284,7 @@ func (s *LineItemService) generateLineItem(variant models.ProductVariant, quanti
 }
 
 func (s *LineItemService) Create(data []models.LineItem) ([]models.LineItem, *utils.ApplictaionError) {
-	if err := s.r.LineItemRepository().SaveSlice(s.ctx, data); err != nil {
+	if err := s.r.LineItemRepository().SaveSlice(s.ctx, &data); err != nil {
 		return nil, err
 	}
 	return data, nil
@@ -391,7 +390,7 @@ func (s *LineItemService) CloneTo(ids uuid.UUIDs, data *models.LineItem, options
 		lineItems[i] = item
 	}
 
-	if err := s.r.LineItemRepository().SaveSlice(s.ctx, lineItems); err != nil {
+	if err := s.r.LineItemRepository().SaveSlice(s.ctx, &lineItems); err != nil {
 		return nil, err
 	}
 

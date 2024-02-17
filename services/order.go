@@ -16,7 +16,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 	"github.com/jinzhu/copier"
 	"github.com/samber/lo"
 )
@@ -52,19 +51,19 @@ func (s *OrderService) ListAndCount(selector *types.FilterableOrder, config *sql
 	var res []models.Order
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 	var specification []sql.Specification
 
-	if config.Q != nil {
+	if !reflect.ValueOf(config.Q).IsZero() {
 		if config.Relations != nil {
 			config.Relations = append(config.Relations, "shipping_address", "customer")
 		} else {
 			config.Relations = []string{"shipping_address", "customer"}
 		}
-		v := sql.ILike(*config.Q)
+		v := sql.ILike(config.Q)
 
 		specification = append(specification, sql.Not(sql.IsNull("customer.id")))
 		specification = append(specification, sql.Not(sql.IsNull("shipping_address.id")))
@@ -85,7 +84,7 @@ func (s *OrderService) ListAndCount(selector *types.FilterableOrder, config *sql
 	query.Selects = selects
 	query.Relations = relations
 
-	count, err := s.r.OrderRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.OrderRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

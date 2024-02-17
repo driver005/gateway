@@ -50,7 +50,7 @@ func (s *PaymentService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Pa
 func (s *PaymentService) List(selector models.Payment, config *sql.Options) ([]models.Payment, *utils.ApplictaionError) {
 	var res []models.Payment
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.PaymentRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.PaymentRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
@@ -21,8 +22,8 @@ func CustomerRepository(db *gorm.DB) *CustomerRepo {
 func (r *CustomerRepo) ListAndCount(ctx context.Context, selector *types.FilterableCustomer, config *sql.Options) ([]models.Customer, *int64, *utils.ApplictaionError) {
 	var res []models.Customer
 
-	if config.Q != nil {
-		v := sql.ILike(*config.Q)
+	if !reflect.ValueOf(config.Q).IsZero() {
+		v := sql.ILike(config.Q)
 		selector.Email = v
 		selector.FirstName = v
 		selector.LastName = v
@@ -35,7 +36,7 @@ func (r *CustomerRepo) ListAndCount(ctx context.Context, selector *types.Filtera
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := r.FindAndCount(ctx, res, query)
+	count, err := r.FindAndCount(ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

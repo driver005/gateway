@@ -71,7 +71,7 @@ func (s *OAuthService) List(selector *models.OAuth, config *sql.Options) ([]mode
 	var res []models.OAuth
 	query := sql.BuildQuery(selector, config)
 
-	if err := s.r.OAuthRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.OAuthRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 

@@ -142,7 +142,7 @@ func (s *ProductVariantInventoryService) ListByItem(itemIds uuid.UUIDs) ([]model
 		Specification: []sql.Specification{sql.In("inventory_item_id", itemIds)},
 	})
 
-	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -155,7 +155,7 @@ func (s *ProductVariantInventoryService) ListByVariant(variantIds uuid.UUIDs) ([
 		Specification: []sql.Specification{sql.In("variant_id", variantIds)},
 	})
 
-	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -290,7 +290,7 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		Specification: []sql.Specification{sql.In("inventory_item_id", itemIds), sql.In("variant_id", variantIds)},
 	})
 
-	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, existingAttachments, query); err != nil {
+	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, &existingAttachments, query); err != nil {
 		return nil, err
 	}
 
@@ -312,7 +312,7 @@ func (s *ProductVariantInventoryService) AttachInventoryItem(data []models.Produ
 		toCreate = append(toCreate, d)
 	}
 
-	if err = s.r.ProductVariantInventoryItemRepository().SaveSlice(s.ctx, toCreate); err != nil {
+	if err = s.r.ProductVariantInventoryItemRepository().SaveSlice(s.ctx, &toCreate); err != nil {
 		return nil, err
 	}
 
@@ -333,7 +333,7 @@ func (s *ProductVariantInventoryService) DetachInventoryItem(inventoryItemId uui
 		Specification: []sql.Specification{sql.In("variant_id", uuid.UUIDs{variantId})},
 	})
 
-	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.ProductVariantInventoryItemRepository().Find(s.ctx, &res, query); err != nil {
 		return err
 	}
 
@@ -456,7 +456,7 @@ func (s *ProductVariantInventoryService) AdjustReservationsQuantityByLineItem(li
 		)
 	}
 
-	reservations, reservationCount, err := s.r.InventoryService().ListReservationItems(s.ctx, interfaces.FilterableReservationItemProps{LineItemId: []uuid.UUID{lineItemId}}, &sql.Options{Order: gox.NewString("created_at DESC")})
+	reservations, reservationCount, err := s.r.InventoryService().ListReservationItems(s.ctx, interfaces.FilterableReservationItemProps{LineItemId: []uuid.UUID{lineItemId}}, &sql.Options{Order: "created_at DESC"})
 	if err != nil {
 		return err
 	}

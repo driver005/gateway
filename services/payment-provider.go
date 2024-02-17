@@ -77,7 +77,7 @@ func (s *PaymentProviderService) RetrieveProvider(providerId uuid.UUID) (interfa
 
 func (s *PaymentProviderService) List() ([]models.PaymentProvider, *utils.ApplictaionError) {
 	var paymentProviders []models.PaymentProvider
-	if err := s.r.PaymentProviderRepository().Find(s.ctx, paymentProviders, sql.Query{}); err != nil {
+	if err := s.r.PaymentProviderRepository().Find(s.ctx, &paymentProviders, sql.Query{}); err != nil {
 		return nil, err
 	}
 	return paymentProviders, nil

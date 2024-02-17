@@ -44,7 +44,7 @@ func (s *ProductCategoryService) ListAndCount(selector *types.FilterableProductC
 	includeDescendantsTree := true
 	query := sql.BuildQuery(selector, config)
 
-	res, count, err := s.r.ProductCategoryRepository().GetFreeTextSearchResultsAndCount(s.ctx, query, config.Q, includeDescendantsTree)
+	res, count, err := s.r.ProductCategoryRepository().GetFreeTextSearchResultsAndCount(s.ctx, query, &config.Q, includeDescendantsTree)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,7 +54,7 @@ func (s *ProductCategoryService) ListAndCount(selector *types.FilterableProductC
 func (s *ProductCategoryService) Retrieve(selector models.ProductCategory, config *sql.Options) (*models.ProductCategory, *utils.ApplictaionError) {
 	query := sql.BuildQuery(selector, config)
 
-	res, err := s.r.ProductCategoryRepository().FindOneWithDescendants(s.ctx, query, config.Q)
+	res, err := s.r.ProductCategoryRepository().FindOneWithDescendants(s.ctx, query, &config.Q)
 	if err != nil {
 		return nil, err
 	}
@@ -401,7 +401,7 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 		Null:          []string{"parent_category_id"},
 	})
 
-	if err := s.r.ProductCategoryRepository().Find(s.ctx, siblingsToShift, query); err != nil {
+	if err := s.r.ProductCategoryRepository().Find(s.ctx, &siblingsToShift, query); err != nil {
 		return err
 	}
 

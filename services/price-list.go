@@ -61,12 +61,12 @@ func (s *PriceListService) List(selector *types.FilterablePriceList, config *sql
 
 func (s *PriceListService) ListAndCount(selector *types.FilterablePriceList, config *sql.Options) ([]models.PriceList, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
-	return s.r.PriceListRepository().ListAndCount(s.ctx, selector, config, config.Q)
+	return s.r.PriceListRepository().ListAndCount(s.ctx, selector, config, &config.Q)
 }
 
 func (s *PriceListService) ListPriceListsVariantIdsMap(priceListIds uuid.UUIDs) (map[string][]string, *utils.ApplictaionError) {

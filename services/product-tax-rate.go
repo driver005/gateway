@@ -31,7 +31,7 @@ func (s *ProductTaxRateService) SetContext(context context.Context) *ProductTaxR
 func (s *ProductTaxRateService) List(selector types.FilterableProductTaxRate, config *sql.Options) ([]models.ProductTaxRate, *utils.ApplictaionError) {
 	var discounts []models.ProductTaxRate
 	query := sql.BuildQuery(selector, config)
-	if err := s.r.ProductTaxRateRepository().Find(s.ctx, discounts, query); err != nil {
+	if err := s.r.ProductTaxRateRepository().Find(s.ctx, &discounts, query); err != nil {
 		return nil, err
 	}
 	return discounts, nil

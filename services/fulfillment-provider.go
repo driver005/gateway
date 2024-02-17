@@ -67,7 +67,7 @@ func (s *FulfillmentProviderService) RegisterInstalledProviders(providers uuid.U
 
 func (s *FulfillmentProviderService) List() ([]models.FulfillmentProvider, *utils.ApplictaionError) {
 	var res []models.FulfillmentProvider
-	if err := s.r.FulfillmentProviderRepository().Find(s.ctx, res, sql.Query{}); err != nil {
+	if err := s.r.FulfillmentProviderRepository().Find(s.ctx, &res, sql.Query{}); err != nil {
 		return nil, err
 	}
 	return res, nil

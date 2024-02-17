@@ -228,7 +228,7 @@ func (m *Invite) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	err = m.r.InviteService().SetContext(context.Context()).Create(model, 0)
+	err = m.r.InviteService().SetContext(context.Context()).Create(model, -1)
 	if err != nil {
 		return err
 	}

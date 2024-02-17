@@ -2,6 +2,7 @@ package sql
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/driver005/gateway/utils"
 	"gorm.io/gorm"
@@ -43,6 +44,12 @@ func (r *Repository[M]) Create(ctx context.Context, model *M) *utils.Applictaion
 	return r.HandleError(res)
 }
 
+// CreateSlice inserts value, returning the inserted data's primary key in value's id
+func (r *Repository[M]) CreateSlice(ctx context.Context, model *[]M) *utils.ApplictaionError {
+	res := r.db.WithContext(ctx).Create(&model)
+	return r.HandleError(res)
+}
+
 // CreateInBatches inserts value, returning the inserted data's primary key in value's id
 func (r *Repository[M]) CreateBatch(ctx context.Context, model *M, batchSize int) *utils.ApplictaionError {
 	res := r.db.WithContext(ctx).CreateInBatches(&model, batchSize)
@@ -61,14 +68,8 @@ func (r *Repository[M]) Insert(ctx context.Context, model *M) *utils.Applictaion
 }
 
 // InsertSlice inserts values, returning the inserted data's primary key in value's id
-func (r *Repository[M]) InsertSlice(ctx context.Context, model []M) *utils.ApplictaionError {
-	for _, m := range model {
-		err := r.Insert(ctx, &m)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func (r *Repository[M]) InsertSlice(ctx context.Context, model *[]M) *utils.ApplictaionError {
+	return r.CreateSlice(ctx, model)
 }
 
 // InsertTx inserts value, returning the inserted data's primary key in value's id
@@ -83,7 +84,7 @@ func (r *Repository[M]) Save(ctx context.Context, model *M) *utils.ApplictaionEr
 }
 
 // Save updates value in database. If value doesn't contain a matching primary key, value is inserted.
-func (r *Repository[M]) SaveSlice(ctx context.Context, model []M) *utils.ApplictaionError {
+func (r *Repository[M]) SaveSlice(ctx context.Context, model *[]M) *utils.ApplictaionError {
 	res := r.db.WithContext(ctx).Save(&model)
 	return r.HandleError(res)
 }
@@ -97,14 +98,12 @@ func (r *Repository[M]) SaveTx(ctx context.Context, model *M, tx *gorm.DB) *util
 // Update updates attributes using callbacks. values must be a struct or map. Reference: https://gorm.io/docs/update.html#Update-Changed-Fields
 func (r *Repository[M]) Update(ctx context.Context, model *M) *utils.ApplictaionError {
 	res := r.db.Model(&model).Updates(&model)
-
 	return r.HandleError(res)
 }
 
 // UpdateSlice updates attributes using callbacks. values must be a struct or map. Reference: https://gorm.io/docs/update.html#Update-Changed-Fields
-func (r *Repository[M]) UpdateSlice(ctx context.Context, model []M) *utils.ApplictaionError {
+func (r *Repository[M]) UpdateSlice(ctx context.Context, model *[]M) *utils.ApplictaionError {
 	res := r.db.Model(&model).Updates(&model)
-
 	return r.HandleError(res)
 }
 
@@ -188,51 +187,49 @@ func (r *Repository[M]) CountBy(ctx context.Context, field []string, query Query
 }
 
 // Find finds all records matching given conditions conds
-func (r *Repository[M]) Find(ctx context.Context, models []M, query Query) *utils.ApplictaionError {
+func (r *Repository[M]) Find(ctx context.Context, models *[]M, query Query) *utils.ApplictaionError {
 	res := r.ParseQuery(ctx, query).Find(&models)
-
 	return r.HandleError(res)
 }
 
 // FindAndCount finds all records matching given conditions conds and count them
-func (r *Repository[M]) FindAndCount(ctx context.Context, models []M, query Query) (*int64, *utils.ApplictaionError) {
+func (r *Repository[M]) FindAndCount(ctx context.Context, models *[]M, query Query) (*int64, *utils.ApplictaionError) {
 	res := r.ParseQuery(ctx, query).Find(&models)
-
 	return &res.RowsAffected, r.HandleError(res)
 }
 
 // FindOne finds the first record ordered by primary key, matching given conditions conds
 func (r *Repository[M]) FindOne(ctx context.Context, model *M, query Query) *utils.ApplictaionError {
 	res := r.ParseQuery(ctx, query).First(&model)
-
 	return r.HandleError(res)
 }
 
 func (r *Repository[M]) ParseQuery(ctx context.Context, query Query) *gorm.DB {
 	model := new(M)
-	db := r.db.WithContext(ctx).Model(model)
 
-	if query.Where != nil {
+	db := r.db.WithContext(ctx).Model(&model)
+
+	if !reflect.ValueOf(query.Where).IsZero() {
 		db = db.Where(query.Where)
 	}
-	if query.WithDeleted {
+	if !reflect.ValueOf(query.WithDeleted).IsZero() {
 		db = db.Unscoped()
 	}
-	if query.Skip != nil {
-		db = db.Offset(*query.Skip)
+	if !reflect.ValueOf(query.Skip).IsZero() {
+		db = db.Offset(query.Skip)
 	}
-	if query.Take != nil {
-		db = db.Limit(*query.Take)
+	if !reflect.ValueOf(query.Take).IsZero() {
+		db = db.Limit(query.Take)
 	}
-	if query.Relations != nil {
+	if !reflect.ValueOf(query.Relations).IsZero() {
 		for _, relation := range query.Relations {
 			db = db.Association(relation).DB
 		}
 	}
-	if query.Selects != nil {
+	if !reflect.ValueOf(query.Selects).IsZero() {
 		db = db.Select(query.Selects)
 	}
-	if query.Order != nil {
+	if !reflect.ValueOf(query.Order).IsZero() {
 		db = db.Order(query.Order)
 	}
 
@@ -286,23 +283,3 @@ func (r *Repository[M]) HandleDBError(err error) *utils.ApplictaionError {
 		nil,
 	)
 }
-
-// func (r *Repository[M]) FindWithLimit(ctx context.Context, limit int, offset int, specifications ...Specification) ([]M, *utils.ApplictaionError) {
-// 	var models []M
-
-// 	dbPrewarm := r.getPreWarmDbForSelect(ctx, specifications...)
-// 	err := dbPrewarm.Limit(limit).Offset(offset).Find(&models).Error
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	result := make([]M, 0, len(models))
-// 	result = append(result, models...)
-
-// 	return result, nil
-// }
-
-// func (r *Repository[M]) FindAll(ctx context.Context) ([]M, *utils.ApplictaionError) {
-// 	return r.FindWithLimit(ctx, -1, -1)
-// }

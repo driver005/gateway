@@ -65,15 +65,15 @@ func (s *ProductService) ListAndCount(selector *types.FilterableProduct, config 
 	var products []models.Product
 
 	query := sql.BuildQuery(selector, config)
-	if config.Q != nil {
-		p, c, err := s.r.ProductRepository().GetFreeTextSearchResultsAndCount(config.Q, query, config.Relations)
+	if !reflect.ValueOf(config.Q).IsZero() {
+		p, c, err := s.r.ProductRepository().GetFreeTextSearchResultsAndCount(&config.Q, query, config.Relations)
 		if err != nil {
 			return nil, nil, err
 		}
 		products = p
 		count = c
 	} else {
-		c, err := s.r.ProductRepository().FindAndCount(s.ctx, products, query)
+		c, err := s.r.ProductRepository().FindAndCount(s.ctx, &products, query)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -185,7 +185,7 @@ func (s *ProductService) FilterProductsBySalesChannel(productIds uuid.UUIDs, sal
 func (s *ProductService) ListTypes() ([]models.ProductType, *utils.ApplictaionError) {
 	var res []models.ProductType
 
-	if err := s.r.ProductTypeRepository().Find(s.ctx, res, sql.Query{}); err != nil {
+	if err := s.r.ProductTypeRepository().Find(s.ctx, &res, sql.Query{}); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -744,7 +744,7 @@ func (s *ProductService) UpdateShippingProfile(productIds uuid.UUIDs, profileId 
 		products = append(products, *product)
 	}
 
-	if err := s.r.ProductRepository().SaveSlice(s.ctx, products); err != nil {
+	if err := s.r.ProductRepository().SaveSlice(s.ctx, &products); err != nil {
 		return nil, err
 	}
 
@@ -778,7 +778,7 @@ func (s *ProductService) getSalesChannelModuleChannels(products []models.Product
 		Selects:       []string{"sales_channels", "id"},
 	})
 
-	if err := s.r.ProductRepository().Find(s.ctx, data, query); err != nil {
+	if err := s.r.ProductRepository().Find(s.ctx, &data, query); err != nil {
 		return nil, err
 	}
 

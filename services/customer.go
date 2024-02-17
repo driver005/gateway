@@ -14,7 +14,6 @@ import (
 	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -87,9 +86,9 @@ func (s *CustomerService) List(selector *types.FilterableCustomer, config *sql.O
 
 func (s *CustomerService) ListAndCount(selector *types.FilterableCustomer, config *sql.Options) ([]models.Customer, *int64, *utils.ApplictaionError) {
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	return s.r.CustomerRepository().ListAndCount(s.ctx, selector, config)
@@ -163,8 +162,8 @@ func (s *CustomerService) ListByEmail(email string, config *sql.Options) ([]mode
 	}
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(2)
+		config.Skip = 0
+		config.Take = 20
 	}
 
 	return s.List(&types.FilterableCustomer{Email: strings.ToLower(email)}, config)

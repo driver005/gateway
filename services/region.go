@@ -13,7 +13,6 @@ import (
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 )
 
 type RegionService struct {
@@ -282,7 +281,7 @@ func (s *RegionService) RetrieveByCountryCode(code string, config *sql.Options) 
 }
 
 func (s *RegionService) RetrieveByName(name string) (*models.Region, *utils.ApplictaionError) {
-	regions, err := s.List(&types.FilterableRegion{Name: name}, &sql.Options{Take: gox.NewInt(1)})
+	regions, err := s.List(&types.FilterableRegion{Name: name}, &sql.Options{Take: 1})
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +329,7 @@ func (s *RegionService) ListAndCount(selector *types.FilterableRegion, config *s
 
 	query := sql.BuildQuery(selector, config)
 
-	count, err := s.r.RegionRepository().FindAndCount(s.ctx, res, query)
+	count, err := s.r.RegionRepository().FindAndCount(s.ctx, &res, query)
 	if err != nil {
 		return nil, nil, err
 	}

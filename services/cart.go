@@ -17,7 +17,6 @@ import (
 	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/icza/gox/gox"
 	"github.com/jinzhu/copier"
 	"github.com/samber/lo"
 )
@@ -49,14 +48,14 @@ func (s *CartService) List(selector types.FilterableCartProps, config *sql.Optio
 	var res []models.Cart
 
 	if reflect.DeepEqual(config, &sql.Options{}) {
-		config.Skip = gox.NewInt(0)
-		config.Take = gox.NewInt(50)
-		config.Order = gox.NewString("created_at DESC")
+		config.Skip = 0
+		config.Take = 50
+		config.Order = "created_at DESC"
 	}
 
 	query := sql.BuildQuery(selector, config)
 
-	if err := s.r.CartRepository().Find(s.ctx, res, query); err != nil {
+	if err := s.r.CartRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -359,7 +358,7 @@ func (s *CartService) RemoveLineItem(id uuid.UUID, lineItemIds uuid.UUIDs) *util
 		}
 	}
 
-	if err := s.r.LineItemRepository().UpdateSlice(s.ctx, lineItems); err != nil {
+	if err := s.r.LineItemRepository().UpdateSlice(s.ctx, &lineItems); err != nil {
 		return err
 	}
 
@@ -487,7 +486,7 @@ func (s *CartService) AddLineItem(
 			ShouldMerge: true,
 		}, &sql.Options{
 			Selects: []string{"id", "metadata", "quantity"},
-			Take:    gox.NewInt(1),
+			Take:    1,
 		})
 		if err != nil {
 			return err
@@ -906,7 +905,7 @@ func (s *CartService) adjustFreeShipping(
 				shippingMethod.Price = 0
 				shippingMethods = append(shippingMethods, shippingMethod)
 			}
-			if err := s.r.ShippingMethodRepository().UpdateSlice(s.ctx, shippingMethods); err != nil {
+			if err := s.r.ShippingMethodRepository().UpdateSlice(s.ctx, &shippingMethods); err != nil {
 				return err
 			}
 		} else {
@@ -923,7 +922,7 @@ func (s *CartService) adjustFreeShipping(
 				}
 				shippingMethods = append(shippingMethods, shippingMethod)
 			}
-			if err := s.r.ShippingMethodRepository().UpdateSlice(s.ctx, shippingMethods); err != nil {
+			if err := s.r.ShippingMethodRepository().UpdateSlice(s.ctx, &shippingMethods); err != nil {
 				return err
 			}
 		}
@@ -1146,7 +1145,7 @@ func (s *CartService) onSalesChannelChange(cart *models.Cart, newSalesChannelId 
 	}
 	productsToKeep, err := s.r.ProductService().SetContext(s.ctx).FilterProductsBySalesChannel(productIDs, newSalesChannelId, &sql.Options{
 		Selects: []string{"id"},
-		Take:    gox.NewInt(len(productIDs)),
+		Take:    len(productIDs),
 	})
 	if err != nil {
 		return err
@@ -1595,7 +1594,7 @@ func (s *CartService) SetPaymentSession(id uuid.UUID, providerId uuid.UUID) *uti
 		cartPaymentSessions = append(cartPaymentSessions, p)
 	}
 
-	if err := s.r.PaymentSessionRepository().UpdateSlice(s.ctx, cartPaymentSessions); err != nil {
+	if err := s.r.PaymentSessionRepository().UpdateSlice(s.ctx, &cartPaymentSessions); err != nil {
 		return err
 	}
 	var paymentSession *models.PaymentSession

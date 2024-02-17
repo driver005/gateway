@@ -13,27 +13,28 @@ import (
 
 type Options struct {
 	Selects       []string `json:"fields,omitempty"`
-	Skip          *int     `json:"offset,omitempty"`
-	Take          *int     `json:"limit,omitempty"`
+	Skip          int      `json:"offset,omitempty"`
+	Take          int      `json:"limit,omitempty"`
 	Relations     []string `json:"expand,omitempty"`
-	Order         *string  `json:"order,omitempty"`
+	Order         string   `json:"order,omitempty"`
 	Specification []Specification
 	Not           []string
 	Null          []string
-	Q             *string
+	Q             string
 }
 
 type Query struct {
 	Selects     []string
-	Skip        *int
-	Take        *int
+	Skip        int
+	Take        int
 	Relations   []string
-	Where       *string
+	Where       string
 	WithDeleted bool
-	Order       *string
+	Order       string
 }
 
-func NewOptions(selects []string, skip *int, take *int, relations []string, order *string, secification []Specification) Options {
+func NewOptions(selects []string, skip int, take int, relations []string, order string, secification []Specification) Options {
+	fmt.Println("test")
 	return Options{
 		Selects:       selects,
 		Skip:          skip,
@@ -44,7 +45,7 @@ func NewOptions(selects []string, skip *int, take *int, relations []string, orde
 	}
 }
 
-func NewQuery(where *string, selects []string, skip *int, take *int, relations []string, order *string, withDeleted bool) Query {
+func NewQuery(where string, selects []string, skip int, take int, relations []string, order string, withDeleted bool) Query {
 	return Query{
 		Selects:     selects,
 		Skip:        skip,
@@ -74,7 +75,7 @@ func BuildQuery[T any](selector T, config *Options) Query {
 	whereString := Build(s.Fields())
 
 	return NewQuery(
-		&whereString,
+		whereString,
 		config.Selects,
 		config.Skip,
 		config.Take,

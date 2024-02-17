@@ -1,11 +1,18 @@
 package cmd
 
+import (
+	"context"
+
+	"github.com/driver005/gateway/registry"
+)
+
 type Handler struct {
-	r Registry
 }
 
-func NewHandler(r Registry) *Handler {
-	return &Handler{
-		r,
-	}
+func (h *Handler) GenerateRegistry(ctx context.Context) *registry.Base {
+	return registry.New(ctx)
+}
+
+func NewHandler() *Handler {
+	return &Handler{}
 }
