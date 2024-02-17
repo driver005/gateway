@@ -34,7 +34,6 @@ type Query struct {
 }
 
 func NewOptions(selects []string, skip int, take int, relations []string, order string, secification []Specification) Options {
-	fmt.Println("test")
 	return Options{
 		Selects:       selects,
 		Skip:          skip,
@@ -88,9 +87,9 @@ func BuildQuery[T any](selector T, config *Options) Query {
 func Build(structFields []*structs.Field) string {
 	var result string
 	for _, field := range structFields {
-		name := strings.Replace(field.Tag("json"), ",omitempty", "", -1)
-		if field.Kind() == reflect.Struct {
-			if !field.IsZero() {
+		if !field.IsZero() {
+			name := strings.Replace(field.Tag("json"), ",omitempty", "", -1)
+			if field.Kind() == reflect.Struct {
 				if field.Name() == "N" {
 					result += fmt.Sprintf(`= '%+v'`, field.Value().(time.Time).Format(time.RFC3339))
 				} else if field.Name() == "Lt" {
@@ -111,9 +110,7 @@ func Build(structFields []*structs.Field) string {
 						result += fmt.Sprintf("%+v = %+v", name, Build(field.Fields()))
 					}
 				}
-			}
-		} else if field.Kind() == reflect.String {
-			if !field.IsZero() {
+			} else if field.Kind() == reflect.String {
 				if field.Name() == "N" {
 					result += fmt.Sprintf(`= '%+v'`, field.Value().(string))
 				} else if field.Name() == "Lt" {
@@ -128,17 +125,13 @@ func Build(structFields []*structs.Field) string {
 					if len(result) > 0 {
 						result += " AND "
 					}
-
 					if field.Value().(string)[0:2] == "IN" {
 						result += fmt.Sprintf(`%+v IN '%+v'`, name, field.Value())
 					} else {
 						result += fmt.Sprintf(`%+v = '%+v'`, name, field.Value())
 					}
-
 				}
-			}
-		} else if field.Kind() == reflect.Int {
-			if !field.IsZero() {
+			} else if field.Kind() == reflect.Int {
 				if field.Name() == "N" {
 					result += fmt.Sprintf(`= '%+v'`, field.Value().(int))
 				} else if field.Name() == "Lt" {
@@ -156,9 +149,7 @@ func Build(structFields []*structs.Field) string {
 					result += fmt.Sprintf(`%+v = %+v`, name, field.Value())
 
 				}
-			}
-		} else if field.Kind() == reflect.Bool {
-			if !field.IsZero() {
+			} else if field.Kind() == reflect.Bool {
 				if field.Name() == "N" {
 					result += fmt.Sprintf(`= '%+v'`, field.Value().(bool))
 				} else if field.Name() == "Lt" {
@@ -175,16 +166,12 @@ func Build(structFields []*structs.Field) string {
 					}
 					result += fmt.Sprintf(`%+v = %+v`, name, field.Value())
 				}
-			}
-		} else if field.Kind() == reflect.Slice {
-			if !field.IsZero() {
+			} else if field.Kind() == reflect.Slice {
 				if len(result) > 0 {
 					result += " AND "
 				}
 				result += fmt.Sprintf(`%+v = %+v`, name, field.Value())
-			}
-		} else if field.Kind() == reflect.Array {
-			if !field.IsZero() {
+			} else if field.Kind() == reflect.Array {
 				if len(result) > 0 {
 					result += " AND "
 				}
