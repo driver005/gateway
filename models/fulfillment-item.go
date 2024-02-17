@@ -2,20 +2,43 @@ package models
 
 import "github.com/google/uuid"
 
-// FulfillmentItem - Correlates a Line Item with a Fulfillment, keeping track of the quantity of the Line Item.
+// @oas:schema:FulfillmentItem
+// title: "Fulfillment Item"
+// description: "This represents the association between a Line Item and a Fulfillment."
+// type: object
+// required:
+//   - fulfillment_id
+//   - item_id
+//   - quantity
+//
+// properties:
+//
+//	fulfillment_id:
+//	  description: The ID of the Fulfillment that the Fulfillment Item belongs to.
+//	  type: string
+//	  example: ful_01G8ZRTMQCA76TXNAT81KPJZRF
+//	item_id:
+//	  description: The ID of the Line Item that the Fulfillment Item references.
+//	  type: string
+//	  example: item_01G8ZC9GWT6B2GP5FSXRXNFNGN
+//	fulfillment:
+//	  description: The details of the fulfillment.
+//	  x-expandable: "fulfillment"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Fulfillment"
+//	item:
+//	  description: The details of the line item.
+//	  x-expandable: "item"
+//	  nullable: true
+//	  $ref: "#/components/schemas/LineItem"
+//	quantity:
+//	  description: The quantity of the Line Item that is included in the Fulfillment.
+//	  type: integer
+//	  example: 1
 type FulfillmentItem struct {
-
-	// The id of the Fulfillment that the Fulfillment Item belongs to.
 	FulfillmentId uuid.NullUUID `json:"fulfillment_id" gorm:"primarykey"`
-
-	// A fulfillment object. Available if the relation `fulfillment` is expanded.
-	Fulfillment *Fulfillment `json:"fulfillment" gorm:"foreignKey:id;references:fulfillment_id"`
-
-	// The id of the Line Item that the Fulfillment Item references.
-	ItemId uuid.NullUUID `json:"item_id"`
-
-	Item *LineItem `json:"item" gorm:"foreignKey:id;references:item_id"`
-
-	// The quantity of the Line Item that is included in the Fulfillment.
-	Quantity int `json:"quantity"`
+	Fulfillment   *Fulfillment  `json:"fulfillment" gorm:"foreignKey:id;references:fulfillment_id"`
+	ItemId        uuid.NullUUID `json:"item_id"`
+	Item          *LineItem     `json:"item" gorm:"foreignKey:id;references:item_id"`
+	Quantity      int           `json:"quantity"`
 }

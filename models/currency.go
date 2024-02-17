@@ -1,23 +1,48 @@
 package models
 
-// Currency
+//
+// @oas:schema:Currency
+// title: "Currency"
+// description: "Currency"
+// type: object
+// required:
+//   - code
+//   - name
+//   - symbol
+//   - symbol_native
+// properties:
+//  code:
+//    description: The 3 character ISO code for the currency.
+//    type: string
+//    example: usd
+//    externalDocs:
+//      url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+//      description: See a list of codes.
+//  symbol:
+//    description: The symbol used to indicate the currency.
+//    type: string
+//    example: $
+//  symbol_native:
+//    description: The native symbol used to indicate the currency.
+//    type: string
+//    example: $
+//  name:
+//    description: The written name of the currency
+//    type: string
+//    example: US Dollar
+//  includes_tax:
+//    description: "Whether the currency prices include tax"
+//    type: boolean
+//    x-featureFlag: "tax_inclusive_pricing"
+//    default: false
+//
+
 type Currency struct {
-	// core.Model
-
-	// The 3 character ISO code for the currency.
-	Code string `json:"code" gorm:"primarykey"`
-
-	// The symbol used to indicate the currency.
-	Symbol string `json:"symbol"`
-
-	// The native symbol used to indicate the currency.
+	Code         string `json:"code" gorm:"primarykey"`
+	Symbol       string `json:"symbol"`
 	SymbolNative string `json:"symbol_native"`
-
-	// The written name of the currency
-	Name string `json:"name"`
-
-	// [EXPERIMENTAL] Does the currency prices include tax
-	IncludesTax bool `json:"includes_tax" gorm:"default:null"`
+	Name         string `json:"name"`
+	IncludesTax  bool   `json:"includes_tax" gorm:"default:null"`
 }
 
 // func (c *Currency) BeforeCreate(tx *gorm.DB) (err error) {

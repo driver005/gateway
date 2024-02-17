@@ -5,28 +5,69 @@ import (
 	"github.com/google/uuid"
 )
 
-// GiftCardTransaction - Gift Card Transactions are created once a Customer uses a Gift Card to pay for their Order
+// @oas:schema:GiftCardTransaction
+// title: "Gift Card Transaction"
+// description: "Gift Card Transactions are created once a Customer uses a Gift Card to pay for their Order."
+// type: object
+// required:
+//   - amount
+//   - created_at
+//   - gift_card_id
+//   - id
+//   - is_taxable
+//   - order_id
+//   - tax_rate
+//
+// properties:
+//
+//	id:
+//	  description: The gift card transaction's ID
+//	  type: string
+//	  example: gct_01G8X9A7ESKAJXG2H0E6F1MW7A
+//	gift_card_id:
+//	  description: The ID of the Gift Card that was used in the transaction.
+//	  type: string
+//	  example: gift_01G8XKBPBQY2R7RBET4J7E0XQZ
+//	gift_card:
+//	  description: The details of the gift card associated used in this transaction.
+//	  x-expandable: "gift_card"
+//	  nullable: true
+//	  $ref: "#/components/schemas/GiftCard"
+//	order_id:
+//	  description: The ID of the order that the gift card was used for payment.
+//	  type: string
+//	  example: order_01G8TJSYT9M6AVS5N4EMNFS1EK
+//	order:
+//	  description: The details of the order that the gift card was used for payment.
+//	  x-expandable: "order"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Order"
+//	amount:
+//	  description: The amount that was used from the Gift Card.
+//	  type: integer
+//	  example: 10
+//	created_at:
+//	  description: The date with timezone at which the resource was created.
+//	  type: string
+//	  format: date-time
+//	is_taxable:
+//	  description: Whether the transaction is taxable or not.
+//	  nullable: true
+//	  type: boolean
+//	  example: false
+//	tax_rate:
+//	  description: The tax rate of the transaction
+//	  nullable: true
+//	  type: number
+//	  example: 0
 type GiftCardTransaction struct {
 	core.Model
 
-	// The ID of the Gift Card that was used in the transaction.
 	GiftCardId uuid.NullUUID `json:"gift_card_id"`
-
-	// A gift card object. Available if the relation `gift_card` is expanded.
-	GiftCard *GiftCard `json:"gift_card" gorm:"foreignKey:id;references:gift_card_id"`
-
-	// The ID of the Order that the Gift Card was used to pay for.
-	OrderId uuid.NullUUID `json:"order_id" gorm:"default:null"`
-
-	// An order object. Available if the relation `order` is expanded.
-	Order *Order `json:"order" gorm:"foreignKey:id;references:order_id"`
-
-	// The amount that was used from the Gift Card.
-	Amount float64 `json:"amount"`
-
-	// Whether the transaction is taxable or not.
-	IsTaxable bool `json:"is_taxable" gorm:"default:null"`
-
-	// The tax rate of the transaction
-	TaxRate float64 `json:"tax_rate" gorm:"default:null"`
+	GiftCard   *GiftCard     `json:"gift_card" gorm:"foreignKey:id;references:gift_card_id"`
+	OrderId    uuid.NullUUID `json:"order_id" gorm:"default:null"`
+	Order      *Order        `json:"order" gorm:"foreignKey:id;references:order_id"`
+	Amount     float64       `json:"amount"`
+	IsTaxable  bool          `json:"is_taxable" gorm:"default:null"`
+	TaxRate    float64       `json:"tax_rate" gorm:"default:null"`
 }

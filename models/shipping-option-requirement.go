@@ -7,21 +7,55 @@ import (
 	"github.com/google/uuid"
 )
 
-// A requirement that a Cart must satisfy for the Shipping Option to be available to the Cart.
+// @oas:schema:ShippingOptionRequirement
+// title: "Shipping Option Requirement"
+// description: "A shipping option requirement defines conditions that a Cart must satisfy for the Shipping Option to be available for usage in the Cart."
+// type: object
+// required:
+//   - amount
+//   - deleted_at
+//   - id
+//   - shipping_option_id
+//   - type
+//
+// properties:
+//
+//	id:
+//	  description: The shipping option requirement's ID
+//	  type: string
+//	  example: sor_01G1G5V29AB4CTNDRFSRWSRKWD
+//	shipping_option_id:
+//	  description: The ID of the shipping option that the requirements belong to.
+//	  type: string
+//	  example: so_01G1G5V27GYX4QXNARRQCW1N8T
+//	shipping_option:
+//	  description: The details of the shipping option that the requirements belong to.
+//	  x-expandable: "shipping_option"
+//	  nullable: true
+//	  $ref: "#/components/schemas/ShippingOption"
+//	type:
+//	  description: The type of the requirement, this defines how the value will be compared to the Cart's total. `min_subtotal` requirements define the minimum subtotal that is needed for the Shipping Option to be available, while the `max_subtotal` defines the maximum subtotal that the Cart can have for the Shipping Option to be available.
+//	  type: string
+//	  enum:
+//	    - min_subtotal
+//	    - max_subtotal
+//	  example: min_subtotal
+//	amount:
+//	  description: The amount to compare the Cart subtotal to.
+//	  type: integer
+//	  example: 100
+//	deleted_at:
+//	  description: The date with timezone at which the resource was deleted.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
 type ShippingOptionRequirement struct {
 	core.Model
 
-	// The amount to compare the Cart subtotal to.
-	Amount float64 `json:"amount"`
-
-	// Shipping Options represent a way in which an Order or Return can be shipped. Shipping Options have an associated Fulfillment Provider that will be used when the fulfillment of an Order is initiated. Shipping Options themselves cannot be added to Carts, but serve as a template for Shipping Methods. This distinction makes it possible to customize individual Shipping Methods with additional information.
-	ShippingOption *ShippingOption `json:"shipping_option" gorm:"foreignKey:id;references:shipping_option_id"`
-
-	// The id of the Shipping Option that the hipping option requirement belongs to
-	ShippingOptionId uuid.NullUUID `json:"shipping_option_id"`
-
-	// The type of the requirement, this defines how the value will be compared to the Cart's total. `min_subtotal` requirements define the minimum subtotal that is needed for the Shipping Option to be available, while the `max_subtotal` defines the maximum subtotal that the Cart can have for the Shipping Option to be available.
-	Type ShippingOptionRequirementType `json:"type"`
+	Amount           float64                       `json:"amount"`
+	ShippingOption   *ShippingOption               `json:"shipping_option" gorm:"foreignKey:id;references:shipping_option_id"`
+	ShippingOptionId uuid.NullUUID                 `json:"shipping_option_id"`
+	Type             ShippingOptionRequirementType `json:"type"`
 }
 
 // The type of the requirement, this defines how the value will be compared to the Cart's total. `min_subtotal` requirements define the minimum subtotal that is needed for the Shipping Option to be available, while the `max_subtotal` defines the maximum subtotal that the Cart can have for the Shipping Option to be available.

@@ -20,6 +20,20 @@ type FindParams struct {
 	Fields string `json:"fields,omitempty" validate:"omitempty"`
 }
 
+// @oas:schema:AdminPostProductsProductMetadataReq
+// type: object
+// required:
+//   - key
+//   - value
+//
+// properties:
+//
+//	key:
+//	  description: The metadata key
+//	  type: string
+//	value:
+//	  description: The metadata value
+//	  type: string
 type Metadata struct {
 	Key   string `json:"key,omitempty" validate:"omitempty"`
 	Value string `json:"value,omitempty" validate:"omitempty"`

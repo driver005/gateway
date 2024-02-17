@@ -7,96 +7,255 @@ import (
 	"github.com/google/uuid"
 )
 
+//
+// @oas:schema:Product
+// title: "Product"
+// description: "A product is a saleable item that holds general information such as name or description. It must include at least one Product Variant, where each product variant defines different options to purchase the product with (for example, different sizes or colors). The prices and inventory of the product are defined on the variant level."
+// type: object
+// required:
+//   - collection_id
+//   - created_at
+//   - deleted_at
+//   - description
+//   - discountable
+//   - external_id
+//   - handle
+//   - height
+//   - hs_code
+//   - id
+//   - is_giftcard
+//   - length
+//   - material
+//   - metadata
+//   - mid_code
+//   - origin_country
+//   - profile_id
+//   - status
+//   - subtitle
+//   - type_id
+//   - thumbnail
+//   - title
+//   - updated_at
+//   - weight
+//   - width
+// properties:
+//   id:
+//     description: The product's ID
+//     type: string
+//     example: prod_01G1G5V2MBA328390B5AXJ610F
+//   title:
+//     description: A title that can be displayed for easy identification of the Product.
+//     type: string
+//     example: Medusa Coffee Mug
+//   subtitle:
+//     description: An optional subtitle that can be used to further specify the Product.
+//     nullable: true
+//     type: string
+//   description:
+//     description: A short description of the Product.
+//     nullable: true
+//     type: string
+//     example: Every programmer's best friend.
+//   handle:
+//     description: A unique identifier for the Product (e.g. for slug structure).
+//     nullable: true
+//     type: string
+//     example: coffee-mug
+//   is_giftcard:
+//     description: Whether the Product represents a Gift Card. Products that represent Gift Cards will automatically generate a redeemable Gift Card code once they are purchased.
+//     type: boolean
+//     default: false
+//   status:
+//     description: The status of the product
+//     type: string
+//     enum:
+//       - draft
+//       - proposed
+//       - published
+//       - rejected
+//     default: draft
+//   images:
+//     description: The details of the product's images.
+//     type: array
+//     x-expandable: "images"
+//     items:
+//       $ref: "#/components/schemas/Image"
+//   thumbnail:
+//     description: A URL to an image file that can be used to identify the Product.
+//     nullable: true
+//     type: string
+//     format: uri
+//   options:
+//     description: The details of the Product Options that are defined for the Product. The product's variants will have a unique combination of values of the product's options.
+//     type: array
+//     x-expandable: "options"
+//     items:
+//       $ref: "#/components/schemas/ProductOption"
+//   variants:
+//     description: The details of the Product Variants that belong to the Product. Each will have a unique combination of values of the product's options.
+//     type: array
+//     x-expandable: "variants"
+//     items:
+//       $ref: "#/components/schemas/ProductVariant"
+//   categories:
+//     description: The details of the product categories that this product belongs to.
+//     type: array
+//     x-expandable: "categories"
+//     x-featureFlag: "product_categories"
+//     items:
+//       $ref: "#/components/schemas/ProductCategory"
+//   profile_id:
+//     description: The ID of the shipping profile that the product belongs to. The shipping profile has a set of defined shipping options that can be used to fulfill the product.
+//     type: string
+//     example: sp_01G1G5V239ENSZ5MV4JAR737BM
+//   profile:
+//     description: The details of the shipping profile that the product belongs to. The shipping profile has a set of defined shipping options that can be used to fulfill the product.
+//     x-expandable: "profile"
+//     nullable: true
+//     $ref: "#/components/schemas/ShippingProfile"
+//   profiles:
+//     description: Available if the relation `profiles` is expanded.
+//     nullable: true
+//     type: array
+//     items:
+//       $ref: "#/components/schemas/ShippingProfile"
+//   weight:
+//     description: The weight of the Product Variant. May be used in shipping rate calculations.
+//     nullable: true
+//     type: number
+//     example: null
+//   length:
+//     description: The length of the Product Variant. May be used in shipping rate calculations.
+//     nullable: true
+//     type: number
+//     example: null
+//   height:
+//     description: The height of the Product Variant. May be used in shipping rate calculations.
+//     nullable: true
+//     type: number
+//     example: null
+//   width:
+//     description: The width of the Product Variant. May be used in shipping rate calculations.
+//     nullable: true
+//     type: number
+//     example: null
+//   hs_code:
+//     description: The Harmonized System code of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//     nullable: true
+//     type: string
+//     example: null
+//   origin_country:
+//     description: The country in which the Product Variant was produced. May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//     nullable: true
+//     type: string
+//     example: null
+//   mid_code:
+//     description: The Manufacturers Identification code that identifies the manufacturer of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//     nullable: true
+//     type: string
+//     example: null
+//   material:
+//     description: The material and composition that the Product Variant is made of, May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//     nullable: true
+//     type: string
+//     example: null
+//   collection_id:
+//     description: The ID of the product collection that the product belongs to.
+//     nullable: true
+//     type: string
+//     example: pcol_01F0YESBFAZ0DV6V831JXWH0BG
+//   collection:
+//     description: The details of the product collection that the product belongs to.
+//     x-expandable: "collection"
+//     nullable: true
+//     $ref: "#/components/schemas/ProductCollection"
+//   type_id:
+//     description: The ID of the product type that the product belongs to.
+//     nullable: true
+//     type: string
+//     example: ptyp_01G8X9A7ESKAJXG2H0E6F1MW7A
+//   type:
+//     description: The details of the product type that the product belongs to.
+//     x-expandable: "type"
+//     nullable: true
+//     $ref: "#/components/schemas/ProductType"
+//   tags:
+//     description: The details of the product tags used in this product.
+//     type: array
+//     x-expandable: "type"
+//     items:
+//       $ref: "#/components/schemas/ProductTag"
+//   discountable:
+//     description: Whether the Product can be discounted. Discounts will not apply to Line Items of this Product when this flag is set to `false`.
+//     type: boolean
+//     default: true
+//   external_id:
+//     description: The external ID of the product
+//     nullable: true
+//     type: string
+//     example: null
+//   sales_channels:
+//     description: The details of the sales channels this product is available in.
+//     type: array
+//     x-expandable: "sales_channels"
+//     items:
+//       $ref: "#/components/schemas/SalesChannel"
+//   created_at:
+//     description: The date with timezone at which the resource was created.
+//     type: string
+//     format: date-time
+//   updated_at:
+//     description: The date with timezone at which the resource was updated.
+//     type: string
+//     format: date-time
+//   deleted_at:
+//     description: The date with timezone at which the resource was deleted.
+//     nullable: true
+//     type: string
+//     format: date-time
+//   metadata:
+//     description: An optional key-value map with additional details
+//     nullable: true
+//     type: object
+//     example: {car: "white"}
+//     externalDocs:
+//       description: "Learn about the metadata attribute, and how to delete and update it."
+//       url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
+//
+
 type Product struct {
 	core.Model
 
-	// A product collection object. Available if the relation `collection` is expanded.
-	Collection *ProductCollection `json:"collection" gorm:"foreignKey:id;references:collection_id"`
-
-	// The Product Collection that the Product belongs to
-	CollectionId uuid.NullUUID `json:"collection_id" gorm:"default:null"`
-
-	// A short description of the Product.
-	Description string `json:"description" gorm:"default:null"`
-
-	// Whether the Product can be discounted. Discounts will not apply to Line Items of this Product when this flag is set to `false`.
-	Discountable bool `json:"discountable" gorm:"default:false"`
-
-	// The external ID of the product
-	ExternalId string `json:"external_id" gorm:"default:null"`
-
-	// A unique identifier for the Product (e.g. for slug structure).
-	Handle string `json:"handle" gorm:"default:null"`
-
-	// The height of the Product Variant. May be used in shipping rate calculations.
-	Height float64 `json:"height" gorm:"default:null"`
-
-	// The Harmonized System code of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	HsCode string `json:"hs_code" gorm:"default:null"`
-
-	// Images of the Product. Available if the relation `images` is expanded.
-	Images []Image `json:"images" gorm:"foreignKey:id"`
-
-	// Whether the Product represents a Gift Card. Products that represent Gift Cards will automatically generate a redeemable Gift Card code once they are purchased.
-	IsGiftcard bool `json:"is_giftcard" gorm:"default:false"`
-
-	// The length of the Product Variant. May be used in shipping rate calculations.
-	Length float64 `json:"length" gorm:"default:null"`
-
-	// The material and composition that the Product Variant is made of, May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	Material string `json:"material" gorm:"default:null"`
-
-	// The Manufacturers Identification code that identifies the manufacturer of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	MIdCode uuid.UUID `json:"mid_code" gorm:"default:null"`
-
-	// The Product Options that are defined for the Product. Product Variants of the Product will have a unique combination of Product Option Values. Available if the relation `options` is expanded.
-	Options []ProductOption `json:"options" gorm:"foreignKey:id"`
-
-	// The country in which the Product Variant was produced. May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	OriginCountry string `json:"origin_country" gorm:"default:null"`
-
-	Categories []ProductCategory `json:"categories" gorm:"foreignKey:id"`
-
-	// Shipping Profiles have a set of defined Shipping Options that can be used to fulfill a given set of Products.
-	Profile *ShippingProfile `json:"profile" gorm:"foreignKey:id;references:profile_id"`
-
-	// The ID of the Shipping Profile that the Product belongs to. Shipping Profiles have a set of defined Shipping Options that can be used to Fulfill a given set of Products.
-	ProfileId uuid.NullUUID `json:"profile_id"`
-
-	Profiles []ShippingProfile `json:"profiles" gorm:"foreignKey:id"`
-
-	// The sales channels the product is associated with. Available if the relation `sales_channels` is expanded.
-	SalesChannels []SalesChannel `json:"sales_channels" gorm:"foreignKey:id"`
-
-	// The status of the product
-	Status ProductStatus `json:"status" gorm:"default:draft"`
-
-	// An optional subtitle that can be used to further specify the Product.
-	Subtitle string `json:"subtitle" gorm:"default:null"`
-
-	// The Product Tags assigned to the Product. Available if the relation `tags` is expanded.
-	Tags []ProductTag `json:"tags" gorm:"foreignKey:id"`
-
-	// A URL to an image file that can be used to identify the Product.
-	Thumbnail string `json:"thumbnail" gorm:"default:null"`
-
-	// A title that can be displayed for easy identification of the Product.
-	Title string `json:"title"`
-
-	// Product Type can be added to Products for filtering and reporting purposes.
-	Type *ProductType `json:"type" gorm:"foreignKey:id;references:type_id"`
-
-	// The Product type that the Product belongs to
-	TypeId uuid.NullUUID `json:"type_id" gorm:"default:null"`
-
-	// The Product Variants that belong to the Product. Each will have a unique combination of Product Option Values. Available if the relation `variants` is expanded.
-	Variants []ProductVariant `json:"variants" gorm:"foreignKey:id"`
-
-	// The weight of the Product Variant. May be used in shipping rate calculations.
-	Weight float64 `json:"weight" gorm:"default:null"`
-
-	// The width of the Product Variant. May be used in shipping rate calculations.
-	Width float64 `json:"width" gorm:"default:null"`
+	Collection    *ProductCollection `json:"collection" gorm:"foreignKey:id;references:collection_id"`
+	CollectionId  uuid.NullUUID      `json:"collection_id" gorm:"default:null"`
+	Description   string             `json:"description" gorm:"default:null"`
+	Discountable  bool               `json:"discountable" gorm:"default:false"`
+	ExternalId    string             `json:"external_id" gorm:"default:null"`
+	Handle        string             `json:"handle" gorm:"default:null"`
+	Height        float64            `json:"height" gorm:"default:null"`
+	HsCode        string             `json:"hs_code" gorm:"default:null"`
+	Images        []Image            `json:"images" gorm:"foreignKey:id"`
+	IsGiftcard    bool               `json:"is_giftcard" gorm:"default:false"`
+	Length        float64            `json:"length" gorm:"default:null"`
+	Material      string             `json:"material" gorm:"default:null"`
+	MIdCode       uuid.UUID          `json:"mid_code" gorm:"default:null"`
+	Options       []ProductOption    `json:"options" gorm:"foreignKey:id"`
+	OriginCountry string             `json:"origin_country" gorm:"default:null"`
+	Categories    []ProductCategory  `json:"categories" gorm:"foreignKey:id"`
+	Profile       *ShippingProfile   `json:"profile" gorm:"foreignKey:id;references:profile_id"`
+	ProfileId     uuid.NullUUID      `json:"profile_id"`
+	Profiles      []ShippingProfile  `json:"profiles" gorm:"foreignKey:id"`
+	SalesChannels []SalesChannel     `json:"sales_channels" gorm:"foreignKey:id"`
+	Status        ProductStatus      `json:"status" gorm:"default:draft"`
+	Subtitle      string             `json:"subtitle" gorm:"default:null"`
+	Tags          []ProductTag       `json:"tags" gorm:"foreignKey:id"`
+	Thumbnail     string             `json:"thumbnail" gorm:"default:null"`
+	Title         string             `json:"title"`
+	Type          *ProductType       `json:"type" gorm:"foreignKey:id;references:type_id"`
+	TypeId        uuid.NullUUID      `json:"type_id" gorm:"default:null"`
+	Variants      []ProductVariant   `json:"variants" gorm:"foreignKey:id"`
+	Weight        float64            `json:"weight" gorm:"default:null"`
+	Width         float64            `json:"width" gorm:"default:null"`
 }
 
 // The status of the product

@@ -5,73 +5,202 @@ import (
 	"github.com/google/uuid"
 )
 
-// Product Variants represent a Product with a specific set of Product Option configurations. The maximum number of Product Variants that a Product can have is given by the number of available Product Option combinations.
+// @oas:schema:ProductVariant
+// title: "Product Variant"
+// description: "A Product Variant represents a Product with a specific set of Product Option configurations. The maximum number of Product Variants that a Product can have is given by the number of available Product Option combinations. A product must at least have one product variant."
+// type: object
+// required:
+//   - allow_backorder
+//   - barcode
+//   - created_at
+//   - deleted_at
+//   - ean
+//   - height
+//   - hs_code
+//   - id
+//   - inventory_quantity
+//   - length
+//   - manage_inventory
+//   - material
+//   - metadata
+//   - mid_code
+//   - origin_country
+//   - product_id
+//   - sku
+//   - title
+//   - upc
+//   - updated_at
+//   - weight
+//   - width
+//
+// properties:
+//
+//	id:
+//	  description: The product variant's ID
+//	  type: string
+//	  example: variant_01G1G5V2MRX2V3PVSR2WXYPFB6
+//	title:
+//	  description: A title that can be displayed for easy identification of the Product Variant.
+//	  type: string
+//	  example: Small
+//	product_id:
+//	  description: The ID of the product that the product variant belongs to.
+//	  type: string
+//	  example: prod_01G1G5V2MBA328390B5AXJ610F
+//	product:
+//	  description: The details of the product that the product variant belongs to.
+//	  x-expandable: "product"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Product"
+//	prices:
+//	  description: The details of the prices of the Product Variant, each represented as a Money Amount. Each Money Amount represents a price in a given currency or a specific Region.
+//	  type: array
+//	  x-expandable: "prices"
+//	  items:
+//	    $ref: "#/components/schemas/MoneyAmount"
+//	sku:
+//	  description: The unique stock keeping unit used to identify the Product Variant. This will usually be a unique identifer for the item that is to be shipped, and can be referenced across multiple systems.
+//	  nullable: true
+//	  type: string
+//	  example: shirt-123
+//	barcode:
+//	  description: A generic field for a GTIN number that can be used to identify the Product Variant.
+//	  nullable: true
+//	  type: string
+//	  example: null
+//	ean:
+//	  description: An EAN barcode number that can be used to identify the Product Variant.
+//	  nullable: true
+//	  type: string
+//	  example: null
+//	upc:
+//	  description: A UPC barcode number that can be used to identify the Product Variant.
+//	  nullable: true
+//	  type: string
+//	  example: null
+//	variant_rank:
+//	  description: The ranking of this variant
+//	  nullable: true
+//	  type: number
+//	  default: 0
+//	inventory_quantity:
+//	  description: The current quantity of the item that is stocked.
+//	  type: integer
+//	  example: 100
+//	allow_backorder:
+//	  description: Whether the Product Variant should be purchasable when `inventory_quantity` is 0.
+//	  type: boolean
+//	  default: false
+//	manage_inventory:
+//	  description: Whether Medusa should manage inventory for the Product Variant.
+//	  type: boolean
+//	  default: true
+//	hs_code:
+//	  description: The Harmonized System code of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//	  nullable: true
+//	  type: string
+//	  example: null
+//	origin_country:
+//	  description: The country in which the Product Variant was produced. May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//	  nullable: true
+//	  type: string
+//	  example: null
+//	mid_code:
+//	  description: The Manufacturers Identification code that identifies the manufacturer of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//	  nullable: true
+//	  type: string
+//	  example: null
+//	material:
+//	  description: The material and composition that the Product Variant is made of, May be used by Fulfillment Providers to pass customs information to shipping carriers.
+//	  nullable: true
+//	  type: string
+//	  example: null
+//	weight:
+//	  description: The weight of the Product Variant. May be used in shipping rate calculations.
+//	  nullable: true
+//	  type: number
+//	  example: null
+//	length:
+//	  description: "The length of the Product Variant. May be used in shipping rate calculations."
+//	  nullable: true
+//	  type: number
+//	  example: null
+//	height:
+//	  description: The height of the Product Variant. May be used in shipping rate calculations.
+//	  nullable: true
+//	  type: number
+//	  example: null
+//	width:
+//	  description: The width of the Product Variant. May be used in shipping rate calculations.
+//	  nullable: true
+//	  type: number
+//	  example: null
+//	options:
+//	  description: The details of the product options that this product variant defines values for.
+//	  type: array
+//	  x-expandable: "options"
+//	  items:
+//	    $ref: "#/components/schemas/ProductOptionValue"
+//	inventory_items:
+//	  description: The details inventory items of the product variant.
+//	  type: array
+//	  x-expandable: "inventory_items"
+//	  items:
+//	    $ref: "#/components/schemas/ProductVariantInventoryItem"
+//	created_at:
+//	  description: The date with timezone at which the resource was created.
+//	  type: string
+//	  format: date-time
+//	updated_at:
+//	  description: The date with timezone at which the resource was updated.
+//	  type: string
+//	  format: date-time
+//	deleted_at:
+//	  description: The date with timezone at which the resource was deleted.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
+//	metadata:
+//	  description: An optional key-value map with additional details
+//	  nullable: true
+//	  type: object
+//	  example: {car: "white"}
+//	  externalDocs:
+//	    description: "Learn about the metadata attribute, and how to delete and update it."
+//	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
+//	purchasable:
+//	  description: |
+//	     Only used with the inventory modules.
+//	     A boolean value indicating whether the Product Variant is purchasable.
+//	     A variant is purchasable if:
+//	       - inventory is not managed
+//	       - it has no inventory items
+//	       - it is in stock
+//	       - it is backorderable.
+//	  type: boolean
 type ProductVariant struct {
 	core.Model
 
-	// Whether the Product Variant should be purchasable when `inventory_quantity` is 0.
-	AllowBackorder bool `json:"allow_backorder" gorm:"default:null"`
-
-	// Whether the Product Variant should be purchasable.
-	Purchasable bool `json:"purchasable" gorm:"default:null"`
-
-	// A generic field for a GTIN number that can be used to identify the Product Variant.
-	Barcode string `json:"barcode" gorm:"default:null"`
-
-	// An EAN barcode number that can be used to identify the Product Variant.
-	Ean string `json:"ean" gorm:"default:null"`
-
-	// The height of the Product Variant. May be used in shipping rate calculations.
-	Height float64 `json:"height" gorm:"default:null"`
-
-	// The Harmonized System code of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	HsCode string `json:"hs_code" gorm:"default:null"`
-
-	// The current quantity of the item that is stocked.
-	InventoryQuantity int `json:"inventory_quantity"`
-
-	// The length of the Product Variant. May be used in shipping rate calculations.
-	Length float64 `json:"length" gorm:"default:null"`
-
-	// Whether Medusa should manage inventory for the Product Variant.
-	ManageInventory bool `json:"manage_inventory" gorm:"default:null"`
-
-	// The material and composition that the Product Variant is made of, May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	Material string `json:"material" gorm:"default:null"`
-
-	// The Manufacturers Identification code that identifies the manufacturer of the Product Variant. May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	MIdCode string `json:"mid_code" gorm:"default:null"`
-
-	// The Product Option Values specified for the Product Variant. Available if the relation `options` is expanded.
-	Options []ProductOptionValue `json:"options" gorm:"foreignKey:id"`
-
-	// The country in which the Product Variant was produced. May be used by Fulfillment Providers to pass customs information to shipping carriers.
-	OriginCountry string `json:"origin_country" gorm:"default:null"`
-
-	// The Money Amounts defined for the Product Variant. Each Money Amount represents a price in a given currency or a price in a specific Region. Available if the relation `prices` is expanded.
-	Prices []MoneyAmount `json:"prices" gorm:"foreignKey:id"`
-
-	// A product object. Available if the relation `product` is expanded.
-	Product *Product `json:"product" gorm:"foreignKey:id;references:product_id"`
-
-	// The ID of the Product that the Product Variant belongs to.
-	ProductId uuid.NullUUID `json:"product_id"`
-
-	// The unique stock keeping unit used to identify the Product Variant. This will usually be a unqiue identifer for the item that is to be shipped, and can be referenced across multiple systems.
-	Sku string `json:"sku" gorm:"default:null"`
-
-	// A title that can be displayed for easy identification of the Product Variant.
-	Title string `json:"title"`
-
-	// A UPC barcode number that can be used to identify the Product Variant.
-	Upc string `json:"upc" gorm:"default:null"`
-
-	// The ranking of this variant
-	VariantRank int `json:"variant_rank" gorm:"default:null"`
-
-	// The weight of the Product Variant. May be used in shipping rate calculations.
-	Weight float64 `json:"weight" gorm:"default:null"`
-
-	// The width of the Product Variant. May be used in shipping rate calculations.
-	Width float64 `json:"width" gorm:"default:null"`
+	AllowBackorder    bool                 `json:"allow_backorder" gorm:"default:null"`
+	Purchasable       bool                 `json:"purchasable" gorm:"default:null"`
+	Barcode           string               `json:"barcode" gorm:"default:null"`
+	Ean               string               `json:"ean" gorm:"default:null"`
+	Height            float64              `json:"height" gorm:"default:null"`
+	HsCode            string               `json:"hs_code" gorm:"default:null"`
+	InventoryQuantity int                  `json:"inventory_quantity"`
+	Length            float64              `json:"length" gorm:"default:null"`
+	ManageInventory   bool                 `json:"manage_inventory" gorm:"default:null"`
+	Material          string               `json:"material" gorm:"default:null"`
+	MIdCode           string               `json:"mid_code" gorm:"default:null"`
+	Options           []ProductOptionValue `json:"options" gorm:"foreignKey:id"`
+	OriginCountry     string               `json:"origin_country" gorm:"default:null"`
+	Prices            []MoneyAmount        `json:"prices" gorm:"foreignKey:id"`
+	Product           *Product             `json:"product" gorm:"foreignKey:id;references:product_id"`
+	ProductId         uuid.NullUUID        `json:"product_id"`
+	Sku               string               `json:"sku" gorm:"default:null"`
+	Title             string               `json:"title"`
+	Upc               string               `json:"upc" gorm:"default:null"`
+	VariantRank       int                  `json:"variant_rank" gorm:"default:null"`
+	Weight            float64              `json:"weight" gorm:"default:null"`
+	Width             float64              `json:"width" gorm:"default:null"`
 }

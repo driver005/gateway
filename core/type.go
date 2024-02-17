@@ -26,5 +26,6 @@ func (a *JSONB) Scan(value interface{}) error {
 func (a *JSONB) Add(key string, value interface{}) JSONB {
 	data := *a
 	data[key] = value
+	a = &data
 	return data
 }

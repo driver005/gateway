@@ -27,11 +27,77 @@ type ProductCategoryInput struct {
 	Metadata         core.JSONB              `json:"metadata,omitempty" validate:"omitempty"`
 }
 
+// @oas:schema:AdminPostProductCategoriesReq
+// type: object
+// description: "The details of the product category to create."
+// required:
+//   - name
+//
+// properties:
+//
+//	name:
+//	  type: string
+//	  description: The name of the product category
+//	description:
+//	  type: string
+//	  description: The description of the product category.
+//	handle:
+//	  type: string
+//	  description: The handle of the product category. If none is provided, the kebab-case version of the name will be used. This field can be used as a slug in URLs.
+//	is_internal:
+//	  type: boolean
+//	  description: >-
+//	    If set to `true`, the product category will only be available to admins.
+//	is_active:
+//	  type: boolean
+//	  description: >-
+//	    If set to `false`, the product category will not be available in the storefront.
+//	parent_category_id:
+//	  type: string
+//	  description: The ID of the parent product category
+//	metadata:
+//	  description: An optional set of key-value pairs to hold additional information.
+//	  type: object
+//	  externalDocs:
+//	    description: "Learn about the metadata attribute, and how to delete and update it."
+//	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type CreateProductCategoryInput struct {
 	ProductCategoryInput
 	Name string `json:"name"`
 }
 
+// @oas:schema:AdminPostProductCategoriesCategoryReq
+// type: object
+// description: "The details to update of the product category."
+// properties:
+//
+//	name:
+//	  type: string
+//	  description:  The name to identify the Product Category by.
+//	description:
+//	  type: string
+//	  description: An optional text field to describe the Product Category by.
+//	handle:
+//	  type: string
+//	  description:  A handle to be used in slugs.
+//	is_internal:
+//	  type: boolean
+//	  description: A flag to make product category an internal category for admins
+//	is_active:
+//	  type: boolean
+//	  description: A flag to make product category visible/hidden in the store front
+//	parent_category_id:
+//	  type: string
+//	  description: The ID of the parent product category
+//	rank:
+//	  type: number
+//	  description: The rank of the category in the tree node (starting from 0)
+//	metadata:
+//	  description: An optional set of key-value pairs to hold additional information.
+//	  type: object
+//	  externalDocs:
+//	    description: "Learn about the metadata attribute, and how to delete and update it."
+//	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type UpdateProductCategoryInput struct {
 	ProductCategoryInput
 	Name string `json:"name,omitempty" validate:"omitempty"`

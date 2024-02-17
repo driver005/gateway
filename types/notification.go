@@ -15,6 +15,15 @@ type FilterableNotification struct {
 	IncludeResends bool      `json:"include_resends,omitempty"`
 }
 
+// @oas:schema:AdminPostNotificationsNotificationResendReq
+// type: object
+// description: "The resend details."
+// properties:
+//
+//	to:
+//	  description: >-
+//	    A new address or user identifier that the Notification should be sent to. If not provided, the previous `to` field of the notification will be used.
+//	  type: string
 type ResendNotification struct {
 	To string `json:"to,omitempty" validate:"omitempty"`
 }

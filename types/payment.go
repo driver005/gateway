@@ -37,6 +37,24 @@ type CreatePaymentInput struct {
 	ResourceId     uuid.UUID              `json:"resource_id,omitempty" validate:"omitempty"`
 }
 
+// @oas:schema:AdminPostPaymentRefundsReq
+// type: object
+// description: "The details of the refund to create."
+// required:
+//   - amount
+//   - reason
+//
+// properties:
+//
+//	amount:
+//	  description: The amount to refund.
+//	  type: integer
+//	reason:
+//	  description: The reason for the Refund.
+//	  type: string
+//	note:
+//	  description: A note with additional details about the Refund.
+//	  type: string
 type PaymentRefund struct {
 	Amount float64             `json:"amount"`
 	Reason models.RefundReason `json:"reason,omitempty"`

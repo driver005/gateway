@@ -2,6 +2,9 @@ package types
 
 import "github.com/driver005/gateway/core"
 
+// @oas:schema:StorePostCustomersCustomerAddressesAddressReq
+// anyOf:
+//   - $ref: "#/components/schemas/AddressPayload"
 type AddressPayload struct {
 	FirstName   string     `json:"first_name,omitempty" validate:"omitempty"`
 	LastName    string     `json:"last_name,omitempty" validate:"omitempty"`

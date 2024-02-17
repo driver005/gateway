@@ -45,6 +45,107 @@ func (m *Cart) SetRoutes(router fiber.Router) {
 	route.Delete("/:id/discounts/:code", m.DeleteDiscount)
 }
 
+// @oas:path [get] /store/carts/{id}
+// operationId: "GetCartsCart"
+// summary: "Get a Cart"
+// description: "Retrieve a Cart's details. This includes recalculating its totals."
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//
+// x-codegen:
+//
+//	method: retrieve
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.retrieve(cartId)
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useGetCart } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const { cart, isLoading } = useGetCart(cartId)
+//
+//     return (
+//     <div>
+//     {isLoading && <span>Loading...</span>}
+//     {cart && cart.items.length === 0 && (
+//     <span>Cart is empty</span>
+//     )}
+//     {cart && cart.items.length > 0 && (
+//     <ul>
+//     {cart.items.map((item) => (
+//     <li key={item.id}>{item.title}</li>
+//     ))}
+//     </ul>
+//     )}
+//     </div>
+//     )
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl '{backend_url}/store/carts/{id}'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -86,6 +187,114 @@ func (m *Cart) Get(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts
+// operationId: "PostCart"
+// summary: "Create a Cart"
+// description: |
+//
+//	Create a Cart. Although optional, specifying the cart's region and sales channel can affect the cart's pricing and
+//	the products that can be added to the cart respectively. So, make sure to set those early on and change them if necessary, such as when the customer changes their region.
+//
+//	If a customer is logged in, make sure to pass its ID or email within the cart's details so that the cart is attached to the customer.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/StorePostCartReq"
+//
+// x-codegen:
+//
+//	method: create
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.create()
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useCreateCart } from "medusa-react"
+//
+//     type Props = {
+//     regionId: string
+//     }
+//
+//     const Cart = ({ regionId }: Props) => {
+//     const createCart = useCreateCart()
+//
+//     const handleCreate = () => {
+//     createCart.mutate({
+//     region_id: regionId
+//     // creates an empty cart
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.items)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: "Successfully created a new Cart"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) Create(context fiber.Ctx) error {
 	model, err := api.BindCreate[types.CreateCart](context, m.r.Validator())
 	if err != nil {
@@ -196,6 +405,118 @@ func (m *Cart) Create(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts/{id}
+// operationId: PostCartsCart
+// summary: Update a Cart
+// description: "Update a Cart's details. If the cart has payment sessions and the region was not changed, the payment sessions are updated. The cart's totals are also recalculated."
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/StorePostCartsCartReq"
+//
+// x-codegen:
+//
+//	method: update
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.update(cartId, {
+//     email: "user@example.com"
+//     })
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useUpdateCart } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const updateCart = useUpdateCart(cartId)
+//
+//     const handleUpdate = (
+//     email: string
+//     ) => {
+//     updateCart.mutate({
+//     email
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.email)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "email": "user@example.com"
+//     }'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) Update(context fiber.Ctx) error {
 	model, id, err := api.BindUpdate[types.CartUpdateProps](context, "id", m.r.Validator())
 	if err != nil {
@@ -239,6 +560,117 @@ func (m *Cart) Update(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts/{id}/complete
+// summary: "Complete a Cart"
+// operationId: "PostCartsCartComplete"
+// description: |
+//
+//	Complete a cart and place an order or create a swap, based on the cart's type. This includes attempting to authorize the cart's payment.
+//	If authorizing the payment requires more action, the cart will not be completed and the order will not be placed or the swap will not be created.
+//
+//	An idempotency key will be generated if none is provided in the header `Idempotency-Key` and added to
+//	the response. If an error occurs during cart completion or the request is interrupted for any reason, the cart completion can be retried by passing the idempotency
+//	key in the `Idempotency-Key` header.
+//
+// externalDocs:
+//
+//	description: "Cart completion overview"
+//	url: "https://docs.medusajs.com/modules/carts-and-checkout/cart#cart-completion"
+//
+// parameters:
+//   - (path) id=* {String} The Cart ID.
+//
+// x-codegen:
+//
+//	method: complete
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.complete(cartId)
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useCompleteCart } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const completeCart = useCompleteCart(cartId)
+//
+//     const handleComplete = () => {
+//     completeCart.mutate(void 0, {
+//     onSuccess: ({ data, type }) => {
+//     console.log(data.id, type)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/complete'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: "If the payment of the cart was successfully authorized, but requires further
+//	    action from the customer, the response body will contain the cart with an
+//	    updated payment session. Otherwise, if the payment was authorized and the cart was successfully completed, the
+//	    response body will contain either the newly created order or swap, depending on what the cart was created for."
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCompleteCartRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) Complete(context fiber.Ctx) error {
 	id, err := api.BindDelete(context, "id")
 	if err != nil {
@@ -363,6 +795,121 @@ func (m *Cart) CreateLineItem(context fiber.Ctx) error {
 	return context.Status(idempotencyKey.ResponseCode).JSON(idempotencyKey.ResponseBody)
 }
 
+// @oas:path [post] /store/carts/{id}/line-items/{line_id}
+// operationId: PostCartsCartLineItemsItem
+// summary: Update a Line Item
+// description: "Update a line item's quantity."
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//   - (path) line_id=* {string} The ID of the Line Item.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/StorePostCartsCartLineItemsItemReq"
+//
+// x-codegen:
+//
+//	method: updateLineItem
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.lineItems.update(cartId, lineId, {
+//     quantity: 1
+//     })
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useUpdateLineItem } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const updateLineItem = useUpdateLineItem(cartId)
+//
+//     const handleUpdateItem = (
+//     lineItemId: string,
+//     quantity: number
+//     ) => {
+//     updateLineItem.mutate({
+//     lineId: lineItemId,
+//     quantity,
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.items)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/line-items/{line_id}' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "quantity": 1
+//     }'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) UpdateLineItem(context fiber.Ctx) error {
 	model, id, err := api.BindUpdate[types.UpdateLineItem](context, "id", m.r.Validator())
 	if err != nil {
@@ -435,6 +982,106 @@ func (m *Cart) UpdateLineItem(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [delete] /store/carts/{id}/line-items/{line_id}
+// operationId: DeleteCartsCartLineItemsItem
+// summary: Delete a Line Item
+// description: "Delete a Line Item from a Cart. The payment sessions will be updated and the totals will be recalculated."
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//   - (path) line_id=* {string} The ID of the Line Item.
+//
+// x-codegen:
+//
+//	method: deleteLineItem
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.lineItems.delete(cartId, lineId)
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useDeleteLineItem } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const deleteLineItem = useDeleteLineItem(cartId)
+//
+//     const handleDeleteItem = (
+//     lineItemId: string
+//     ) => {
+//     deleteLineItem.mutate({
+//     lineId: lineItemId,
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.items)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X DELETE '{backend_url}/store/carts/{id}/line-items/{line_id}'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) DeleteLineItem(context fiber.Ctx) error {
 	id, err := api.BindDelete(context, "id")
 	if err != nil {
@@ -477,6 +1124,104 @@ func (m *Cart) DeleteLineItem(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts/{id}/payment-sessions
+// operationId: "PostCartsCartPaymentSessions"
+// summary: "Create Payment Sessions"
+// description: "Create Payment Sessions for each of the available Payment Providers in the Cart's Region. If there's only one payment session created,
+//
+//	it will be selected by default. The creation of the payment session uses the payment provider and may require sending requests to third-party services."
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//
+// x-codegen:
+//
+//	method: createPaymentSessions
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.createPaymentSessions(cartId)
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useCreatePaymentSession } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const createPaymentSession = useCreatePaymentSession(cartId)
+//
+//     const handleComplete = () => {
+//     createPaymentSession.mutate(void 0, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.payment_sessions)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/payment-sessions'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) CreatePaymentSession(context fiber.Ctx) error {
 	id, err := api.BindDelete(context, "id")
 	if err != nil {
@@ -544,6 +1289,126 @@ func (m *Cart) CreatePaymentSession(context fiber.Ctx) error {
 	return context.Status(idempotencyKey.ResponseCode).JSON(idempotencyKey.ResponseBody)
 }
 
+// @oas:path [post] /store/carts/{id}/payment-sessions/{provider_id}
+// operationId: PostCartsCartPaymentSessionUpdate
+// summary: Update a Payment Session
+// description: "Update a Payment Session with additional data. This can be useful depending on the payment provider used.
+//
+//	All payment sessions are updated and cart totals are recalculated afterwards."
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//   - (path) provider_id=* {string} The ID of the payment provider.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/StorePostCartsCartPaymentSessionUpdateReq"
+//
+// x-codegen:
+//
+//	method: updatePaymentSession
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.updatePaymentSession(cartId, "manual", {
+//     data: {
+//
+//     }
+//     })
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useUpdatePaymentSession } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const updatePaymentSession = useUpdatePaymentSession(cartId)
+//
+//     const handleUpdate = (
+//     providerId: string,
+//     data: Record<string, unknown>
+//     ) => {
+//     updatePaymentSession.mutate({
+//     provider_id: providerId,
+//     data
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.payment_session)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/payment-sessions/manual' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "data": {}
+//     }'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) UpdatePaymentSession(context fiber.Ctx) error {
 	model, id, err := api.BindUpdate[types.UpdatePaymentSession](context, "id", m.r.Validator())
 	if err != nil {
@@ -579,6 +1444,106 @@ func (m *Cart) UpdatePaymentSession(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [delete] /store/carts/{id}/payment-sessions/{provider_id}
+// operationId: DeleteCartsCartPaymentSessionsSession
+// summary: "Delete a Payment Session"
+// description: "Delete a Payment Session in a Cart. May be useful if a payment has failed. The totals will be recalculated."
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//   - (path) provider_id=* {string} The ID of the Payment Provider used to create the Payment Session to be deleted.
+//
+// x-codegen:
+//
+//	method: deletePaymentSession
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.deletePaymentSession(cartId, "manual")
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useDeletePaymentSession } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const deletePaymentSession = useDeletePaymentSession(cartId)
+//
+//     const handleDeletePaymentSession = (
+//     providerId: string
+//     ) => {
+//     deletePaymentSession.mutate({
+//     provider_id: providerId,
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.payment_sessions)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X DELETE '{backend_url}/store/carts/{id}/payment-sessions/{provider_id}'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) DeletePaymentSession(context fiber.Ctx) error {
 	id, err := api.BindDelete(context, "id")
 	if err != nil {
@@ -610,6 +1575,106 @@ func (m *Cart) DeletePaymentSession(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts/{id}/payment-sessions/{provider_id}/refresh
+// operationId: PostCartsCartPaymentSessionsSession
+// summary: Refresh a Payment Session
+// description: "Refresh a Payment Session to ensure that it is in sync with the Cart. This is usually not necessary, but is provided for edge cases."
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//   - (path) provider_id=* {string} The ID of the Payment Provider that created the Payment Session to be refreshed.
+//
+// x-codegen:
+//
+//	method: refreshPaymentSession
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.refreshPaymentSession(cartId, "manual")
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useRefreshPaymentSession } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const refreshPaymentSession = useRefreshPaymentSession(cartId)
+//
+//     const handleRefresh = (
+//     providerId: string
+//     ) => {
+//     refreshPaymentSession.mutate({
+//     provider_id: providerId,
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.payment_sessions)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/payment-sessions/{provider_id}/refresh'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) RefreshPaymentSession(context fiber.Ctx) error {
 	id, err := api.BindDelete(context, "id")
 	if err != nil {
@@ -642,6 +1707,121 @@ func (m *Cart) RefreshPaymentSession(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts/{id}/payment-session
+// operationId: PostCartsCartPaymentSession
+// summary: Select a Payment Session
+// description: "Select the Payment Session that will be used to complete the cart. This is typically used when the customer chooses their preferred payment method during checkout.
+//
+//	The totals of the cart will be recalculated."
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/StorePostCartsCartPaymentSessionReq"
+//
+// x-codegen:
+//
+//	method: setPaymentSession
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.setPaymentSession(cartId, {
+//     provider_id: "manual"
+//     })
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useSetPaymentSession } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const setPaymentSession = useSetPaymentSession(cartId)
+//
+//     const handleSetPaymentSession = (
+//     providerId: string
+//     ) => {
+//     setPaymentSession.mutate({
+//     provider_id: providerId,
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.payment_session)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/payment-sessions' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "provider_id": "manual"
+//     }'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) SetPaymentSession(context fiber.Ctx) error {
 	model, id, err := api.BindUpdate[types.SessionsInput](context, "id", m.r.Validator())
 	if err != nil {
@@ -668,6 +1848,118 @@ func (m *Cart) SetPaymentSession(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts/{id}/shipping-methods
+// operationId: "PostCartsCartShippingMethod"
+// summary: "Add Shipping Method"
+// description: "Add a Shipping Method to the Cart. The validation of the `data` field is handled by the fulfillment provider of the chosen shipping option."
+// parameters:
+//   - (path) id=* {string} The cart ID.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/StorePostCartsCartShippingMethodReq"
+//
+// x-codegen:
+//
+//	method: addShippingMethod
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.addShippingMethod(cartId, {
+//     option_id
+//     })
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAddShippingMethodToCart } from "medusa-react"
+//
+//     type Props = {
+//     cartId: string
+//     }
+//
+//     const Cart = ({ cartId }: Props) => {
+//     const addShippingMethod = useAddShippingMethodToCart(cartId)
+//
+//     const handleAddShippingMethod = (
+//     optionId: string
+//     ) => {
+//     addShippingMethod.mutate({
+//     option_id: optionId,
+//     }, {
+//     onSuccess: ({ cart }) => {
+//     console.log(cart.shipping_methods)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Cart
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/shipping-methods' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "option_id": "{option_id}",
+//     }'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	"200":
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) AddShippingMethod(context fiber.Ctx) error {
 	model, id, err := api.BindUpdate[types.AddShippingMethod](context, "id", m.r.Validator())
 	if err != nil {
@@ -705,6 +1997,72 @@ func (m *Cart) AddShippingMethod(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /store/carts/{id}/taxes
+// operationId: "PostCartsCartTaxes"
+// summary: "Calculate Cart Taxes"
+// description: "Calculate the taxes for a cart. This is useful if the `automatic_taxes` field of the cart's region is set to `false`. If the cart's region uses a tax provider other than
+//
+//	Medusa's system provider, this may lead to sending requests to third-party services."
+//
+// externalDocs:
+//
+//	description: "How to calculate taxes manually during checkout"
+//	url: "https://docs.medusajs.com/modules/taxes/storefront/manual-calculation"
+//
+// parameters:
+//   - (path) id=* {String} The Cart ID.
+//
+// x-codegen:
+//
+//	method: calculateTaxes
+//
+// x-codeSamples:
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/carts/{id}/taxes'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) CalculateTaxes(context fiber.Ctx) error {
 	id, err := api.BindDelete(context, "id")
 	if err != nil {
@@ -748,6 +2106,77 @@ func (m *Cart) CalculateTaxes(context fiber.Ctx) error {
 	return context.Status(idempotencyKey.ResponseCode).JSON(idempotencyKey.ResponseBody)
 }
 
+// @oas:path [delete] /store/carts/{id}/discounts/{code}
+// operationId: DeleteCartsCartDiscountsDiscount
+// summary: "Remove Discount"
+// description: "Remove a Discount from a Cart. This only removes the application of the discount, and not completely deletes it. The totals will be re-calculated and the payment sessions
+//
+//	will be refreshed after the removal."
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Cart.
+//   - (path) code=* {string} The unique discount code.
+//
+// x-codegen:
+//
+//	method: deleteDiscount
+//
+// x-codeSamples:
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.carts.deleteDiscount(cartId, code)
+//     .then(({ cart }) => {
+//     console.log(cart.id);
+//     })
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X DELETE '{backend_url}/store/carts/{id}/discounts/{code}'
+//
+// tags:
+//   - Carts
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreCartsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Cart) DeleteDiscount(context fiber.Ctx) error {
 	id, err := api.BindDelete(context, "id")
 	if err != nil {

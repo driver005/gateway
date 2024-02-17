@@ -5,6 +5,20 @@ import (
 	"github.com/google/uuid"
 )
 
+// @oas:schema:AdminPostProductsToCollectionReq
+// type: object
+// description: "The details of the products to add to the collection."
+// required:
+//   - product_ids
+//
+// properties:
+//
+//	product_ids:
+//	  description: "An array of Product IDs to add to the Product Collection."
+//	  type: array
+//	  items:
+//	    description: "The ID of a Product to add to the Product Collection."
+//	    type: string
 type AddProductsToCollectionInput struct {
 	ProductIds []uuid.UUID `json:"product_ids"`
 }

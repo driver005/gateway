@@ -5,40 +5,107 @@ import (
 	"github.com/google/uuid"
 )
 
-// TaxRate - A Tax Rate can be used to associate a certain rate to charge on products within a given Region
+// @oas:schema:TaxRate
+// title: "Tax Rate"
+// description: "A Tax Rate can be used to define a custom rate to charge on specified products, product types, and shipping options within a given region."
+// type: object
+// required:
+//   - code
+//   - created_at
+//   - id
+//   - metadata
+//   - name
+//   - rate
+//   - region_id
+//   - updated_at
+//
+// properties:
+//
+//	id:
+//	  description: The tax rate's ID
+//	  type: string
+//	  example: txr_01G8XDBAWKBHHJRKH0AV02KXBR
+//	rate:
+//	  description: The numeric rate to charge
+//	  nullable: true
+//	  type: number
+//	  example: 10
+//	code:
+//	  description: A code to identify the tax type by
+//	  nullable: true
+//	  type: string
+//	  example: tax01
+//	name:
+//	  description: A human friendly name for the tax
+//	  type: string
+//	  example: Tax Example
+//	region_id:
+//	  description: The ID of the region that the rate belongs to.
+//	  type: string
+//	  example: reg_01G1G5V26T9H8Y0M4JNE3YGA4G
+//	region:
+//	  description: The details of the region that the rate belongs to.
+//	  x-expandable: "region"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Region"
+//	products:
+//	  description: The details of the products that belong to this tax rate.
+//	  type: array
+//	  x-expandable: "products"
+//	  items:
+//	    $ref: "#/components/schemas/Product"
+//	product_types:
+//	  description: The details of the product types that belong to this tax rate.
+//	  type: array
+//	  x-expandable: "product_types"
+//	  items:
+//	    $ref: "#/components/schemas/ProductType"
+//	shipping_options:
+//	  description: The details of the shipping options that belong to this tax rate.
+//	  type: array
+//	  x-expandable: "shipping_options"
+//	  items:
+//	    $ref: "#/components/schemas/ShippingOption"
+//	product_count:
+//	  description: The count of products
+//	  type: integer
+//	  example: 10
+//	product_type_count:
+//	  description: The count of product types
+//	  type: integer
+//	  example: 2
+//	shipping_option_count:
+//	  description: The count of shipping options
+//	  type: integer
+//	  example: 1
+//	created_at:
+//	  description: The date with timezone at which the resource was created.
+//	  type: string
+//	  format: date-time
+//	updated_at:
+//	  description: The date with timezone at which the resource was updated.
+//	  type: string
+//	  format: date-time
+//	metadata:
+//	  description: An optional key-value map with additional details
+//	  nullable: true
+//	  type: object
+//	  example: {car: "white"}
+//	  externalDocs:
+//	    description: "Learn about the metadata attribute, and how to delete and update it."
+//	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type TaxRate struct {
 	core.Model
 
-	// The numeric rate to charge
-	Rate float64 `json:"rate" gorm:"default:null"`
-
-	// A code to identify the tax type by
-	Code string `json:"code" gorm:"default:null"`
-
-	// A human friendly name for the tax
-	Name string `json:"name"`
-
-	// The id of the Region that the rate belongs to
-	RegionId uuid.NullUUID `json:"region_id"`
-
-	// A region object. Available if the relation `region` is expanded.
-	Region *Region `json:"region" gorm:"foreignKey:id;references:region_id"`
-
-	// The products that belong to this tax rate. Available if the relation `products` is expanded.
-	Products []Product `json:"products" gorm:"foreignKey:id"`
-
-	// The product types that belong to this tax rate. Available if the relation `product_types` is expanded.
-	ProductTypes []ProductType `json:"product_types" gorm:"foreignKey:id"`
-
-	// The shipping options that belong to this tax rate. Available if the relation `shipping_options` is expanded.
-	ShippingOptions []ShippingOption `json:"shipping_options" gorm:"foreignKey:id"`
-
-	// The count of products
-	ProductCount int32 `json:"product_count" gorm:"default:null"`
-
-	// The count of product types
-	ProductTypeCount int32 `json:"product_type_count" gorm:"default:null"`
-
-	// The count of shipping options
-	ShippingOptionCount int32 `json:"shipping_option_count" gorm:"default:null"`
+	Rate                float64          `json:"rate" gorm:"default:null"`
+	Code                string           `json:"code" gorm:"default:null"`
+	Name                string           `json:"name"`
+	RegionId            uuid.NullUUID    `json:"region_id"`
+	Region              *Region          `json:"region" gorm:"foreignKey:id;references:region_id"`
+	Products            []Product        `json:"products" gorm:"foreignKey:id"`
+	ProductTypes        []ProductType    `json:"product_types" gorm:"foreignKey:id"`
+	ShippingOptions     []ShippingOption `json:"shipping_options" gorm:"foreignKey:id"`
+	ProductCount        int32            `json:"product_count" gorm:"default:null"`
+	ProductTypeCount    int32            `json:"product_type_count" gorm:"default:null"`
+	ShippingOptionCount int32            `json:"shipping_option_count" gorm:"default:null"`
 }

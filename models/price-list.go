@@ -7,36 +7,102 @@ import (
 	"github.com/driver005/gateway/core"
 )
 
-// Price Lists represents a set of prices that overrides the default price for one or more product variants.
+// @oas:schema:PriceList
+// title: "Price List"
+// description: "A Price List represents a set of prices that override the default price for one or more product variants."
+// type: object
+// required:
+//   - created_at
+//   - deleted_at
+//   - description
+//   - ends_at
+//   - id
+//   - name
+//   - starts_at
+//   - status
+//   - type
+//   - updated_at
+//
+// properties:
+//
+//	id:
+//	  description: The price list's ID
+//	  type: string
+//	  example: pl_01G8X3CKJXCG5VXVZ87H9KC09W
+//	name:
+//	  description: The price list's name
+//	  type: string
+//	  example: VIP Prices
+//	description:
+//	  description: The price list's description
+//	  type: string
+//	  example: Prices for VIP customers
+//	type:
+//	  description: The type of Price List. This can be one of either `sale` or `override`.
+//	  type: string
+//	  enum:
+//	    - sale
+//	    - override
+//	  default: sale
+//	status:
+//	  description: The status of the Price List
+//	  type: string
+//	  enum:
+//	    - active
+//	    - draft
+//	  default: draft
+//	starts_at:
+//	  description: The date with timezone that the Price List starts being valid.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
+//	ends_at:
+//	  description: The date with timezone that the Price List stops being valid.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
+//	customer_groups:
+//	  description: The details of the customer groups that the Price List can apply to.
+//	  type: array
+//	  x-expandable: "customer_groups"
+//	  items:
+//	    $ref: "#/components/schemas/CustomerGroup"
+//	prices:
+//	  description: The prices that belong to the price list, represented as a Money Amount.
+//	  type: array
+//	  x-expandable: "prices"
+//	  items:
+//	    $ref: "#/components/schemas/MoneyAmount"
+//	includes_tax:
+//	  description: "Whether the price list prices include tax"
+//	  type: boolean
+//	  x-featureFlag: "tax_inclusive_pricing"
+//	  default: false
+//	created_at:
+//	  description: The date with timezone at which the resource was created.
+//	  type: string
+//	  format: date-time
+//	updated_at:
+//	  description: The date with timezone at which the resource was updated.
+//	  type: string
+//	  format: date-time
+//	deleted_at:
+//	  description: The date with timezone at which the resource was deleted.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
 type PriceList struct {
 	core.Model
 
-	// The Customer Groups that the Price List applies to. Available if the relation `customer_groups` is expanded.
 	CustomerGroups []CustomerGroup `json:"customer_groups" gorm:"foreignKey:id"`
-
-	// The price list's description
-	Description string `json:"description"`
-
-	// The date with timezone that the Price List stops being valid.
-	EndsAt *time.Time `json:"ends_at" gorm:"default:null"`
-
-	// [EXPERIMENTAL] Does the price list prices include tax
-	IncludesTax bool `json:"includes_tax" gorm:"default:null"`
-
-	// The price list's name
-	Name string `json:"name"`
-
-	// The Money Amounts that are associated with the Price List. Available if the relation `prices` is expanded.
-	Prices []MoneyAmount `json:"prices" gorm:"foreignKey:id"`
-
-	// The date with timezone that the Price List starts being valid.
-	StartsAt *time.Time `json:"starts_at" gorm:"default:null"`
-
-	// The status of the Price List
-	Status PriceListStatus `json:"status" gorm:"default:null"`
-
-	// The type of Price List. This can be one of either `sale` or `override`.
-	Type PriceListType `json:"type" gorm:"default:null"`
+	Description    string          `json:"description"`
+	EndsAt         *time.Time      `json:"ends_at" gorm:"default:null"`
+	IncludesTax    bool            `json:"includes_tax" gorm:"default:null"`
+	Name           string          `json:"name"`
+	Prices         []MoneyAmount   `json:"prices" gorm:"foreignKey:id"`
+	StartsAt       *time.Time      `json:"starts_at" gorm:"default:null"`
+	Status         PriceListStatus `json:"status" gorm:"default:null"`
+	Type           PriceListType   `json:"type" gorm:"default:null"`
 }
 
 // The status of the Price List

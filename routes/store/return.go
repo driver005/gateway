@@ -24,6 +24,142 @@ func (m *Return) SetRoutes(router fiber.Router) {
 	route.Post("", m.Create)
 }
 
+// @oas:path [post] /store/returns
+// operationId: "PostReturns"
+// summary: "Create Return"
+// description: "Create a Return for an Order. If a return shipping method is specified, the return is automatically fulfilled."
+// externalDocs:
+//
+//	description: "How to create a return in a storefront"
+//	url: "https://docs.medusajs.com/modules/orders/storefront/create-return"
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/StorePostReturnsReq"
+//
+// x-codegen:
+//
+//	method: create
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     medusa.returns.create({
+//     order_id,
+//     items: [
+//     {
+//     item_id,
+//     quantity: 1
+//     }
+//     ]
+//     })
+//     .then((data) => {
+//     console.log(data.return.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useCreateReturn } from "medusa-react"
+//
+//     type CreateReturnData = {
+//     items: {
+//     item_id: string,
+//     quantity: number
+//     }[]
+//     return_shipping: {
+//     option_id: string
+//     }
+//     }
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const CreateReturn = ({ orderId }: Props) => {
+//     const createReturn = useCreateReturn()
+//     // ...
+//
+//     const handleCreate = (data: CreateReturnData) => {
+//     createReturn.mutate({
+//     ...data,
+//     order_id: orderId
+//     }, {
+//     onSuccess: ({ return: returnData }) => {
+//     console.log(returnData.id)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default CreateReturn
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '{backend_url}/store/returns' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "order_id": "asfasf",
+//     "items": [
+//     {
+//     "item_id": "assfasf",
+//     "quantity": 1
+//     }
+//     ]
+//     }'
+//
+// tags:
+//   - Returns
+//
+// responses:
+//
+//	200:
+//	  description: OK
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/StoreReturnsRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Return) Create(context fiber.Ctx) error {
 	model, err := api.Bind[types.CreateReturn](context, m.r.Validator())
 	if err != nil {

@@ -8,64 +8,190 @@ import (
 	"github.com/google/uuid"
 )
 
-// Swap - Swaps can be created when a Customer wishes to exchange Products that they have purchased to different Products. Swaps consist of a Return of previously purchased Products and a Fulfillment of new Products, the amount paid for the Products being returned will be used towards payment for the new Products. In the case where the amount paid for the the Products being returned exceed the amount to be paid for the new Products, a Refund will be issued for the difference.
+// @oas:schema:Swap
+// title: "Swap"
+// description: "A swap can be created when a Customer wishes to exchange Products that they have purchased with different Products. It consists of a Return of previously purchased Products and a Fulfillment of new Products. It also includes information on any additional payment or refund required based on the difference between the exchanged products."
+// type: object
+// required:
+//   - allow_backorder
+//   - canceled_at
+//   - cart_id
+//   - confirmed_at
+//   - created_at
+//   - deleted_at
+//   - difference_due
+//   - fulfillment_status
+//   - id
+//   - idempotency_key
+//   - metadata
+//   - no_notification
+//   - order_id
+//   - payment_status
+//   - shipping_address_id
+//   - updated_at
+//
+// properties:
+//
+//	id:
+//	  description: The swap's ID
+//	  type: string
+//	  example: swap_01F0YET86Y9G92D3YDR9Y6V676
+//	fulfillment_status:
+//	  description: The status of the Fulfillment of the Swap.
+//	  type: string
+//	  enum:
+//	    - not_fulfilled
+//	    - fulfilled
+//	    - shipped
+//	    - partially_shipped
+//	    - canceled
+//	    - requires_action
+//	  example: not_fulfilled
+//	payment_status:
+//	  description: The status of the Payment of the Swap. The payment may either refer to the refund of an amount or the authorization of a new amount.
+//	  type: string
+//	  enum:
+//	    - not_paid
+//	    - awaiting
+//	    - captured
+//	    - confirmed
+//	    - canceled
+//	    - difference_refunded
+//	    - partially_refunded
+//	    - refunded
+//	    - requires_action
+//	  example: not_paid
+//	order_id:
+//	  description: The ID of the order that the swap belongs to.
+//	  type: string
+//	  example: order_01G8TJSYT9M6AVS5N4EMNFS1EK
+//	order:
+//	  description: The details of the order that the swap belongs to.
+//	  x-expandable: "order"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Order"
+//	additional_items:
+//	  description: The details of the new products to send to the customer, represented as line items.
+//	  type: array
+//	  x-expandable: "additional_items"
+//	  items:
+//	    $ref: "#/components/schemas/LineItem"
+//	return_order:
+//	  description: The details of the return that belongs to the swap, which holds the details on the items being returned.
+//	  x-expandable: "return_order"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Return"
+//	fulfillments:
+//	  description: The details of the fulfillments that are used to send the new items to the customer.
+//	  x-expandable: "fulfillments"
+//	  type: array
+//	  items:
+//	    $ref: "#/components/schemas/Fulfillment"
+//	payment:
+//	  description: The details of the additional payment authorized by the customer when `difference_due` is positive.
+//	  x-expandable: "payment"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Payment"
+//	difference_due:
+//	  description: The difference amount between the order’s original total and the new total imposed by the swap. If its value is negative, a refund must be issues to the customer. If it's positive, additional payment must be authorized by the customer. Otherwise, no payment processing is required.
+//	  nullable: true
+//	  type: integer
+//	  example: 0
+//	shipping_address_id:
+//	  description: The Address to send the new Line Items to - in most cases this will be the same as the shipping address on the Order.
+//	  nullable: true
+//	  type: string
+//	  example: addr_01G8ZH853YPY9B94857DY91YGW
+//	shipping_address:
+//	  description: The details of the shipping address that the new items should be sent to.
+//	  x-expandable: "shipping_address"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Address"
+//	shipping_methods:
+//	  description: The details of the shipping methods used to fulfill the additional items purchased.
+//	  type: array
+//	  x-expandable: "shipping_methods"
+//	  items:
+//	    $ref: "#/components/schemas/ShippingMethod"
+//	cart_id:
+//	  description: The ID of the cart that the customer uses to complete the swap.
+//	  nullable: true
+//	  type: string
+//	  example: cart_01G8ZH853Y6TFXWPG5EYE81X63
+//	cart:
+//	  description: The details of the cart that the customer uses to complete the swap.
+//	  x-expandable: "cart"
+//	  nullable: true
+//	  $ref: "#/components/schemas/Cart"
+//	confirmed_at:
+//	  description: The date with timezone at which the Swap was confirmed by the Customer.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
+//	canceled_at:
+//	  description: The date with timezone at which the Swap was canceled.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
+//	no_notification:
+//	  description: If set to true, no notification will be sent related to this swap
+//	  nullable: true
+//	  type: boolean
+//	  example: false
+//	allow_backorder:
+//	  description: If true, swaps can be completed with items out of stock
+//	  type: boolean
+//	  default: false
+//	idempotency_key:
+//	  description: Randomly generated key used to continue the completion of the swap in case of failure.
+//	  nullable: true
+//	  type: string
+//	  externalDocs:
+//	    url: https://docs.medusajs.com/development/idempotency-key/overview.md
+//	    description: Learn more how to use the idempotency key.
+//	created_at:
+//	  description: The date with timezone at which the resource was created.
+//	  type: string
+//	  format: date-time
+//	updated_at:
+//	  description: The date with timezone at which the resource was updated.
+//	  type: string
+//	  format: date-time
+//	deleted_at:
+//	  description: The date with timezone at which the resource was deleted.
+//	  nullable: true
+//	  type: string
+//	  format: date-time
+//	metadata:
+//	  description: An optional key-value map with additional details
+//	  nullable: true
+//	  type: object
+//	  example: {car: "white"}
+//	  externalDocs:
+//	    description: "Learn about the metadata attribute, and how to delete and update it."
+//	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Swap struct {
 	core.Model
 
-	// The status of the Fulfillment of the Swap.
 	FulfillmentStatus SwapFulfillmentStatus `json:"fulfillment_status"`
-
-	// The status of the Payment of the Swap. The payment may either refer to the refund of an amount or the authorization of a new amount.
-	PaymentStatus SwapPaymentStatus `json:"payment_status"`
-
-	// The ID of the Order where the Line Items to be returned where purchased.
-	OrderId uuid.NullUUID `json:"order_id"`
-
-	// An order object. Available if the relation `order` is expanded.
-	Order *Order `json:"order" gorm:"foreignKey:id;references:order_id"`
-
-	// The new Line Items to ship to the Customer. Available if the relation `additional_items` is expanded.
-	AdditionalItems []LineItem `json:"additional_items" gorm:"foreignKey:id"`
-
-	// A return order object. The Return that is issued for the return part of the Swap. Available if the relation `return_order` is expanded.
-	ReturnOrder *Return `json:"return_order" gorm:"foreignKey:id"`
-
-	// The Fulfillments used to send the new Line Items. Available if the relation `fulfillments` is expanded.
-	Fulfillments []Fulfillment `json:"fulfillments" gorm:"foreignKey:id"`
-
-	Payment *Payment `json:"payment" gorm:"foreignKey:id"`
-
-	// The difference that is paid or refunded as a result of the Swap. May be negative when the amount paid for the returned items exceed the total of the new Products.
-	DifferenceDue float64 `json:"difference_due" gorm:"default:null"`
-
-	// The Address to send the new Line Items to - in most cases this will be the same as the shipping address on the Order.
-	ShippingAddressId uuid.NullUUID `json:"shipping_address_id" gorm:"default:null"`
-
-	ShippingAddress *Address `json:"shipping_address" gorm:"foreignKey:id;references:shipping_address_id"`
-
-	// The Shipping Methods used to fulfill the additional items purchased. Available if the relation `shipping_methods` is expanded.
-	ShippingMethods []ShippingMethod `json:"shipping_methods" gorm:"foreignKey:id"`
-
-	// The id of the Cart that the Customer will use to confirm the Swap.
-	CartId uuid.NullUUID `json:"cart_id" gorm:"default:null"`
-
-	// A cart object. Available if the relation `cart` is expanded.
-	Cart *Cart `json:"cart" gorm:"foreignKey:id;references:cart_id"`
-
-	// If true, swaps can be completed with items out of stock
-	AllowBackorder bool `json:"allow_backorder" gorm:"default:null"`
-
-	// Randomly generated key used to continue the completion of the swap in case of failure.
-	IdempotencyKey string `json:"idempotency_key" gorm:"default:null"`
-
-	// The date with timezone at which the Swap was confirmed by the Customer.
-	ConfirmedAt *time.Time `json:"confirmed_at" gorm:"default:null"`
-
-	// The date with timezone at which the Swap was canceled.
-	CanceledAt *time.Time `json:"canceled_at" gorm:"default:null"`
-
-	// If set to true, no notification will be sent related to this swap
-	NoNotification bool `json:"no_notification" gorm:"default:null"`
+	PaymentStatus     SwapPaymentStatus     `json:"payment_status"`
+	OrderId           uuid.NullUUID         `json:"order_id"`
+	Order             *Order                `json:"order" gorm:"foreignKey:id;references:order_id"`
+	AdditionalItems   []LineItem            `json:"additional_items" gorm:"foreignKey:id"`
+	ReturnOrder       *Return               `json:"return_order" gorm:"foreignKey:id"`
+	Fulfillments      []Fulfillment         `json:"fulfillments" gorm:"foreignKey:id"`
+	Payment           *Payment              `json:"payment" gorm:"foreignKey:id"`
+	DifferenceDue     float64               `json:"difference_due" gorm:"default:null"`
+	ShippingAddressId uuid.NullUUID         `json:"shipping_address_id" gorm:"default:null"`
+	ShippingAddress   *Address              `json:"shipping_address" gorm:"foreignKey:id;references:shipping_address_id"`
+	ShippingMethods   []ShippingMethod      `json:"shipping_methods" gorm:"foreignKey:id"`
+	CartId            uuid.NullUUID         `json:"cart_id" gorm:"default:null"`
+	Cart              *Cart                 `json:"cart" gorm:"foreignKey:id;references:cart_id"`
+	AllowBackorder    bool                  `json:"allow_backorder" gorm:"default:null"`
+	IdempotencyKey    string                `json:"idempotency_key" gorm:"default:null"`
+	ConfirmedAt       *time.Time            `json:"confirmed_at" gorm:"default:null"`
+	CanceledAt        *time.Time            `json:"canceled_at" gorm:"default:null"`
+	NoNotification    bool                  `json:"no_notification" gorm:"default:null"`
 }
 
 type SwapFulfillmentStatus string

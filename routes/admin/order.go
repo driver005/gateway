@@ -64,6 +64,119 @@ func (m *Order) SetRoutes(router fiber.Router) {
 	route.Post("/:id/claims/:claim_id/fulfillments/:fulfillment_id/cancel", m.CancelFullfillmentClaim)
 }
 
+// @oas:path [get] /admin/orders/{id}
+// operationId: "GetOrdersOrder"
+// summary: "Get an Order"
+// description: "Retrieve an Order's details."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: retrieve
+//	queryParams: AdminGetOrdersOrderParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.retrieve(orderId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminOrder } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const {
+//     order,
+//     isLoading,
+//     } = useAdminOrder(orderId)
+//
+//     return (
+//     <div>
+//     {isLoading && <span>Loading...</span>}
+//     {order && <span>{order.display_id}</span>}
+//
+//     </div>
+//     )
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl '"{backend_url}"/admin/orders/{id}' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) Get(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -77,6 +190,256 @@ func (m *Order) Get(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [get] /admin/orders
+// operationId: "GetOrders"
+// summary: "List Orders"
+// description: "Retrieve a list of Orders. The orders can be filtered by fields such as `status` or `display_id`. The order can also be paginated."
+// x-authenticated: true
+// parameters:
+//   - (query) q {string} term to search orders' shipping address, first name, email, and display ID
+//   - (query) id {string} Filter by ID.
+//   - in: query
+//     name: status
+//     style: form
+//     explode: false
+//     description: Filter by status
+//     schema:
+//     type: array
+//     items:
+//     type: string
+//     enum: [pending, completed, archived, canceled, requires_action]
+//   - in: query
+//     name: fulfillment_status
+//     style: form
+//     explode: false
+//     description: Filter by fulfillment status
+//     schema:
+//     type: array
+//     items:
+//     type: string
+//     enum: [not_fulfilled, fulfilled, partially_fulfilled, shipped, partially_shipped, canceled, returned, partially_returned, requires_action]
+//   - in: query
+//     name: payment_status
+//     style: form
+//     explode: false
+//     description: Filter by payment status
+//     schema:
+//     type: array
+//     items:
+//     type: string
+//     enum: [captured, awaiting, not_paid, refunded, partially_refunded, canceled, requires_action]
+//   - (query) display_id {string} Filter by display ID
+//   - (query) cart_id {string} Filter by cart ID
+//   - (query) customer_id {string} Filter by customer ID
+//   - (query) email {string} Filter by email
+//   - in: query
+//     name: region_id
+//     style: form
+//     explode: false
+//     description: Filter by region IDs.
+//     schema:
+//     oneOf:
+//   - type: string
+//     description: ID of a Region.
+//   - type: array
+//     items:
+//     type: string
+//     description: ID of a Region.
+//   - in: query
+//     name: currency_code
+//     style: form
+//     explode: false
+//     description: Filter by currency codes.
+//     schema:
+//     type: string
+//     externalDocs:
+//     url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+//     description: See a list of codes.
+//   - (query) tax_rate {string} Filter by tax rate.
+//   - in: query
+//     name: created_at
+//     description: Filter by a creation date range.
+//     schema:
+//     type: object
+//     properties:
+//     lt:
+//     type: string
+//     description: filter by dates less than this date
+//     format: date
+//     gt:
+//     type: string
+//     description: filter by dates greater than this date
+//     format: date
+//     lte:
+//     type: string
+//     description: filter by dates less than or equal to this date
+//     format: date
+//     gte:
+//     type: string
+//     description: filter by dates greater than or equal to this date
+//     format: date
+//   - in: query
+//     name: updated_at
+//     description: Filter by an update date range.
+//     schema:
+//     type: object
+//     properties:
+//     lt:
+//     type: string
+//     description: filter by dates less than this date
+//     format: date
+//     gt:
+//     type: string
+//     description: filter by dates greater than this date
+//     format: date
+//     lte:
+//     type: string
+//     description: filter by dates less than or equal to this date
+//     format: date
+//     gte:
+//     type: string
+//     description: filter by dates greater than or equal to this date
+//     format: date
+//   - in: query
+//     name: canceled_at
+//     description: Filter by a cancelation date range.
+//     schema:
+//     type: object
+//     properties:
+//     lt:
+//     type: string
+//     description: filter by dates less than this date
+//     format: date
+//     gt:
+//     type: string
+//     description: filter by dates greater than this date
+//     format: date
+//     lte:
+//     type: string
+//     description: filter by dates less than or equal to this date
+//     format: date
+//     gte:
+//     type: string
+//     description: filter by dates greater than or equal to this date
+//     format: date
+//   - in: query
+//     name: sales_channel_id
+//     style: form
+//     explode: false
+//     description: Filter by Sales Channel IDs
+//     schema:
+//     type: array
+//     items:
+//     type: string
+//     description: The ID of a Sales Channel
+//   - (query) offset=0 {integer} The number of orders to skip when retrieving the orders.
+//   - (query) limit=50 {integer} Limit the number of orders returned.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//   - (query) order {string} A order field to sort-order the retrieved orders by.
+//
+// x-codegen:
+//
+//	method: list
+//	queryParams: AdminGetOrdersParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.list()
+//     .then(({ orders, limit, offset, count }) => {
+//     console.log(orders.length);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminOrders } from "medusa-react"
+//
+//     const Orders = () => {
+//     const { orders, isLoading } = useAdminOrders()
+//
+//     return (
+//     <div>
+//     {isLoading && <span>Loading...</span>}
+//     {orders && !orders.length && <span>No Orders</span>}
+//     {orders && orders.length > 0 && (
+//     <ul>
+//     {orders.map((order) => (
+//     <li key={order.id}>{order.display_id}</li>
+//     ))}
+//     </ul>
+//     )}
+//     </div>
+//     )
+//     }
+//
+//     export default Orders
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl '"{backend_url}"/admin/orders' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersListRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) List(context fiber.Ctx) error {
 	model, config, err := api.BindList[types.FilterableOrder](context)
 	if err != nil {
@@ -95,6 +458,137 @@ func (m *Order) List(context fiber.Ctx) error {
 	})
 }
 
+// @oas:path [post] /admin/orders/{id}
+// operationId: "PostOrdersOrder"
+// summary: "Update an Order"
+// description: "Update and order's details."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderReq"
+//
+// x-codegen:
+//
+//	method: update
+//	params: AdminPostOrdersOrderParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.update(orderId, {
+//     email: "user@example.com"
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminUpdateOrder } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const updateOrder = useAdminUpdateOrder(
+//     orderId
+//     )
+//
+//     const handleUpdate = (
+//     email: string
+//     ) => {
+//     updateOrder.mutate({
+//     email,
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.email)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/adasda' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "email": "user@example.com"
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) Update(context fiber.Ctx) error {
 	model, id, err := api.BindUpdate[types.UpdateOrderInput](context, "id", m.r.Validator())
 	if err != nil {
@@ -109,6 +603,142 @@ func (m *Order) Update(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/shipping-methods
+// operationId: "PostOrdersOrderShippingMethods"
+// summary: "Add a Shipping Method"
+// description: "Add a Shipping Method to an Order. If another Shipping Method exists with the same Shipping Profile, the previous Shipping Method will be replaced."
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderShippingMethodsReq"
+//
+// x-authenticated: true
+// x-codegen:
+//
+//	method: addShippingMethod
+//	params: AdminPostOrdersOrderShippingMethodsParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.addShippingMethod(orderId, {
+//     price: 1000,
+//     option_id
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminAddShippingMethod } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const addShippingMethod = useAdminAddShippingMethod(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleAddShippingMethod = (
+//     optionId: string,
+//     price: number
+//     ) => {
+//     addShippingMethod.mutate({
+//     option_id: optionId,
+//     price
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.shipping_methods)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/shipping-methods' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "price": 1000,
+//     "option_id": "{option_id}"
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) AddShippingMethod(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderShippingMethod](context, "id", m.r.Validator())
 	if err != nil {
@@ -133,6 +763,121 @@ func (m *Order) AddShippingMethod(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/archive
+// operationId: "PostOrdersOrderArchive"
+// summary: "Archive Order"
+// description: "Archive an order and change its status."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: archive
+//	params: AdminPostOrdersOrderArchiveParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.archive(orderId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminArchiveOrder } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const archiveOrder = useAdminArchiveOrder(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleArchivingOrder = () => {
+//     archiveOrder.mutate(void 0, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.status)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/archive' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) Archive(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -153,6 +898,121 @@ func (m *Order) Archive(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/cancel
+// operationId: "PostOrdersOrderCancel"
+// summary: "Cancel an Order"
+// description: "Cancel an order and change its status. This will also cancel any associated Fulfillments and Payments, and it may fail if the Payment or Fulfillment Provider is unable to cancel the Payment/Fulfillment."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: cancel
+//	params: AdminPostOrdersOrderCancel
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.cancel(orderId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCancelOrder } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const cancelOrder = useAdminCancelOrder(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCancel = () => {
+//     cancelOrder.mutate(void 0, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.status)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/cancel' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) Cancel(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -174,6 +1034,131 @@ func (m *Order) Cancel(context fiber.Ctx) error {
 
 }
 
+// @oas:path [post] /admin/orders/{id}/swaps/{swap_id}/cancel
+// operationId: "PostOrdersSwapCancel"
+// summary: "Cancel a Swap"
+// description: "Cancel a Swap and change its status."
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Canceling a swap
+//	url: https://docs.medusajs.com/modules/orders/swaps#canceling-a-swap
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order the swap is associated with.
+//   - (path) swap_id=* {string} The ID of the Swap.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: cancelSwap
+//	params: AdminPostOrdersSwapCancelParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.cancelSwap(orderId, swapId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCancelSwap } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string,
+//     swapId: string
+//     }
+//
+//     const Swap = ({
+//     orderId,
+//     swapId
+//     }: Props) => {
+//     const cancelSwap = useAdminCancelSwap(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCancel = () => {
+//     cancelSwap.mutate(swapId, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.swaps)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Swap
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{order_id}/swaps/{swap_id}/cancel' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CancelSwap(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -211,6 +1196,122 @@ func (m *Order) CancelSwap(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/claims/{claim_id}/cancel
+// operationId: "PostOrdersClaimCancel"
+// summary: "Cancel a Claim"
+// description: "Cancel a Claim and change its status. A claim can't be canceled if it has a refund, if its fulfillments haven't been canceled, of if its associated return hasn't been canceled."
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Canceling a claim
+//	url: https://docs.medusajs.com/modules/orders/claims#cancel-a-claim
+//
+// parameters:
+//   - (path) id=* {string} The ID of the order the claim is associated with.
+//   - (path) claim_id=* {string} The ID of the Claim.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: cancelClaim
+//	params: AdminPostOrdersClaimCancel
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.cancelClaim(orderId, claimId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCancelClaim } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     claimId: string
+//     }
+//
+//     const Claim = ({ orderId, claimId }: Props) => {
+//     const cancelClaim = useAdminCancelClaim(orderId)
+//     // ...
+//
+//     const handleCancel = () => {
+//     cancelClaim.mutate(claimId)
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Claim
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/claims/{claim_id}/cancel' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CancelClaim(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -248,6 +1349,127 @@ func (m *Order) CancelClaim(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/claims/{claim_id}/fulfillments/{fulfillment_id}/cancel
+// operationId: "PostOrdersClaimFulfillmentsCancel"
+// summary: "Cancel Claim's Fulfillment"
+// description: "Cancel a claim's fulfillment and change its fulfillment status to `canceled`."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the order the claim is associated with.
+//   - (path) claim_id=* {string} The ID of the claim.
+//   - (path) fulfillment_id=* {string} The ID of the fulfillment.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: cancelClaimFulfillment
+//	params: AdminPostOrdersClaimFulfillmentsCancelParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.cancelClaimFulfillment(orderId, claimId, fulfillmentId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCancelClaimFulfillment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     claimId: string
+//     }
+//
+//     const Claim = ({ orderId, claimId }: Props) => {
+//     const cancelFulfillment = useAdminCancelClaimFulfillment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCancel = (fulfillmentId: string) => {
+//     cancelFulfillment.mutate({
+//     claim_id: claimId,
+//     fulfillment_id: fulfillmentId,
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.claims)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Claim
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/claims/{claim_id}/fulfillments/{fulfillment_id}/cancel' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CancelFullfillmentClaim(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -302,6 +1524,128 @@ func (m *Order) CancelFullfillmentClaim(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/swaps/{swap_id}/fulfillments/{fulfillment_id}/cancel
+// operationId: "PostOrdersSwapFulfillmentsCancel"
+// summary: "Cancel Swap's Fulfilmment"
+// description: "Cancel a swap's fulfillment and change its fulfillment status to `canceled`."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the order the swap is associated with.
+//   - (path) swap_id=* {string} The ID of the swap.
+//   - (path) fulfillment_id=* {string} The ID of the fulfillment.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: cancelSwapFulfillment
+//	params: AdminPostOrdersSwapFulfillementsCancelParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.cancelSwapFulfillment(orderId, swapId, fulfillmentId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCancelSwapFulfillment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string,
+//     swapId: string
+//     }
+//
+//     const Swap = ({
+//     orderId,
+//     swapId
+//     }: Props) => {
+//     const cancelFulfillment = useAdminCancelSwapFulfillment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCancelFulfillment = (
+//     fulfillmentId: string
+//     ) => {
+//     cancelFulfillment.mutate({
+//     swap_id: swapId,
+//     fulfillment_id: fulfillmentId,
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Swap
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/swaps/{swap_id}/fulfillments/{fulfillment_id}/cancel' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CancelFullfillmentSwap(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -356,6 +1700,124 @@ func (m *Order) CancelFullfillmentSwap(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/fulfillments/{fulfillment_id}/cancel
+// operationId: "PostOrdersOrderFulfillmentsCancel"
+// summary: "Cancel a Fulfilmment"
+// description: "Cancel an order's fulfillment and change its fulfillment status to `canceled`."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (path) fulfillment_id=* {string} The ID of the Fulfillment.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: cancelFulfillment
+//	params: AdminPostOrdersOrderFulfillementsCancelParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.cancelFulfillment(orderId, fulfillmentId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCancelFulfillment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const cancelFulfillment = useAdminCancelFulfillment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCancel = (
+//     fulfillmentId: string
+//     ) => {
+//     cancelFulfillment.mutate(fulfillmentId, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.fulfillments)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/fulfillments/{fulfillment_id}/cancel' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CancelFullfillment(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -408,6 +1870,121 @@ func (m *Order) CancelFullfillment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/capture
+// operationId: "PostOrdersOrderCapture"
+// summary: "Capture an Order's Payments"
+// description: "Capture all the Payments associated with an Order. The payment of canceled orders can't be captured."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: capturePayment
+//	params: AdminPostOrdersOrderCaptureParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.capturePayment(orderId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCapturePayment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const capturePayment = useAdminCapturePayment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCapture = () => {
+//     capturePayment.mutate(void 0, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.status)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/capture' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CapturePayment(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -428,6 +2005,121 @@ func (m *Order) CapturePayment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/complete
+// operationId: "PostOrdersOrderComplete"
+// summary: "Complete an Order"
+// description: "Complete an Order and change its status. A canceled order can't be completed."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: complete
+//	params: AdminPostOrdersOrderCompleteParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.complete(orderId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCompleteOrder } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const completeOrder = useAdminCompleteOrder(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleComplete = () => {
+//     completeOrder.mutate(void 0, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.status)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/complete' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) Complete(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -448,6 +2140,145 @@ func (m *Order) Complete(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/claims/{claim_id}/shipments
+// operationId: "PostOrdersOrderClaimsClaimShipments"
+// summary: "Ship a Claim's Fulfillment"
+// description: "Create a shipment for the claim and mark its fulfillment as shipped. This changes the claim's fulfillment status to either `partially_shipped` or `shipped`, depending on
+//
+//	whether all the items were shipped."
+//
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Fulfill a claim
+//	url: https://docs.medusajs.com/modules/orders/claims#fulfill-a-claim
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order the claim is associated with.
+//   - (path) claim_id=* {string} The ID of the Claim.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderClaimsClaimShipmentsReq"
+//
+// x-codegen:
+//
+//	method: createClaimShipment
+//	params: AdminPostOrdersOrderClaimsClaimShipmentsParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.createClaimShipment(orderId, claimId, {
+//     fulfillment_id
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCreateClaimShipment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     claimId: string
+//     }
+//
+//     const Claim = ({ orderId, claimId }: Props) => {
+//     const createShipment = useAdminCreateClaimShipment(orderId)
+//     // ...
+//
+//     const handleCreateShipment = (fulfillmentId: string) => {
+//     createShipment.mutate({
+//     claim_id: claimId,
+//     fulfillment_id: fulfillmentId,
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.claims)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Claim
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/claims/{claim_id}/shipments' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "fulfillment_id": "{fulfillment_id}"
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CreateClaimShippment(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderClaimShipments](context, "id", m.r.Validator())
 	if err != nil {
@@ -478,6 +2309,152 @@ func (m *Order) CreateClaimShippment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+//
+// @oas:path [post] /admin/orders/{id}/claims
+// operationId: "PostOrdersOrderClaims"
+// summary: "Create a Claim"
+// description: "Create a Claim for an order. If a return shipping method is specified, a return will also be created and associated with the claim. If the claim's type is `refund`,
+//  the refund is processed as well."
+// externalDocs:
+//   description: How are claims created
+//   url: https://docs.medusajs.com/modules/orders/claims#how-are-claims-created
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+// requestBody:
+//   content:
+//     application/json:
+//       schema:
+//         $ref: "#/components/schemas/AdminPostOrdersOrderClaimsReq"
+// x-codegen:
+//   method: createClaim
+//   params: AdminPostOrdersOrderClaimsParams
+// x-codeSamples:
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//       import Medusa from "@medusajs/medusa-js"
+//       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//       // must be previously logged in or use api token
+//       medusa.admin.orders.createClaim(orderId, {
+//         type: 'refund',
+//         claim_items: [
+//           {
+//             item_id,
+//             quantity: 1
+//           }
+//         ]
+//       })
+//       .then(({ order }) => {
+//         console.log(order.id);
+//       })
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//       import React from "react"
+//       import { useAdminCreateClaim } from "medusa-react"
+//
+//       type Props = {
+//         orderId: string
+//       }
+//
+
+//	    const CreateClaim = ({ orderId }: Props) => {
+//
+//	    const CreateClaim = (orderId: string) => {
+//	      const createClaim = useAdminCreateClaim(orderId)
+//	      // ...
+//
+//	      const handleCreate = (itemId: string) => {
+//	        createClaim.mutate({
+//	          type: "refund",
+//	          claim_items: [
+//	            {
+//	              item_id: itemId,
+//	              quantity: 1,
+//	            },
+//	          ],
+//	        }, {
+//	          onSuccess: ({ order }) => {
+//	            console.log(order.claims)
+//	          }
+//	        })
+//	      }
+//
+//	      // ...
+//	    }
+//
+//	    export default CreateClaim
+//	- lang: Shell
+//	  label: cURL
+//	  source: |
+//	    curl -X POST '"{backend_url}"/admin/orders/{id}/claims' \
+//	    -H 'x-medusa-access-token: "{api_token}"' \
+//	    -H 'Content-Type: application/json' \
+//	    --data-raw '{
+//	        "type": "refund",
+//	        "claim_items": [
+//	          {
+//	            "item_id": "asdsd",
+//	            "quantity": 1
+//	          }
+//	        ]
+//	    }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CreateClaim(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.CreateClaimInput](context, "id", m.r.Validator())
 	if err != nil {
@@ -596,6 +2573,162 @@ func (m *Order) CreateClaim(context fiber.Ctx) error {
 	return context.Status(idempotencyKey.ResponseCode).JSON(idempotencyKey.ResponseBody)
 }
 
+// @oas:path [post] /admin/orders/{id}/fulfillment
+// operationId: "PostOrdersOrderFulfillments"
+// summary: "Create a Fulfillment"
+// description: "Create a Fulfillment of an Order using the fulfillment provider, and change the order's fulfillment status to either `partially_fulfilled` or `fulfilled`, depending on
+//
+//	whether all the items were fulfilled."
+//
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Fulfillments of orders
+//	url: https://docs.medusajs.com/modules/orders/#fulfillments-in-orders
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderFulfillmentsReq"
+//
+// x-codegen:
+//
+//	method: createFulfillment
+//	params: AdminPostOrdersOrderFulfillmentsParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.createFulfillment(orderId, {
+//     items: [
+//     {
+//     item_id,
+//     quantity: 1
+//     }
+//     ]
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCreateFulfillment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const createFulfillment = useAdminCreateFulfillment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCreateFulfillment = (
+//     itemId: string,
+//     quantity: number
+//     ) => {
+//     createFulfillment.mutate({
+//     items: [
+//     {
+//     item_id: itemId,
+//     quantity,
+//     },
+//     ],
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.fulfillments)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/fulfillment' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "items": [
+//     {
+//     "item_id": "{item_id}",
+//     "quantity": 1
+//     }
+//     ]
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CreateFulfillment(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderFulfillments](context, "id", m.r.Validator())
 	if err != nil {
@@ -672,6 +2805,85 @@ func (m *Order) CreateFulfillment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/line-items/{line_item_id}/reserve
+// operationId: "PostOrdersOrderLineItemReservations"
+// summary: "Create a Reservation"
+// description: "Create a Reservation for a line item at a specified location, optionally for a partial quantity."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (path) line_item_id=* {string} The ID of the Line item.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminOrdersOrderLineItemReservationReq"
+//
+// x-codeSamples:
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/line-items/{line_item_id}/reserve' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "location_id": "loc_1"
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminPostReservationsReq"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CreateReservationForLineItem(context fiber.Ctx) error {
 	model, err := api.Bind[types.OrderLineItemReservation](context, m.r.Validator())
 	if err != nil {
@@ -710,6 +2922,146 @@ func (m *Order) CreateReservationForLineItem(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(reservations[0])
 }
 
+// @oas:path [post] /admin/orders/{id}/shipment
+// operationId: "PostOrdersOrderShipment"
+// summary: "Ship a Fulfillment"
+// description: "Create a shipment and mark a fulfillment as shipped. This changes the order's fulfillment status to either `partially_shipped` or `shipped`, depending on
+//
+//	whether all the items were shipped."
+//
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Fulfillments of orders
+//	url: https://docs.medusajs.com/modules/orders/#fulfillments-in-orders
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderShipmentReq"
+//
+// x-codegen:
+//
+//	method: createShipment
+//	params: AdminPostOrdersOrderShipmentParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.createShipment(order_id, {
+//     fulfillment_id
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCreateShipment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const createShipment = useAdminCreateShipment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCreate = (
+//     fulfillmentId: string
+//     ) => {
+//     createShipment.mutate({
+//     fulfillment_id: fulfillmentId,
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.fulfillment_status)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/shipment' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "fulfillment_id": "{fulfillment_id}"
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CreateShipment(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.CreateOrderShipment](context, "id", m.r.Validator())
 	if err != nil {
@@ -738,6 +3090,152 @@ func (m *Order) CreateShipment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/swaps/{swap_id}/shipments
+// operationId: "PostOrdersOrderSwapsSwapShipments"
+// summary: "Ship a Swap's Fulfillment"
+// description: "Create a shipment for a swap and mark its fulfillment as shipped. This changes the swap's fulfillment status to either `partially_shipped` or `shipped`, depending on
+//
+//	whether all the items were shipped."
+//
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Handling swap fulfillments
+//	url: https://docs.medusajs.com/modules/orders/swaps#handling-swap-fulfillment
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (path) swap_id=* {string} The ID of the Swap.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderSwapsSwapShipmentsReq"
+//
+// x-codegen:
+//
+//	method: createSwapShipment
+//	params: AdminPostOrdersOrderSwapsSwapShipmentsParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.createSwapShipment(orderId, swapId, {
+//     fulfillment_id
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCreateSwapShipment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string,
+//     swapId: string
+//     }
+//
+//     const Swap = ({
+//     orderId,
+//     swapId
+//     }: Props) => {
+//     const createShipment = useAdminCreateSwapShipment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleCreateShipment = (
+//     fulfillmentId: string
+//     ) => {
+//     createShipment.mutate({
+//     swap_id: swapId,
+//     fulfillment_id: fulfillmentId,
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.swaps)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Swap
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/swaps/{swap_id}/shipments' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "fulfillment_id": "{fulfillment_id}"
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CreateSwapShipment(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.CreateOrderShipment](context, "id", m.r.Validator())
 	if err != nil {
@@ -768,6 +3266,154 @@ func (m *Order) CreateSwapShipment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/swaps
+// operationId: "PostOrdersOrderSwaps"
+// summary: "Create a Swap"
+// description: "Create a Swap. This includes creating a return that is associated with the swap."
+// x-authenticated: true
+// externalDocs:
+//
+//	description: How are swaps created
+//	url: https://docs.medusajs.com/modules/orders/swaps#how-are-swaps-created
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderSwapsReq"
+//
+// x-codegen:
+//
+//	method: createSwap
+//	queryParams: AdminPostOrdersOrderSwapsParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.createSwap(orderId, {
+//     return_items: [
+//     {
+//     item_id,
+//     quantity: 1
+//     }
+//     ]
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminCreateSwap } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const CreateSwap = ({ orderId }: Props) => {
+//     const createSwap = useAdminCreateSwap(orderId)
+//     // ...
+//
+//     const handleCreate = (
+//     returnItems: {
+//     item_id: string,
+//     quantity: number
+//     }[]
+//     ) => {
+//     createSwap.mutate({
+//     return_items: returnItems
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.swaps)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default CreateSwap
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/swaps' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "return_items": [
+//     {
+//     "item_id": "asfasf",
+//     "quantity": 1
+//     }
+//     ]
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) CreateSwap(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderSwap](context, "id", m.r.Validator())
 	if err != nil {
@@ -879,6 +3525,137 @@ func (m *Order) CreateSwap(context fiber.Ctx) error {
 	return context.Status(idempotencyKey.ResponseCode).JSON(idempotencyKey.ResponseBody)
 }
 
+// @oas:path [post] /admin/orders/{id}/claims/{claim_id}/fulfillments
+// operationId: "PostOrdersOrderClaimsClaimFulfillments"
+// summary: "Create a Claim Fulfillment"
+// description: "Create a Fulfillment for a Claim, and change its fulfillment status to `partially_fulfilled` or `fulfilled` depending on whether all the items were fulfilled.
+// It may also change the status to `requires_action` if any actions are required."
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Fulfill a claim
+//	url: https://docs.medusajs.com/modules/orders/claims#fulfill-a-claim
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order the claim is associated with.
+//   - (path) claim_id=* {string} The ID of the Claim.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderClaimsClaimFulfillmentsReq"
+//
+// x-codegen:
+//
+//	method: fulfillClaim
+//	params: AdminPostOrdersOrderClaimsClaimFulfillmentsReq
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.fulfillClaim(orderId, claimId, {
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminFulfillClaim } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     claimId: string
+//     }
+//
+//     const Claim = ({ orderId, claimId }: Props) => {
+//     const fulfillClaim = useAdminFulfillClaim(orderId)
+//     // ...
+//
+//     const handleFulfill = () => {
+//     fulfillClaim.mutate({
+//     claim_id: claimId,
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.claims)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Claim
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/claims/{claim_id}/fulfillments' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) FulfillClaim(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderClaimFulfillments](context, "id", m.r.Validator())
 	if err != nil {
@@ -956,6 +3733,135 @@ func (m *Order) FulfillClaim(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+//
+// @oas:path [post] /admin/orders/{id}/swaps/{swap_id}/fulfillments
+// operationId: "PostOrdersOrderSwapsSwapFulfillments"
+// summary: "Create a Swap Fulfillment"
+// description: "Create a Fulfillment for a Swap and change its fulfillment status to `fulfilled`. If it requires any additional actions,
+// its fulfillment status may change to `requires_action`."
+// x-authenticated: true
+// externalDocs:
+//   description: Handling a swap's fulfillment
+//   url: https://docs.medusajs.com/modules/orders/swaps#handling-swap-fulfillment
+// parameters:
+//   - (path) id=* {string} The ID of the Order the swap is associated with.
+//   - (path) swap_id=* {string} The ID of the Swap.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+// requestBody:
+//   content:
+//     application/json:
+//       schema:
+//         $ref: "#/components/schemas/AdminPostOrdersOrderSwapsSwapFulfillmentsReq"
+// x-codegen:
+//   method: fulfillSwap
+//   params: AdminPostOrdersOrderSwapsSwapFulfillmentsParams
+// x-codeSamples:
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//       import Medusa from "@medusajs/medusa-js"
+//       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//       // must be previously logged in or use api token
+
+//	    medusa.admin.orders.fulfillSwap(orderId, swapId, {
+//
+//	    })
+//	    .then(({ order }) => {
+//	      console.log(order.id);
+//	    })
+//	- lang: tsx
+//	  label: Medusa React
+//	  source: |
+//	    import React from "react"
+//	    import { useAdminFulfillSwap } from "medusa-react"
+//
+//	    type Props = {
+//	      orderId: string,
+//	      swapId: string
+//	    }
+//
+//	    const Swap = ({
+//	      orderId,
+//	      swapId
+//	    }: Props) => {
+//	      const fulfillSwap = useAdminFulfillSwap(
+//	        orderId
+//	      )
+//	      // ...
+//
+//	      const handleFulfill = () => {
+//	        fulfillSwap.mutate({
+//	          swap_id: swapId,
+//	        }, {
+//	          onSuccess: ({ order }) => {
+//	            console.log(order.swaps)
+//	          }
+//	        })
+//	      }
+//
+//	      // ...
+//	    }
+//
+//	    export default Swap
+//	- lang: Shell
+//	  label: cURL
+//	  source: |
+//	    curl -X POST '"{backend_url}"/admin/orders/{id}/swaps/{swap_id}/fulfillments' \
+//	    -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) FulfillSwap(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderClaimFulfillments](context, "id", m.r.Validator())
 	if err != nil {
@@ -1037,6 +3943,75 @@ func (m *Order) FulfillSwap(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [get] /admin/orders/{id}/reservations
+// operationId: "GetOrdersOrderReservations"
+// summary: "Get Order Reservations"
+// description: "Retrieve the list of reservations of an Order"
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) offset=0 {integer} The number of reservations to skip when retrieving the reservations.
+//   - (query) limit=20 {integer} Limit the number of reservations returned.
+//
+// x-codeSamples:
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl '"{backend_url}"/admin/orders/{id}/reservations' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminReservationsListRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) GetReservations(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -1066,6 +4041,134 @@ func (m *Order) GetReservations(context fiber.Ctx) error {
 	})
 }
 
+// @oas:path [post] /admin/orders/{id}/swaps/{swap_id}/process-payment
+// operationId: "PostOrdersOrderSwapsSwapProcessPayment"
+// summary: "Process a Swap Payment"
+// description: "Process a swap's payment either by refunding or issuing a payment. This depends on the `difference_due` of the swap. If `difference_due` is negative, the amount is refunded.
+//
+//	If `difference_due` is positive, the amount is captured."
+//
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Handling a swap's payment
+//	url: https://docs.medusajs.com/modules/orders/swaps#handling-swap-payment
+//
+// parameters:
+//   - (path) id=* {string} The ID of the order the swap is associated with.
+//   - (path) swap_id=* {string} The ID of the swap.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// x-codegen:
+//
+//	method: processSwapPayment
+//	params: AdminPostOrdersOrderSwapsSwapProcessPaymentParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.processSwapPayment(orderId, swapId)
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminProcessSwapPayment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string,
+//     swapId: string
+//     }
+//
+//     const Swap = ({
+//     orderId,
+//     swapId
+//     }: Props) => {
+//     const processPayment = useAdminProcessSwapPayment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleProcessPayment = () => {
+//     processPayment.mutate(swapId, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.swaps)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Swap
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/swaps/{swap_id}/process-payment' \
+//     -H 'x-medusa-access-token: "{api_token}"'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) ProcessSwapPayment(context fiber.Ctx) error {
 	id, config, err := api.BindGet(context, "id")
 	if err != nil {
@@ -1091,6 +4194,142 @@ func (m *Order) ProcessSwapPayment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/refund
+// operationId: "PostOrdersOrderRefunds"
+// summary: "Create a Refund"
+// description: "Refund an amount for an order. The amount must be less than or equal the `refundable_amount` of the order."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderRefundsReq"
+//
+// x-codegen:
+//
+//	method: refundPayment
+//	params: AdminPostOrdersOrderRefundsParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.refundPayment(orderId, {
+//     amount: 1000,
+//     reason: "Do not like it"
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminRefundPayment } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const refundPayment = useAdminRefundPayment(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleRefund = (
+//     amount: number,
+//     reason: string
+//     ) => {
+//     refundPayment.mutate({
+//     amount,
+//     reason,
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.refunds)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/adasda/refund' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "amount": 1000,
+//     "reason": "Do not like it"
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) RefundPayment(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderRefunds](context, "id", m.r.Validator())
 	if err != nil {
@@ -1111,6 +4350,159 @@ func (m *Order) RefundPayment(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// @oas:path [post] /admin/orders/{id}/return
+// operationId: "PostOrdersOrderReturns"
+// summary: "Request a Return"
+// description: "Request and create a Return for items in an order. If the return shipping method is specified, it will be automatically fulfilled."
+// x-authenticated: true
+// externalDocs:
+//
+//	description: Return creation process
+//	url: https://docs.medusajs.com/modules/orders/returns#returns-process
+//
+// parameters:
+//   - (path) id=* {string} The ID of the Order.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderReturnsReq"
+//
+// x-codegen:
+//
+//	method: requestReturn
+//	params: AdminPostOrdersOrderReturnsParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.requestReturn(orderId, {
+//     items: [
+//     {
+//     item_id,
+//     quantity: 1
+//     }
+//     ]
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminRequestReturn } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     }
+//
+//     const Order = ({ orderId }: Props) => {
+//     const requestReturn = useAdminRequestReturn(
+//     orderId
+//     )
+//     // ...
+//
+//     const handleRequestingReturn = (
+//     itemId: string,
+//     quantity: number
+//     ) => {
+//     requestReturn.mutate({
+//     items: [
+//     {
+//     item_id: itemId,
+//     quantity
+//     }
+//     ]
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.returns)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Order
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/return' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "items": [
+//     {
+//     "item_id": "{item_id}",
+//     "quantity": 1
+//     }
+//     ]
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) RequestReturn(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.OrderReturns](context, "id", m.r.Validator())
 	if err != nil {
@@ -1234,6 +4626,137 @@ func (m *Order) RequestReturn(context fiber.Ctx) error {
 	return context.Status(idempotencyKey.ResponseCode).JSON(idempotencyKey.ResponseBody)
 }
 
+// @oas:path [post] /admin/orders/{id}/claims/{claim_id}
+// operationId: "PostOrdersOrderClaimsClaim"
+// summary: "Update a Claim"
+// description: "Update a Claim's details."
+// x-authenticated: true
+// parameters:
+//   - (path) id=* {string} The ID of the Order associated with the claim.
+//   - (path) claim_id=* {string} The ID of the Claim.
+//   - (query) expand {string} Comma-separated relations that should be expanded in the returned order.
+//   - (query) fields {string} Comma-separated fields that should be included in the returned order.
+//
+// requestBody:
+//
+//	content:
+//	  application/json:
+//	    schema:
+//	      $ref: "#/components/schemas/AdminPostOrdersOrderClaimsClaimReq"
+//
+// x-codegen:
+//
+//	method: updateClaim
+//	params: AdminPostOrdersOrderClaimsClaimParams
+//
+// x-codeSamples:
+//
+//   - lang: JavaScript
+//     label: JS Client
+//     source: |
+//     import Medusa from "@medusajs/medusa-js"
+//     const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+//     // must be previously logged in or use api token
+//     medusa.admin.orders.updateClaim(orderId, claimId, {
+//     no_notification: true
+//     })
+//     .then(({ order }) => {
+//     console.log(order.id);
+//     })
+//
+//   - lang: tsx
+//     label: Medusa React
+//     source: |
+//     import React from "react"
+//     import { useAdminUpdateClaim } from "medusa-react"
+//
+//     type Props = {
+//     orderId: string
+//     claimId: string
+//     }
+//
+//     const Claim = ({ orderId, claimId }: Props) => {
+//     const updateClaim = useAdminUpdateClaim(orderId)
+//     // ...
+//
+//     const handleUpdate = () => {
+//     updateClaim.mutate({
+//     claim_id: claimId,
+//     no_notification: false
+//     }, {
+//     onSuccess: ({ order }) => {
+//     console.log(order.claims)
+//     }
+//     })
+//     }
+//
+//     // ...
+//     }
+//
+//     export default Claim
+//
+//   - lang: Shell
+//     label: cURL
+//     source: |
+//     curl -X POST '"{backend_url}"/admin/orders/{id}/claims/{claim_id}' \
+//     -H 'x-medusa-access-token: "{api_token}"' \
+//     -H 'Content-Type: application/json' \
+//     --data-raw '{
+//     "no_notification": true
+//     }'
+//
+// security:
+//   - api_token: []
+//   - cookie_auth: []
+//   - jwt_token: []
+//
+// tags:
+//   - Orders
+//
+// responses:
+//
+//	200:
+//	  description: "OK"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/schemas/AdminOrdersRes"
+//	"400":
+//	  description: "Bad Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/400_error"
+//	"401":
+//	  description: "Unauthorized"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/unauthorized"
+//	"404":
+//	  description: "Not Found"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/not_found_error"
+//	"409":
+//	  description: "Invalid State"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_state_error"
+//	"422":
+//	  description: "Invalid Request"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref:  "#/components/responses/invalid_request_error"
+//	"500":
+//	  description: "Internal Server"
+//	  content:
+//	    application/json:
+//	      schema:
+//	        $ref: "#/components/responses/500_error"
 func (m *Order) UpdateClaim(context fiber.Ctx) error {
 	model, id, config, err := api.BindAll[types.UpdateClaimInput](context, "id", m.r.Validator())
 	if err != nil {

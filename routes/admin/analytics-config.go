@@ -23,6 +23,7 @@ func (m *AnalyticsConfig) SetRoutes(router fiber.Router) {
 	route.Delete("", m.Delete)
 }
 
+// No OAS for this route, for internal use only.
 func (m *AnalyticsConfig) Get(context fiber.Ctx) error {
 	userId := api.GetUser(context)
 
@@ -34,6 +35,7 @@ func (m *AnalyticsConfig) Get(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(user)
 }
 
+// No OAS for this route, for internal use only.
 func (m *AnalyticsConfig) Create(context fiber.Ctx) error {
 	model, err := api.BindCreate[types.CreateAnalyticsConfig](context, m.r.Validator())
 	if err != nil {
@@ -50,6 +52,7 @@ func (m *AnalyticsConfig) Create(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// No OAS for this route, for internal use only.
 func (m *AnalyticsConfig) Update(context fiber.Ctx) error {
 	model, err := api.BindCreate[types.UpdateAnalyticsConfig](context, m.r.Validator())
 	if err != nil {
@@ -66,6 +69,7 @@ func (m *AnalyticsConfig) Update(context fiber.Ctx) error {
 	return context.Status(fiber.StatusOK).JSON(result)
 }
 
+// No OAS for this route, for internal use only.
 func (m *AnalyticsConfig) Delete(context fiber.Ctx) error {
 	userId := api.GetUser(context)
 

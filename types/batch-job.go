@@ -11,6 +11,43 @@ type BatchJobUpdateProps struct {
 	Result  *models.BatchJobResult `json:"result,omitempty" validate:"omitempty"`
 }
 
+// @oas:schema:AdminPostBatchesReq
+// type: object
+// description: The details of the batch job to create.
+// required:
+//   - type
+//   - context
+//
+// properties:
+//
+//	type:
+//	  type: string
+//	  description: >-
+//	    The type of batch job to start, which is defined by the `batchType` property of the associated batch job strategy.
+//	  example: product-export
+//	context:
+//	  type: object
+//	  description: Additional infomration regarding the batch to be used for processing.
+//	  example:
+//	    shape:
+//	      prices:
+//	        - region: null
+//	          currency_code: "eur"
+//	      dynamicImageColumnCount: 4
+//	      dynamicOptionColumnCount: 2
+//	    list_config:
+//	      skip: 0
+//	      take: 50
+//	      order:
+//	        created_at: "DESC"
+//	      relations:
+//	        - variants
+//	        - variant.prices
+//	        - images
+//	dry_run:
+//	  type: boolean
+//	  description: Set a batch job in dry_run mode, which would delay executing the batch job until it's confirmed.
+//	  default: false
 type CreateBatchJobInput struct {
 	Type    string     `json:"type"`
 	Context core.JSONB `json:"context,omitempty" validate:"omitempty"`
