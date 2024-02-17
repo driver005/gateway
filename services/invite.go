@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -37,7 +36,6 @@ func (s *InviteService) SetContext(context context.Context) *InviteService {
 func (s *InviteService) List(selector *types.FilterableInvite, config *sql.Options) ([]models.Invite, *utils.ApplictaionError) {
 	var res []models.Invite
 	query := sql.BuildQuery(selector, config)
-	fmt.Println("test")
 	if err := s.r.InviteRepository().Find(s.ctx, &res, query); err != nil {
 		return nil, err
 	}
