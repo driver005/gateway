@@ -447,7 +447,7 @@ func (m *Base) Init(ctx context.Context) error {
 				SingularTable: true,
 			},
 			DisableForeignKeyConstraintWhenMigrating: true,
-			Logger:                                   dbLogger.Default.LogMode(dbLogger.Info),
+			Logger:                                   dbLogger.Default.LogMode(dbLogger.Silent),
 		})
 
 		if err != nil {
