@@ -32,7 +32,7 @@ func (s *SalesChannelService) SetContext(context context.Context) *SalesChannelS
 }
 
 func (s *SalesChannelService) Retrieve(selector *models.SalesChannel, config *sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {
-	var res *models.SalesChannel
+	var res *models.SalesChannel = &models.SalesChannel{}
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.SalesChannelRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

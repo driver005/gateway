@@ -8,6 +8,7 @@ import (
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/utils"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -269,7 +270,7 @@ func (r *MoneyAmountRepo) FindRegionMoneyAmounts(where []models.MoneyAmount) ([]
 	return results, nil
 }
 
-func (r *MoneyAmountRepo) FindManyForVariantsInRegion(variantIds uuid.UUIDs, regionId uuid.UUID, currencyCode string, customerId uuid.UUID, includeDiscountPrices bool, includeTaxInclusivePricing bool) (*map[uuid.UUID]models.MoneyAmount, *int64, *utils.ApplictaionError) {
+func (r *MoneyAmountRepo) FindManyForVariantsInRegion(variantIds uuid.UUIDs, regionId uuid.UUID, currencyCode string, customerId uuid.UUID, includeDiscountPrices bool, includeTaxInclusivePricing bool) (map[uuid.UUID][]models.MoneyAmount, *int64, *utils.ApplictaionError) {
 	if len(variantIds) == 0 {
 		return nil, nil, nil
 	}
@@ -315,11 +316,10 @@ func (r *MoneyAmountRepo) FindManyForVariantsInRegion(variantIds uuid.UUIDs, reg
 	if err := queryBuilder.Find(&prices).Error; err != nil {
 		return nil, nil, r.HandleDBError(err)
 	}
-	var groupedPrices map[uuid.UUID]models.MoneyAmount
-	for _, price := range prices {
-		groupedPrices[price.VariantId.UUID] = price
-	}
-	return &groupedPrices, &queryBuilder.RowsAffected, nil
+	groupedPrices := lo.GroupBy(prices, func(price models.MoneyAmount) uuid.UUID {
+		return price.VariantId.UUID
+	})
+	return groupedPrices, &queryBuilder.RowsAffected, nil
 }
 
 func (r *MoneyAmountRepo) UpdatePriceListPrices(priceListId uuid.UUID, updates []models.MoneyAmount) ([]models.MoneyAmount, *utils.ApplictaionError) {

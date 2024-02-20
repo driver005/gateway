@@ -63,11 +63,11 @@ import (
 type GiftCardTransaction struct {
 	core.Model
 
-	GiftCardId uuid.NullUUID `json:"gift_card_id"`
-	GiftCard   *GiftCard     `json:"gift_card" gorm:"foreignKey:id;references:gift_card_id"`
-	OrderId    uuid.NullUUID `json:"order_id" gorm:"default:null"`
-	Order      *Order        `json:"order" gorm:"foreignKey:id;references:order_id"`
-	Amount     float64       `json:"amount"`
-	IsTaxable  bool          `json:"is_taxable" gorm:"default:null"`
-	TaxRate    float64       `json:"tax_rate" gorm:"default:null"`
+	GiftCardId uuid.NullUUID `json:"gift_card_id"  gorm:"column:gift_card_id"`
+	GiftCard   *GiftCard     `json:"gift_card"  gorm:"column:gift_card;foreignKey:GiftCardId"`
+	OrderId    uuid.NullUUID `json:"order_id"  gorm:"column:order_id"`
+	Order      *Order        `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	Amount     float64       `json:"amount"  gorm:"column:amount"`
+	IsTaxable  bool          `json:"is_taxable"  gorm:"column:is_taxable"`
+	TaxRate    float64       `json:"tax_rate"  gorm:"column:tax_rate"`
 }

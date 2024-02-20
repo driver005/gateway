@@ -7,11 +7,12 @@ import (
 )
 
 type ProductType struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewProductType(r Registry) *ProductType {
-	m := ProductType{r: r}
+	m := ProductType{r: r, name: "product_types"}
 	return &m
 }
 
@@ -214,9 +215,9 @@ func (m *ProductType) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"product_types": result,
+		"count":         count,
+		"offset":        config.Skip,
+		"limit":         config.Take,
 	})
 }

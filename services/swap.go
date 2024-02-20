@@ -109,7 +109,7 @@ func (s *SwapService) Retrieve(swapId uuid.UUID, config *sql.Options) (*models.S
 		)
 	}
 
-	var swap *models.Swap
+	var swap *models.Swap = &models.Swap{}
 	newConfig := s.transformQueryForCart(config)
 	query := sql.BuildQuery(models.Swap{Model: core.Model{Id: swapId}}, newConfig["swap"])
 	if err := s.r.SwapRepository().FindOne(s.ctx, swap, query); err != nil {
@@ -131,7 +131,7 @@ func (s *SwapService) Retrieve(swapId uuid.UUID, config *sql.Options) (*models.S
 }
 
 func (s *SwapService) RetrieveByCartId(cartId uuid.UUID, relations []string) (*models.Swap, *utils.ApplictaionError) {
-	var swap *models.Swap
+	var swap *models.Swap = &models.Swap{}
 	query := sql.BuildQuery(models.Swap{CartId: uuid.NullUUID{UUID: cartId}}, &sql.Options{
 		Relations: relations,
 	})
@@ -884,7 +884,7 @@ func (s *SwapService) CreateShipment(swapId uuid.UUID, fulfillmentId uuid.UUID, 
 }
 
 func (s *SwapService) DeleteMetadata(swapId string, key string) (*models.Swap, *utils.ApplictaionError) {
-	var swap *models.Swap
+	var swap *models.Swap = &models.Swap{}
 
 	if err := swap.ParseUUID(swapId); err != nil {
 		return nil, utils.NewApplictaionError(

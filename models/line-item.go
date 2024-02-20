@@ -235,43 +235,43 @@ import (
 type LineItem struct {
 	core.Model
 
-	CartId            uuid.NullUUID        `json:"cart_id" gorm:"default:null"`
-	Cart              *Cart                `json:"cart" gorm:"foreignKey:id;references:cart_id"`
-	OrderId           uuid.NullUUID        `json:"order_id" gorm:"default:null"`
-	Order             *Order               `json:"order" gorm:"foreignKey:id;references:order_id"`
-	SwapId            uuid.NullUUID        `json:"swap_id" gorm:"default:null"`
-	Swap              *Swap                `json:"swap" gorm:"foreignKey:id;references:swap_id"`
-	ClaimOrderId      uuid.NullUUID        `json:"claim_order_id" gorm:"default:null"`
-	ClaimOrder        *ClaimOrder          `json:"claim_order" gorm:"foreignKey:id;references:claim_order_id"`
-	TaxLines          []LineItemTaxLine    `json:"tax_lines" gorm:"foreignKey:id"`
-	Adjustments       []LineItemAdjustment `json:"adjustments" gorm:"foreignKey:id"`
-	OriginalItemId    uuid.NullUUID        `json:"original_item_id" gorm:"default:null"`
-	OrderEditId       uuid.NullUUID        `json:"order_edit_id" gorm:"default:null"`
-	OrderEdit         *OrderEdit           `json:"order_edit" gorm:"foreignKey:id;references:order_edit_id"`
-	Title             string               `json:"title"`
-	Description       string               `json:"description" gorm:"default:null"`
-	Thumbnail         string               `json:"thumbnail" gorm:"default:null"`
-	IsReturn          bool                 `json:"is_return" gorm:"default:null"`
-	IsGiftcard        bool                 `json:"is_giftcard" gorm:"default:null"`
-	ShouldMerge       bool                 `json:"should_merge" gorm:"default:null"`
-	AllowDiscounts    bool                 `json:"allow_discounts" gorm:"default:null"`
-	HasShipping       bool                 `json:"has_shipping" gorm:"default:null"`
-	UnitPrice         float64              `json:"unit_price"`
-	ProductId         uuid.NullUUID        `json:"product_id" gorm:"default:null"`
-	VariantId         uuid.NullUUID        `json:"variant_id" gorm:"default:null"`
-	Variant           *ProductVariant      `json:"variant" gorm:"foreignKey:id;references:variant_id"`
-	Quantity          int                  `json:"quantity"`
-	FulfilledQuantity int                  `json:"fulfilled_quantity" gorm:"default:null"`
-	ReturnedQuantity  int                  `json:"returned_quantity" gorm:"default:null"`
-	ShippedQuantity   int                  `json:"shipped_quantity" gorm:"default:null"`
-	Refundable        float64              `json:"refundable" gorm:"default:null"`
-	Subtotal          float64              `json:"subtotal" gorm:"default:null"`
-	TaxTotal          float64              `json:"tax_total" gorm:"default:null"`
-	Total             float64              `json:"total" gorm:"default:null"`
-	OriginalTotal     float64              `json:"original_total" gorm:"default:null"`
-	OriginalTaxTotal  float64              `json:"original_tax_total" gorm:"default:null"`
-	DiscountTotal     float64              `json:"discount_total" gorm:"default:null"`
-	GiftCardTotal     float64              `json:"gift_card_total" gorm:"default:null"`
-	RawDiscountTotal  float64              `json:"raw_discount_total" gorm:"default:null"`
-	IncludesTax       bool                 `json:"includes_tax" gorm:"default:null"`
+	CartId            uuid.NullUUID        `json:"cart_id"  gorm:"column:cart_id"`
+	Cart              *Cart                `json:"cart"  gorm:"column:cart;foreignKey:CartId"`
+	OrderId           uuid.NullUUID        `json:"order_id"  gorm:"column:order_id"`
+	Order             *Order               `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	SwapId            uuid.NullUUID        `json:"swap_id"  gorm:"column:swap_id"`
+	Swap              *Swap                `json:"swap"  gorm:"column:swap;foreignKey:SwapId"`
+	ClaimOrderId      uuid.NullUUID        `json:"claim_order_id"  gorm:"column:claim_order_id"`
+	ClaimOrder        *ClaimOrder          `json:"claim_order"  gorm:"column:claim_order;foreignKey:ClaimOrderId"`
+	TaxLines          []LineItemTaxLine    `json:"tax_lines"  gorm:"column:tax_lines;foreignKey:Id"`
+	Adjustments       []LineItemAdjustment `json:"adjustments"  gorm:"column:adjustments;foreignKey:Id"`
+	OriginalItemId    uuid.NullUUID        `json:"original_item_id"  gorm:"column:original_item_id"`
+	OrderEditId       uuid.NullUUID        `json:"order_edit_id"  gorm:"column:order_edit_id"`
+	OrderEdit         *OrderEdit           `json:"order_edit"  gorm:"column:order_edit;foreignKey:OrderEditId"`
+	Title             string               `json:"title"  gorm:"column:title"`
+	Description       string               `json:"description"  gorm:"column:description"`
+	Thumbnail         string               `json:"thumbnail"  gorm:"column:thumbnail"`
+	IsReturn          bool                 `json:"is_return"  gorm:"column:is_return;default:false"`
+	IsGiftcard        bool                 `json:"is_giftcard"  gorm:"column:is_giftcard;default:false"`
+	ShouldMerge       bool                 `json:"should_merge"  gorm:"column:should_merge;default:false"`
+	AllowDiscounts    bool                 `json:"allow_discounts"  gorm:"column:allow_discounts;default:false"`
+	HasShipping       bool                 `json:"has_shipping"  gorm:"column:has_shipping"`
+	UnitPrice         float64              `json:"unit_price"  gorm:"column:unit_price"`
+	ProductId         uuid.NullUUID        `json:"product_id"  gorm:"column:product_id"`
+	VariantId         uuid.NullUUID        `json:"variant_id"  gorm:"column:variant_id"`
+	Variant           *ProductVariant      `json:"variant"  gorm:"column:variant;foreignKey:VariantId"`
+	Quantity          int                  `json:"quantity"  gorm:"column:quantity"`
+	FulfilledQuantity int                  `json:"fulfilled_quantity"  gorm:"column:fulfilled_quantity"`
+	ReturnedQuantity  int                  `json:"returned_quantity"  gorm:"column:returned_quantity"`
+	ShippedQuantity   int                  `json:"shipped_quantity"  gorm:"column:shipped_quantity"`
+	Refundable        float64              `json:"refundable"  gorm:"column:refundable"`
+	Subtotal          float64              `json:"subtotal"  gorm:"column:subtotal"`
+	TaxTotal          float64              `json:"tax_total"  gorm:"column:tax_total"`
+	Total             float64              `json:"total"  gorm:"column:total"`
+	OriginalTotal     float64              `json:"original_total"  gorm:"column:original_total"`
+	OriginalTaxTotal  float64              `json:"original_tax_total"  gorm:"column:original_tax_total"`
+	DiscountTotal     float64              `json:"discount_total"  gorm:"column:discount_total"`
+	GiftCardTotal     float64              `json:"gift_card_total"  gorm:"column:gift_card_total"`
+	RawDiscountTotal  float64              `json:"raw_discount_total"  gorm:"column:raw_discount_total"`
+	IncludesTax       bool                 `json:"includes_tax"  gorm:"column:includes_tax"`
 }

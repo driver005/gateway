@@ -94,14 +94,14 @@ import (
 type Refund struct {
 	core.Model
 
-	OrderId        uuid.NullUUID `json:"order_id" gorm:"default:null"`
-	PaymentId      uuid.NullUUID `json:"payment_id"`
-	Order          *Order        `json:"order" gorm:"foreignKey:id;references:order_id"`
-	Payment        *Payment      `json:"payment" gorm:"foreignKey:id;references:payment_id"`
-	Amount         float64       `json:"amount"`
-	Note           string        `json:"note" gorm:"default:null"`
-	Reason         RefundReason  `json:"reason" gorm:"default:null"`
-	IdempotencyKey string        `json:"idempotency_key" gorm:"default:null"`
+	OrderId        uuid.NullUUID `json:"order_id"  gorm:"column:order_id"`
+	PaymentId      uuid.NullUUID `json:"payment_id"  gorm:"column:payment_id"`
+	Order          *Order        `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	Payment        *Payment      `json:"payment"  gorm:"column:payment;foreignKey:PaymentId"`
+	Amount         float64       `json:"amount"  gorm:"column:amount"`
+	Note           string        `json:"note"  gorm:"column:note"`
+	Reason         RefundReason  `json:"reason"  gorm:"column:reason"`
+	IdempotencyKey string        `json:"idempotency_key"  gorm:"column:idempotency_key"`
 }
 
 // The status of the product

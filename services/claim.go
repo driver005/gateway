@@ -43,7 +43,7 @@ func (s *ClaimService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Clai
 			nil,
 		)
 	}
-	var res *models.ClaimOrder
+	var res *models.ClaimOrder = &models.ClaimOrder{}
 	query := sql.BuildQuery(models.ClaimOrder{Model: core.Model{Id: id}}, config)
 	if err := s.r.ClaimRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -277,7 +277,7 @@ func (s *ClaimService) Create(data *types.CreateClaimInput) (*models.ClaimOrder,
 		return nil, err
 	}
 
-	var claim *models.ClaimOrder
+	var claim *models.ClaimOrder = &models.ClaimOrder{}
 
 	if data.ShippingAddress != nil {
 		if err := s.r.AddressRepository().Save(s.ctx, utils.ToAddress(data.ShippingAddress)); err != nil {

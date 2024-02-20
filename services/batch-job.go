@@ -47,7 +47,7 @@ func (s *BatchJobService) ResolveBatchJobByType(batchtype string) interfaces.IBa
 }
 
 func (s *BatchJobService) Retrive(batchJobId uuid.UUID) (*models.BatchJob, *utils.ApplictaionError) {
-	var model *models.BatchJob
+	var model *models.BatchJob = &models.BatchJob{}
 
 	if err := s.r.BatchJobRepository().FindOne(s.ctx, model, sql.BuildQuery[models.BatchJob](
 		models.BatchJob{

@@ -167,10 +167,23 @@ func Build(structFields []*structs.Field) string {
 					result += fmt.Sprintf(`%+v = %+v`, name, field.Value())
 				}
 			} else if field.Kind() == reflect.Slice {
+				value := reflect.ValueOf(field.Value())
 				if len(result) > 0 {
 					result += " AND "
 				}
-				result += fmt.Sprintf(`%+v = %+v`, name, field.Value())
+				if value.Len() > 1 {
+					result += fmt.Sprintf(`%+v IN (`, name)
+					for i := 0; i < value.Len(); i++ {
+						result += fmt.Sprintf(`'%+v'`, value.Index(i))
+						if i == value.Len()-1 {
+							result += ")"
+						} else {
+							result += ","
+						}
+					}
+				} else {
+					result += fmt.Sprintf(`%+v = '%+v'`, name, value.Index(0))
+				}
 			} else if field.Kind() == reflect.Array {
 				if len(result) > 0 {
 					result += " AND "

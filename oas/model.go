@@ -63,12 +63,10 @@ func NewOpenAPI() OpenAPI {
 }
 
 func (spec *OpenAPI) parseYamlFile(Path string) error {
-	data, err := parseYamlFile(spec, Path)
-	if err != nil {
+	if err := parseYamlFile(spec, Path); err != nil {
 		return err
 	}
 
-	spec = data
 	return nil
 }
 
@@ -400,7 +398,6 @@ func (spec *OpenAPI) parsePaths(f *ast.File, apiType string) (errs []error) {
 				WithError(err).
 				WithField("content", content).
 				Error("Unable to unmarshal Path")
-			// fmt.Println(err)
 			errs = append(errs, &BuildError{
 				Err:     err,
 				Content: content,
@@ -648,7 +645,6 @@ func (spec *OpenAPI) parseSchemas(f *ast.File, apiType string) (errors []error) 
 				// Replacing tab with spaces
 				content := tab.ReplaceAllString(yamlString, "  ")
 				content = strings.Replace(content, "\n\n", "\n", -1)
-				// fmt.Println(content)
 
 				data := &Schema{}
 
@@ -659,7 +655,6 @@ func (spec *OpenAPI) parseSchemas(f *ast.File, apiType string) (errors []error) 
 						WithError(err).
 						WithField("content", content).
 						Error("Unable to unmarshal Path")
-					// fmt.Println(err)
 					continue
 				}
 
@@ -899,5 +894,5 @@ func parseImportContentPath(str string) (string, error) {
 	if len(matches) == 2 {
 		return matches[1], nil
 	}
-	return "", errors.New("Not an import")
+	return "", errors.New("not an import")
 }

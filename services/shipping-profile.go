@@ -84,7 +84,7 @@ func (s *ShippingProfileService) Retrieve(profileId uuid.UUID, config *sql.Optio
 			nil,
 		)
 	}
-	var res *models.ShippingProfile
+	var res *models.ShippingProfile = &models.ShippingProfile{}
 
 	query := sql.BuildQuery(models.ShippingProfile{Model: core.Model{Id: profileId}}, config)
 
@@ -118,7 +118,7 @@ func (s *ShippingProfileService) RetrieveForProducts(productIds uuid.UUIDs) (map
 }
 
 func (s *ShippingProfileService) RetrieveDefault() (*models.ShippingProfile, *utils.ApplictaionError) {
-	var res *models.ShippingProfile
+	var res *models.ShippingProfile = &models.ShippingProfile{}
 
 	query := sql.BuildQuery(models.ShippingProfile{Type: models.ShippingProfileTypeDefault}, &sql.Options{})
 
@@ -134,7 +134,7 @@ func (s *ShippingProfileService) CreateDefault() (*models.ShippingProfile, *util
 		return nil, err
 	}
 	if profile == nil {
-		var profile *models.ShippingProfile
+		var profile *models.ShippingProfile = &models.ShippingProfile{}
 		profile.Name = "Default Shipping Profile"
 		profile.Type = models.ShippingProfileTypeDefault
 
@@ -148,7 +148,7 @@ func (s *ShippingProfileService) CreateDefault() (*models.ShippingProfile, *util
 }
 
 func (s *ShippingProfileService) RetrieveGiftCardDefault() (*models.ShippingProfile, *utils.ApplictaionError) {
-	var res *models.ShippingProfile
+	var res *models.ShippingProfile = &models.ShippingProfile{}
 
 	query := sql.BuildQuery(models.ShippingProfile{Type: models.ShippingProfileTypeGiftCard}, &sql.Options{})
 
@@ -164,7 +164,7 @@ func (s *ShippingProfileService) CreateGiftCardDefault() (*models.ShippingProfil
 		return nil, err
 	}
 	if profile == nil {
-		var profile *models.ShippingProfile
+		var profile *models.ShippingProfile = &models.ShippingProfile{}
 		profile.Name = "Gift Card Profile"
 		profile.Type = models.ShippingProfileTypeGiftCard
 

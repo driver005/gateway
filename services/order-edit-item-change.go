@@ -39,7 +39,7 @@ func (s *OrderItemChangeService) Retrieve(id uuid.UUID, config *sql.Options) (*m
 			nil,
 		)
 	}
-	var res *models.OrderItemChange
+	var res *models.OrderItemChange = &models.OrderItemChange{}
 
 	query := sql.BuildQuery(models.OrderItemChange{Model: core.Model{Id: id}}, config)
 

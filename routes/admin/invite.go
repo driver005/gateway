@@ -8,11 +8,12 @@ import (
 )
 
 type Invite struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewInvite(r Registry) *Invite {
-	m := Invite{r: r}
+	m := Invite{r: r, name: "invites"}
 	return &m
 }
 
@@ -124,7 +125,9 @@ func (m *Invite) List(context fiber.Ctx) error {
 	// 	"offset": config.Skip,
 	// 	"limit":  config.Take,
 	// })
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/invites

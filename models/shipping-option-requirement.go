@@ -52,10 +52,10 @@ import (
 type ShippingOptionRequirement struct {
 	core.Model
 
-	Amount           float64                       `json:"amount"`
-	ShippingOption   *ShippingOption               `json:"shipping_option" gorm:"foreignKey:id;references:shipping_option_id"`
-	ShippingOptionId uuid.NullUUID                 `json:"shipping_option_id"`
-	Type             ShippingOptionRequirementType `json:"type"`
+	Amount           float64                       `json:"amount"  gorm:"column:amount"`
+	ShippingOption   *ShippingOption               `json:"shipping_option"  gorm:"column:shipping_option;foreignKey:ShippingOptionId"`
+	ShippingOptionId uuid.NullUUID                 `json:"shipping_option_id"  gorm:"column:shipping_option_id"`
+	Type             ShippingOptionRequirementType `json:"type"  gorm:"column:type"`
 }
 
 // The type of the requirement, this defines how the value will be compared to the Cart's total. `min_subtotal` requirements define the minimum subtotal that is needed for the Shipping Option to be available, while the `max_subtotal` defines the maximum subtotal that the Cart can have for the Shipping Option to be available.

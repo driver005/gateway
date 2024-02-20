@@ -7,11 +7,12 @@ import (
 )
 
 type ReturnReason struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewReturnReason(r Registry) *ReturnReason {
-	m := ReturnReason{r: r}
+	m := ReturnReason{r: r, name: "return_reason"}
 	return &m
 }
 
@@ -142,7 +143,9 @@ func (m *ReturnReason) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/return-reasons
@@ -265,7 +268,9 @@ func (m *ReturnReason) List(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"return_reasons": result,
+	})
 }
 
 // @oas:path [post] /admin/return-reasons
@@ -403,7 +408,9 @@ func (m *ReturnReason) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/return-reasons/{id}
@@ -546,7 +553,9 @@ func (m *ReturnReason) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/return-reasons/{id}

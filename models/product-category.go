@@ -100,15 +100,15 @@ import (
 type ProductCategory struct {
 	core.Model
 
-	Name             string            `json:"name"`
-	Description      string            `json:"description,omitempty"`
-	Handle           string            `json:"handle"`
-	Mpath            string            `json:"mpath"`
-	IsInternal       bool              `json:"is_internal"`
-	IsActive         bool              `json:"is_active"`
-	Rank             int64             `json:"rank,omitempty"`
-	CategoryChildren []ProductCategory `json:"category_children"`
-	ParentCategoryId uuid.NullUUID     `json:"parent_category_id"`
-	ParentCategory   *ProductCategory  `json:"parent_category,omitempty" gorm:"foreignKey:id;references:parent_category_id"`
-	Products         []Product         `json:"products,omitempty"`
+	Name             string            `json:"name"  gorm:"column:name"`
+	Description      string            `json:"description"  gorm:"column:description;default:''"`
+	Handle           string            `json:"handle"  gorm:"column:handle"`
+	Mpath            string            `json:"mpath"  gorm:"column:mpath"`
+	IsInternal       bool              `json:"is_internal"  gorm:"column:is_internal"`
+	IsActive         bool              `json:"is_active"  gorm:"column:is_active"`
+	Rank             int64             `json:"rank"  gorm:"column:rank;default:0"`
+	CategoryChildren []ProductCategory `json:"category_children"  gorm:"column:category_children;foreignKey:Id"`
+	ParentCategoryId uuid.NullUUID     `json:"parent_category_id"  gorm:"column:parent_category_id"`
+	ParentCategory   *ProductCategory  `json:"parent_category"  gorm:"column:parent_category;foreignKey:ParentCategoryId"`
+	Products         []Product         `json:"products"  gorm:"column:products;many2many:product_category_product"`
 }

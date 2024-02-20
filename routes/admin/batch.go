@@ -17,11 +17,12 @@ type AdminPostBatchesReq struct {
 }
 
 type Batch struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewBatch(r Registry) *Batch {
-	m := Batch{r: r}
+	m := Batch{r: r, name: "batch_job"}
 	return &m
 }
 
@@ -143,7 +144,9 @@ func (m *Batch) SetRoutes(router fiber.Router) {
 //	        $ref: "#/components/responses/500_error"
 func (m *Batch) Get(context fiber.Ctx) error {
 	batch := context.Locals("batch-job").(*models.BatchJob)
-	return context.Status(fiber.StatusOK).JSON(batch)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): batch,
+	})
 }
 
 // @oas:path [get] /admin/batch-jobs
@@ -740,7 +743,9 @@ func (m *Batch) Cancel(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(model)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): model,
+	})
 }
 
 // @oas:path [post] /admin/batch-jobs/{id}/confirm
@@ -861,5 +866,7 @@ func (m *Batch) Confirm(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(model)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): model,
+	})
 }

@@ -82,7 +82,7 @@ func (s *GiftCardService) CreateTransaction(data *types.CreateGiftCardTransactio
 }
 
 func (s *GiftCardService) Create(data *types.CreateGiftCardInput) (*models.GiftCard, *utils.ApplictaionError) {
-	var model *models.GiftCard
+	var model *models.GiftCard = &models.GiftCard{}
 	region, err := s.r.RegionService().SetContext(s.ctx).Retrieve(data.RegionId, &sql.Options{})
 	if err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ func (s *GiftCardService) ResolveTaxRate(giftCardTaxRate float64, region *models
 }
 
 func (s *GiftCardService) Retrieve(selector *models.GiftCard, config *sql.Options) (*models.GiftCard, *utils.ApplictaionError) {
-	var res *models.GiftCard
+	var res *models.GiftCard = &models.GiftCard{}
 	query := sql.BuildQuery(selector, config)
 	if err := s.r.GiftCardRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

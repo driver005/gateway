@@ -53,7 +53,7 @@ import "github.com/driver005/gateway/core"
 type TaxLine struct {
 	core.Model
 
-	Code string  `json:"code" gorm:"default:null"`
-	Name string  `json:"name"`
-	Rate float64 `json:"rate"`
+	Code string  `json:"code"  gorm:"column:code"`
+	Name string  `json:"name"  gorm:"column:name"`
+	Rate float64 `json:"rate"  gorm:"column:rate"`
 }

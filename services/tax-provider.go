@@ -413,7 +413,7 @@ func (s *TaxProviderService) RegisterInstalledProviders(providers uuid.UUIDs) *u
 	}
 
 	for _, p := range providers {
-		var model *models.TaxProvider
+		var model *models.TaxProvider = &models.TaxProvider{}
 		model.IsInstalled = true
 		model.Id = p
 

@@ -62,7 +62,7 @@ func (s *PublishableApiKeyService) RetrieveById(id uuid.UUID, config *sql.Option
 }
 
 func (s *PublishableApiKeyService) Retrieve(selector *models.PublishableApiKey, config *sql.Options) (*models.PublishableApiKey, *utils.ApplictaionError) {
-	var res *models.PublishableApiKey
+	var res *models.PublishableApiKey = &models.PublishableApiKey{}
 	query := sql.BuildQuery(selector, config)
 
 	if err := s.r.PublishableApiKeyRepository().FindOne(s.ctx, res, query); err != nil {

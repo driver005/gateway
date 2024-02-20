@@ -9,11 +9,12 @@ import (
 )
 
 type App struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewApp(r Registry) *App {
-	m := App{r: r}
+	m := App{r: r, name: "apps"}
 	return &m
 }
 
@@ -97,7 +98,9 @@ func (m *App) List(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/apps/authorizations
@@ -192,5 +195,7 @@ func (m *App) Authorize(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

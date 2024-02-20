@@ -104,16 +104,16 @@ import (
 type DraftOrder struct {
 	core.Model
 
-	Status              DraftOrderStatus `json:"status" gorm:"default:open"`
-	DisplayId           uuid.NullUUID    `json:"display_id" gorm:"default:null"`
-	CartId              uuid.NullUUID    `json:"cart_id" gorm:"default:null"`
-	Cart                Cart             `json:"cart" gorm:"default:null"`
-	OrderId             uuid.NullUUID    `json:"order_id" gorm:"default:null"`
-	Order               *Order           `json:"order" gorm:"foreignKey:id;references:order_id"`
-	CanceledAt          *time.Time       `json:"canceled_at" gorm:"default:null"`
-	CompletedAt         *time.Time       `json:"completed_at" gorm:"default:null"`
-	NoNotificationOrder bool             `json:"no_notification_order" gorm:"default:null"`
-	IdempotencyKey      string           `json:"idempotency_key" gorm:"default:null"`
+	Status              DraftOrderStatus `json:"status"  gorm:"column:status;default:open"`
+	DisplayId           uuid.NullUUID    `json:"display_id"  gorm:"column:display_id"`
+	CartId              uuid.NullUUID    `json:"cart_id"  gorm:"column:cart_id"`
+	Cart                *Cart            `json:"cart"  gorm:"column:cart;foreignKey:CartId"`
+	OrderId             uuid.NullUUID    `json:"order_id"  gorm:"column:order_id"`
+	Order               *Order           `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	CanceledAt          *time.Time       `json:"canceled_at"  gorm:"column:canceled_at"`
+	CompletedAt         *time.Time       `json:"completed_at"  gorm:"column:completed_at"`
+	NoNotificationOrder bool             `json:"no_notification_order"  gorm:"column:no_notification_order"`
+	IdempotencyKey      string           `json:"idempotency_key"  gorm:"column:idempotency_key"`
 }
 
 // The status of the Price List

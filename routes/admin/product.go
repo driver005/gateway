@@ -11,11 +11,12 @@ import (
 )
 
 type Product struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewProduct(r Registry) *Product {
-	m := Product{r: r}
+	m := Product{r: r, name: "product"}
 	return &m
 }
 
@@ -159,7 +160,9 @@ func (m *Product) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/products
@@ -445,10 +448,10 @@ func (m *Product) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"products": result,
+		"count":    count,
+		"offset":   config.Skip,
+		"limit":    config.Take,
 	})
 }
 
@@ -610,7 +613,9 @@ func (m *Product) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/products/{id}
@@ -753,7 +758,9 @@ func (m *Product) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/products/{id}
@@ -1029,7 +1036,9 @@ func (m *Product) AddOption(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/products/{id}/options/{option_id}
@@ -1399,7 +1408,9 @@ func (m *Product) CreateVariant(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/products/{id}/variants/{variant_id}
@@ -1664,7 +1675,9 @@ func (m *Product) ListTagUsageCount(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"tags": result,
+	})
 }
 
 // @oas:path [get] /admin/products/types
@@ -1752,7 +1765,9 @@ func (m *Product) ListTypes(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"types": result,
+	})
 }
 
 // @oas:path [get] /admin/products/{id}/variants
@@ -1847,10 +1862,10 @@ func (m *Product) ListVariants(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"variants": result,
+		"count":    count,
+		"offset":   config.Skip,
+		"limit":    config.Take,
 	})
 }
 
@@ -1978,7 +1993,9 @@ func (m *Product) SetMetadata(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/products/{id}/options/{option_id}
@@ -2143,7 +2160,9 @@ func (m *Product) UpdateOption(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/products/{id}/variants/{variant_id}
@@ -2325,6 +2344,8 @@ func (m *Product) UpdateVariant(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 
 }

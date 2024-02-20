@@ -14,11 +14,12 @@ import (
 )
 
 type DraftOrder struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewDraftOrder(r Registry) *DraftOrder {
-	m := DraftOrder{r: r}
+	m := DraftOrder{r: r, name: "draft_order"}
 	return &m
 }
 
@@ -156,7 +157,9 @@ func (m *DraftOrder) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/draft-orders
@@ -284,10 +287,10 @@ func (m *DraftOrder) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"draft_orders": result,
+		"count":        count,
+		"offset":       config.Skip,
+		"limit":        config.Take,
 	})
 }
 
@@ -453,7 +456,9 @@ func (m *DraftOrder) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/draft-orders/{id}
@@ -625,7 +630,9 @@ func (m *DraftOrder) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/draft-orders/{id}
@@ -946,9 +953,11 @@ func (m *DraftOrder) CreateLineItem(context fiber.Ctx) error {
 		return err
 	}
 
-	draftOrder.Cart = *cart
+	draftOrder.Cart = cart
 
-	return context.Status(fiber.StatusOK).JSON(draftOrder)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): draftOrder,
+	})
 }
 
 // @oas:path [post] /admin/draft-orders/{id}/pay
@@ -1130,7 +1139,9 @@ func (m *DraftOrder) RegisterPayment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/draft-orders/{id}/line-items/{line_id}
@@ -1321,9 +1332,11 @@ func (m *DraftOrder) UpdateLineItem(context fiber.Ctx) error {
 		return err
 	}
 
-	draftOrder.Cart = *cart
+	draftOrder.Cart = cart
 
-	return context.Status(fiber.StatusOK).JSON(draftOrder)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): draftOrder,
+	})
 }
 
 // @oas:path [delete] /admin/draft-orders/{id}/line-items/{line_id}
@@ -1471,7 +1484,9 @@ func (m *DraftOrder) DeleteLineItem(context fiber.Ctx) error {
 		return err
 	}
 
-	draftOrder.Cart = *cart
+	draftOrder.Cart = cart
 
-	return context.Status(fiber.StatusOK).JSON(draftOrder)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): draftOrder,
+	})
 }

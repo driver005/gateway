@@ -176,7 +176,7 @@ func (m *Upload) Get(context fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
 		"download_url": res,
 	})
 }
@@ -307,7 +307,7 @@ func (m *Upload) Create(context fiber.Ctx) error {
 			results = append(results, *res)
 		}
 	}
-	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
 		"uploads": results,
 	})
 }
@@ -435,7 +435,7 @@ func (m *Upload) Delete(context fiber.Ctx) error {
 	if err := m.r.FileService().Delete(interfaces.DeleteFileType{FileKey: req.FileKey}); err != nil {
 		return err
 	}
-	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
 		"id":      req.FileKey,
 		"object":  "file",
 		"deleted": true,
@@ -568,7 +568,7 @@ func (m *Upload) CreateProtectedUpload(context fiber.Ctx) error {
 			results = append(results, *res)
 		}
 	}
-	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
 		"uploads": results,
 	})
 }

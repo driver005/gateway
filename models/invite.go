@@ -76,9 +76,9 @@ import (
 type Invite struct {
 	core.Model
 
-	UserEmail string     `json:"user_email"`
-	Role      UserRole   `json:"role" gorm:"default:null"`
-	Accepted  bool       `json:"accepted" gorm:"default:null"`
-	Token     string     `json:"token" gorm:"default:null"`
-	ExpiresAt *time.Time `json:"expores_at" gorm:"default:null"`
+	UserEmail string     `json:"user_email"  gorm:"column:user_email"`
+	Role      UserRole   `json:"role"  gorm:"column:role;default:'member'"`
+	Accepted  bool       `json:"accepted"  gorm:"column:accepted;default:false"`
+	Token     string     `json:"token"  gorm:"column:token"`
+	ExpiresAt *time.Time `json:"expores_at"  gorm:"column:expores_at"`
 }

@@ -76,10 +76,10 @@ import (
 type ShippingProfile struct {
 	core.Model
 
-	Name            string              `json:"name"`
-	Products        []Product           `json:"products" gorm:"foreignKey:id"`
-	ShippingOptions []ShippingOption    `json:"shipping_options" gorm:"foreignKey:id"`
-	Type            ShippingProfileType `json:"type"`
+	Name            string              `json:"name"  gorm:"column:name"`
+	Products        []Product           `json:"products"  gorm:"column:products;many2many:product_shipping_profile"`
+	ShippingOptions []ShippingOption    `json:"shipping_options"  gorm:"column:shipping_options;foreignKey:Id"`
+	Type            ShippingProfileType `json:"type"  gorm:"column:type"`
 }
 
 // The type of the Shipping Profile, may be `default`, `gift_card` or `custom`.

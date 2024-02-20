@@ -3,11 +3,12 @@ package admin
 import "github.com/gofiber/fiber/v3"
 
 type Reservation struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewReservation(r Registry) *Reservation {
-	m := Reservation{r: r}
+	m := Reservation{r: r, name: "reservation"}
 	return &m
 }
 

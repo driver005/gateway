@@ -69,9 +69,9 @@ import (
 type Note struct {
 	core.Model
 
-	ResourceType string        `json:"resource_type"`
-	ResourceId   uuid.NullUUID `json:"resource_id"`
-	Value        string        `json:"value"`
-	AuthorId     uuid.NullUUID `json:"author_id" gorm:"default:null"`
-	Author       *User         `json:"author" gorm:"foreignKey:id;references:author_id"`
+	ResourceType string        `json:"resource_type"  gorm:"column:resource_type"`
+	ResourceId   uuid.NullUUID `json:"resource_id"  gorm:"column:resource_id"`
+	Value        string        `json:"value"  gorm:"column:value"`
+	AuthorId     uuid.NullUUID `json:"author_id"  gorm:"column:author_id"`
+	Author       *User         `json:"author"  gorm:"column:author;foreignKey:AuthorId"`
 }

@@ -189,47 +189,47 @@ import (
 type BatchJob struct {
 	core.Model
 
-	Type           string          `json:"type"`
-	Status         BatchJobStatus  `json:"status" gorm:"default:created"`
-	CreatedBy      uuid.UUID       `json:"created_by" gorm:"default:null"`
-	CreatedByUser  *User           `json:"created_by_user" gorm:"foreignKey:id"`
-	Context        core.JSONB      `json:"context" gorm:"default:null"`
-	DryRun         bool            `json:"dry_run" gorm:"default:null"`
-	Result         *BatchJobResult `json:"result" gorm:"default:null"`
-	PreProcessedAt *time.Time      `json:"pre_processed_at" gorm:"default:null"`
-	ProcessingAt   *time.Time      `json:"processing_at" gorm:"default:null"`
-	ConfirmedAt    *time.Time      `json:"confirmed_at" gorm:"default:null"`
-	CompletedAt    *time.Time      `json:"completed_at" gorm:"default:null"`
-	CanceledAt     *time.Time      `json:"canceled_at" gorm:"default:null"`
-	FailedAt       *time.Time      `json:"failed_at" gorm:"default:null"`
+	Type           string          `json:"type"  gorm:"column:type"`
+	Status         BatchJobStatus  `json:"status"  gorm:"column:status;default:created"`
+	CreatedBy      uuid.UUID       `json:"created_by"  gorm:"column:created_by"`
+	CreatedByUser  *User           `json:"created_by_user"  gorm:"column:created_by_user;foreignKey:CreatedBy"`
+	Context        core.JSONB      `json:"context"  gorm:"column:context"`
+	DryRun         bool            `json:"dry_run"  gorm:"column:dry_run;default:false"`
+	Result         *BatchJobResult `json:"result"  gorm:"column:result"`
+	PreProcessedAt *time.Time      `json:"pre_processed_at"  gorm:"column:pre_processed_at"`
+	ProcessingAt   *time.Time      `json:"processing_at"  gorm:"column:processing_at"`
+	ConfirmedAt    *time.Time      `json:"confirmed_at"  gorm:"column:confirmed_at"`
+	CompletedAt    *time.Time      `json:"completed_at"  gorm:"column:completed_at"`
+	CanceledAt     *time.Time      `json:"canceled_at"  gorm:"column:canceled_at"`
+	FailedAt       *time.Time      `json:"failed_at"  gorm:"column:failed_at"`
 }
 
 type BatchJobResultErrorsCode struct {
-	Message string `json:"message,omitempty" gorm:"default:null"`
-	Code    string `json:"code,omitempty" gorm:"default:null"`
+	Message string `json:"message"  gorm:"column:message"`
+	Code    string `json:"code"  gorm:"column:code"`
 }
 
 type BatchJobResultErrors struct {
-	Message string                    `json:"message,omitempty" gorm:"default:null"`
-	Code    *BatchJobResultErrorsCode `json:"code,omitempty" gorm:"default:null"`
-	Err     []string                  `json:"err,omitempty" gorm:"default:null"`
+	Message string                    `json:"message"  gorm:"column:message"`
+	Code    *BatchJobResultErrorsCode `json:"code"  gorm:"column:code"`
+	Err     []string                  `json:"err"  gorm:"column:err"`
 }
 
 type BatchJobResultStatDescriptors struct {
-	Key     string `json:"key,omitempty" gorm:"default:null"`
-	Name    string `json:"name,omitempty" gorm:"default:null"`
-	Message string `json:"message,omitempty" gorm:"default:null"`
+	Key     string `json:"key"  gorm:"column:key"`
+	Name    string `json:"name"  gorm:"column:name"`
+	Message string `json:"message"  gorm:"column:message"`
 }
 
 // BatchJobResult - The result of the batch job.
 type BatchJobResult struct {
-	Count            float64                        `json:"count,omitempty" gorm:"default:null"`
-	AdvancementCount float64                        `json:"advancement_count,omitempty" gorm:"default:null"`
-	Progress         float64                        `json:"progress,omitempty" gorm:"default:null"`
-	Errors           *BatchJobResultErrors          `json:"errors,omitempty" gorm:"default:null"`
-	StatDescriptors  *BatchJobResultStatDescriptors `json:"stat_descriptors,omitempty" gorm:"default:null"`
-	FileKey          string                         `json:"file_key,omitempty" gorm:"default:null"`
-	FileSize         float64                        `json:"file_size,omitempty" gorm:"default:null"`
+	Count            float64                        `json:"count"  gorm:"column:count"`
+	AdvancementCount float64                        `json:"advancement_count"  gorm:"column:advancement_count"`
+	Progress         float64                        `json:"progress"  gorm:"column:progress"`
+	Errors           *BatchJobResultErrors          `json:"errors"  gorm:"column:errors"`
+	StatDescriptors  *BatchJobResultStatDescriptors `json:"stat_descriptors"  gorm:"column:stat_descriptors"`
+	FileKey          string                         `json:"file_key"  gorm:"column:file_key"`
+	FileSize         float64                        `json:"file_size"  gorm:"column:file_size"`
 }
 
 func (b BatchJobResult) Interface() interface{} {

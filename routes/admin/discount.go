@@ -12,11 +12,12 @@ import (
 )
 
 type Discount struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewDiscount(r Registry) *Discount {
-	m := Discount{r: r}
+	m := Discount{r: r, name: "discount"}
 	return &m
 }
 
@@ -169,7 +170,9 @@ func (m *Discount) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/discounts
@@ -314,10 +317,10 @@ func (m *Discount) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"discounts": result,
+		"count":     count,
+		"offset":    config.Skip,
+		"limit":     config.Take,
 	})
 }
 
@@ -453,7 +456,9 @@ func (m *Discount) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/discounts/{id}
@@ -591,7 +596,9 @@ func (m *Discount) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/discounts/{id}
@@ -846,7 +853,9 @@ func (m *Discount) GetConditon(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/discounts/code/{code}
@@ -973,7 +982,9 @@ func (m *Discount) GetDiscountByCode(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/discounts/{id}/regions/{region_id}
@@ -1103,7 +1114,9 @@ func (m *Discount) AddRegion(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/discounts/{discount_id}/conditions/{condition_id}/batch
@@ -1288,7 +1301,9 @@ func (m *Discount) AddResourcesToConditionBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/discounts/{discount_id}/conditions
@@ -1450,7 +1465,9 @@ func (m *Discount) CreateConditon(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/discounts/{id}/dynamic-codes
@@ -1599,7 +1616,9 @@ func (m *Discount) CreateDynamicCode(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/discounts/{discount_id}/conditions/{condition_id}
@@ -1786,7 +1805,9 @@ func (m *Discount) UpdateConditon(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/discounts/{discount_id}/conditions/{condition_id}
@@ -2097,7 +2118,9 @@ func (m *Discount) DeleteDynamicCode(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/discounts/{discount_id}/conditions/{condition_id}/batch
@@ -2279,7 +2302,9 @@ func (m *Discount) DeleteResourcesToConditionBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/discounts/{id}/regions/{region_id}
@@ -2409,5 +2434,7 @@ func (m *Discount) RemoveRegion(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

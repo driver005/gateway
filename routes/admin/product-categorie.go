@@ -8,11 +8,12 @@ import (
 )
 
 type ProductCategory struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewProductCategory(r Registry) *ProductCategory {
-	m := ProductCategory{r: r}
+	m := ProductCategory{r: r, name: "product_category"}
 	return &m
 }
 
@@ -156,7 +157,9 @@ func (m *ProductCategory) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/product-categories
@@ -297,10 +300,10 @@ func (m *ProductCategory) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"product_categories": result,
+		"count":              count,
+		"offset":             config.Skip,
+		"limit":              config.Take,
 	})
 }
 
@@ -441,7 +444,9 @@ func (m *ProductCategory) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/product-categories/{id}
@@ -590,7 +595,9 @@ func (m *ProductCategory) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/product-categories/{id}
@@ -892,7 +899,9 @@ func (m *ProductCategory) AddProductsBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/product-categories/{id}/products/batch
@@ -1062,5 +1071,7 @@ func (m *ProductCategory) DeleteProductsBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

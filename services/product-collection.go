@@ -39,7 +39,7 @@ func (s *ProductCollectionService) Retrieve(collectionId uuid.UUID, config *sql.
 			nil,
 		)
 	}
-	var res *models.ProductCollection
+	var res *models.ProductCollection = &models.ProductCollection{}
 
 	query := sql.BuildQuery(models.ProductCollection{Model: core.Model{Id: collectionId}}, config)
 
@@ -58,7 +58,7 @@ func (s *ProductCollectionService) RetrieveByHandle(collectionHandle string, con
 		)
 	}
 
-	var res *models.ProductCollection
+	var res *models.ProductCollection = &models.ProductCollection{}
 
 	query := sql.BuildQuery(models.ProductCollection{Handle: collectionHandle}, config)
 

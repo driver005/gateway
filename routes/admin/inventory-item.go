@@ -3,11 +3,12 @@ package admin
 import "github.com/gofiber/fiber/v3"
 
 type InventoryItem struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewInventoryItem(r Registry) *InventoryItem {
-	m := InventoryItem{r: r}
+	m := InventoryItem{r: r, name: "inventory_item"}
 	return &m
 }
 

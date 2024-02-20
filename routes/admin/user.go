@@ -9,11 +9,12 @@ import (
 )
 
 type User struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewUser(r Registry) *User {
-	m := User{r: r}
+	m := User{r: r, name: "user"}
 	return &m
 }
 
@@ -147,12 +148,14 @@ func (m *User) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	user, err := m.r.UserService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
+	result, err := m.r.UserService().SetContext(context.Context()).Retrieve(id, &sql.Options{})
 	if err != nil {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(user)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/users
@@ -362,7 +365,7 @@ func (m *User) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
+		"users":  result,
 		"count":  count,
 		"offset": config.Skip,
 		"limit":  config.Take,
@@ -502,7 +505,9 @@ func (m *User) Create(context fiber.Ctx) error {
 	}
 
 	result.PasswordHash = ""
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/users/{id}
@@ -643,7 +648,9 @@ func (m *User) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/users/{id}
@@ -934,7 +941,9 @@ func (m *User) ResetPassword(context fiber.Ctx) error {
 	}
 
 	result.PasswordHash = ""
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/users/password-token

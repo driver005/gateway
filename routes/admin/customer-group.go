@@ -8,11 +8,12 @@ import (
 )
 
 type CustomerGroup struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewCustomerGroup(r Registry) *CustomerGroup {
-	m := CustomerGroup{r: r}
+	m := CustomerGroup{r: r, name: "customer_group"}
 	return &m
 }
 
@@ -150,7 +151,9 @@ func (m *CustomerGroup) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/customer-groups
@@ -370,10 +373,10 @@ func (m *CustomerGroup) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"customer_groups": result,
+		"count":           count,
+		"offset":          config.Skip,
+		"limit":           config.Take,
 	})
 }
 
@@ -502,7 +505,9 @@ func (m *CustomerGroup) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/customer-groups/{id}
@@ -639,7 +644,9 @@ func (m *CustomerGroup) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/customer-groups/{id}
@@ -915,7 +922,9 @@ func (m *CustomerGroup) AddCustomers(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/customer-groups/{id}/customers
@@ -1215,5 +1224,7 @@ func (m *CustomerGroup) DeleteCustomers(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

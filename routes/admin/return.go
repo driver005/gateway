@@ -9,11 +9,12 @@ import (
 )
 
 type Return struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewReturn(r Registry) *Return {
-	m := Return{r: r}
+	m := Return{r: r, name: "return"}
 	return &m
 }
 
@@ -150,10 +151,10 @@ func (m *Return) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"returns": result,
+		"count":   count,
+		"offset":  config.Skip,
+		"limit":   config.Take,
 	})
 }
 
@@ -302,7 +303,9 @@ func (m *Return) Cancel(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"order": result,
+	})
 }
 
 // @oas:path [post] /admin/returns/{id}/receive
@@ -482,5 +485,7 @@ func (m *Return) Receive(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

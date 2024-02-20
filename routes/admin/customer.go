@@ -7,11 +7,12 @@ import (
 )
 
 type Customer struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewCustomer(r Registry) *Customer {
-	m := Customer{r: r}
+	m := Customer{r: r, name: "customer"}
 	return &m
 }
 
@@ -143,7 +144,9 @@ func (m *Customer) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/customers
@@ -281,10 +284,10 @@ func (m *Customer) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"customers": result,
+		"count":     count,
+		"offset":    config.Skip,
+		"limit":     config.Take,
 	})
 }
 
@@ -428,7 +431,9 @@ func (m *Customer) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/customers/{id}
@@ -570,5 +575,7 @@ func (m *Customer) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

@@ -156,22 +156,22 @@ import (
 type ClaimOrder struct {
 	core.Model
 
-	Type              ClaimStatus            `json:"type"`
-	PaymentStatus     ClaimPaymentStatus     `json:"payment_status" gorm:"default:null"`
-	FulfillmentStatus ClaimFulfillmentStatus `json:"fulfillment_status" gorm:"default:null"`
-	ClaimItems        []ClaimItem            `json:"claim_items" gorm:"foreignKey:id"`
-	AdditionalItems   []LineItem             `json:"additional_items" gorm:"foreignKey:id"`
-	OrderId           uuid.NullUUID          `json:"order_id"`
-	Order             *Order                 `json:"order" gorm:"foreignKey:id;references:order_id"`
-	ReturnOrder       *Return                `json:"return_order" gorm:"foreignKey:id"`
-	ShippingAddressId uuid.NullUUID          `json:"shipping_address_id" gorm:"default:null"`
-	ShippingAddress   *Address               `json:"shipping_address" gorm:"foreignKey:id;references:shipping_address_id"`
-	ShippingMethods   []ShippingMethod       `json:"shipping_methods" gorm:"foreignKey:id"`
-	Fulfillments      []Fulfillment          `json:"fulfillments" gorm:"foreignKey:id"`
-	RefundAmount      float64                `json:"refund_amount" gorm:"default:null"`
-	CanceledAt        *time.Time             `json:"canceled_at" gorm:"default:null"`
-	NoNotification    bool                   `json:"no_notification" gorm:"default:null"`
-	IdempotencyKey    string                 `json:"idempotency_key" gorm:"default:null"`
+	Type              ClaimStatus            `json:"type"  gorm:"column:type;default:'na'"`
+	PaymentStatus     ClaimPaymentStatus     `json:"payment_status"  gorm:"column:payment_status;default:'not_fulfilled'"`
+	FulfillmentStatus ClaimFulfillmentStatus `json:"fulfillment_status"  gorm:"column:fulfillment_status"`
+	ClaimItems        []ClaimItem            `json:"claim_items"  gorm:"column:claim_items;foreignKey:Id"`
+	AdditionalItems   []LineItem             `json:"additional_items"  gorm:"column:additional_items;foreignKey:Id"`
+	OrderId           uuid.NullUUID          `json:"order_id"  gorm:"column:order_id"`
+	Order             *Order                 `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	ReturnOrder       *Return                `json:"return_order"  gorm:"column:return_order;foreignKey:Id"`
+	ShippingAddressId uuid.NullUUID          `json:"shipping_address_id"  gorm:"column:shipping_address_id"`
+	ShippingAddress   *Address               `json:"shipping_address"  gorm:"column:shipping_address;foreignKey:ShippingAddressId"`
+	ShippingMethods   []ShippingMethod       `json:"shipping_methods"  gorm:"column:shipping_methods;foreignKey:Id"`
+	Fulfillments      []Fulfillment          `json:"fulfillments"  gorm:"column:fulfillments;foreignKey:Id"`
+	RefundAmount      float64                `json:"refund_amount"  gorm:"column:refund_amount"`
+	CanceledAt        *time.Time             `json:"canceled_at"  gorm:"column:canceled_at"`
+	NoNotification    bool                   `json:"no_notification"  gorm:"column:no_notification"`
+	IdempotencyKey    string                 `json:"idempotency_key"  gorm:"column:idempotency_key"`
 }
 
 // The status of the Price List

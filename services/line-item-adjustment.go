@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
@@ -38,7 +39,7 @@ func (s *LineItemAdjustmentService) Retrieve(id uuid.UUID, config *sql.Options) 
 			nil,
 		)
 	}
-	var res *models.LineItemAdjustment
+	var res *models.LineItemAdjustment = &models.LineItemAdjustment{}
 	query := sql.BuildQuery(models.LineItemAdjustment{Model: core.Model{Id: id}}, config)
 
 	if err := s.r.LineItemAdjustmentRepository().FindOne(s.ctx, res, query); err != nil {
@@ -83,7 +84,7 @@ func (s *LineItemAdjustmentService) List(selector types.FilterableLineItemAdjust
 }
 
 func (s *LineItemAdjustmentService) Delete(id uuid.UUID, selector *models.LineItemAdjustment, config *sql.Options) *utils.ApplictaionError {
-	var data *models.LineItemAdjustment
+	var data *models.LineItemAdjustment = &models.LineItemAdjustment{}
 	if id != uuid.Nil {
 		var err *utils.ApplictaionError
 		data, err = s.Retrieve(id, config)
@@ -131,7 +132,7 @@ func (s *LineItemAdjustmentService) GenerateAdjustments(calculationContextData t
 		return nil, nil
 	}
 
-	var discount *models.Discount
+	var discount *models.Discount = &models.Discount{}
 	for _, d := range calculationContextData.Discounts {
 		if d.Rule.Type != models.DiscountRuleFreeShipping {
 			discount = &d
@@ -139,7 +140,7 @@ func (s *LineItemAdjustmentService) GenerateAdjustments(calculationContextData t
 		}
 	}
 
-	if discount == nil {
+	if reflect.DeepEqual(discount, &models.Discount{}) {
 		return nil, nil
 	}
 

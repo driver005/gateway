@@ -35,7 +35,7 @@ func (s *ProductVariantService) SetContext(context context.Context) *ProductVari
 }
 
 func (s *ProductVariantService) Retrieve(id uuid.UUID, config *sql.Options) (*models.ProductVariant, *utils.ApplictaionError) {
-	var res *models.ProductVariant
+	var res *models.ProductVariant = &models.ProductVariant{}
 
 	query := sql.BuildQuery(models.ProductVariant{Model: core.Model{Id: id}}, config)
 
@@ -58,7 +58,7 @@ func (s *ProductVariantService) RetrieveBySKU(sku string, config *sql.Options) (
 	if priceIndex >= 0 && config.Relations != nil {
 		config.Relations = append(config.Relations[:priceIndex], config.Relations[priceIndex+1:]...)
 	}
-	var res *models.ProductVariant
+	var res *models.ProductVariant = &models.ProductVariant{}
 
 	query := sql.BuildQuery(models.ProductVariant{Sku: sku}, config)
 

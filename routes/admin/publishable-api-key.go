@@ -10,11 +10,12 @@ import (
 )
 
 type PublishableApiKey struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewPublishableApiKey(r Registry) *PublishableApiKey {
-	m := PublishableApiKey{r: r}
+	m := PublishableApiKey{r: r, name: "publishable_api_key"}
 	return &m
 }
 
@@ -156,7 +157,9 @@ func (m *PublishableApiKey) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/publishable-api-keys
@@ -293,10 +296,10 @@ func (m *PublishableApiKey) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"publishable_api_keys": result,
+		"count":                count,
+		"offset":               config.Skip,
+		"limit":                config.Take,
 	})
 }
 
@@ -429,7 +432,9 @@ func (m *PublishableApiKey) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/publishable-api-keys/{id}
@@ -572,7 +577,9 @@ func (m *PublishableApiKey) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/publishable-api-keys/{id}
@@ -840,7 +847,9 @@ func (m *PublishableApiKey) AddChannelsBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/publishable-api-keys/{id}/sales-channels/batch
@@ -1007,7 +1016,9 @@ func (m *PublishableApiKey) DeleteChannelsBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/publishable-api-keys/{id}/sales-channels
@@ -1144,7 +1155,9 @@ func (m *PublishableApiKey) ListChannels(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"sales_channels": result,
+	})
 }
 
 // @oas:path [post] /admin/publishable-api-keys/{id}/revoke
@@ -1278,6 +1291,8 @@ func (m *PublishableApiKey) Revoke(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 
 }

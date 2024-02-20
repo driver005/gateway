@@ -49,7 +49,7 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 		)
 	}
 
-	var existingReq *models.ShippingOptionRequirement
+	var existingReq *models.ShippingOptionRequirement = &models.ShippingOptionRequirement{}
 	if data.Id != uuid.Nil {
 		query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: data.Id}}, &sql.Options{})
 		err := s.r.ShippingOptionRequirementRepository().FindOne(s.ctx, existingReq, query)
@@ -57,7 +57,6 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
 				fmt.Sprintf("Shipping option requirement with id %s does not exist", data.Id),
-				"500",
 				nil,
 			)
 		}
@@ -81,7 +80,7 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 	if optionId == uuid.Nil {
 		return model, nil
 	}
-	if existingReq != nil {
+	if reflect.DeepEqual(existingReq, &models.ShippingOptionRequirement{}) {
 		model = existingReq
 		if !reflect.ValueOf(data.Type).IsZero() {
 			model.Type = data.Type
@@ -532,7 +531,7 @@ func (s *ShippingOptionService) AddRequirement(optionId uuid.UUID, requirement *
 }
 
 func (s *ShippingOptionService) RemoveRequirement(requirementId uuid.UUID) (*models.ShippingOptionRequirement, *utils.ApplictaionError) {
-	var requirement *models.ShippingOptionRequirement
+	var requirement *models.ShippingOptionRequirement = &models.ShippingOptionRequirement{}
 	query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: requirementId}}, &sql.Options{})
 	if err := s.r.ShippingOptionRequirementRepository().FindOne(s.ctx, requirement, query); err != nil {
 		return nil, err

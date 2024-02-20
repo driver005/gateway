@@ -33,3 +33,16 @@ func ParseUUIDs(str []string) (uuid.UUIDs, *ApplictaionError) {
 
 	return ids, nil
 }
+
+func ParseToUUID(input interface{}) (uuid.UUID, *ApplictaionError) {
+	str, ok := input.(string)
+	if ok {
+		return ParseUUID(str)
+	}
+
+	return uuid.Nil, NewApplictaionError(
+		INVALID_DATA,
+		"input needs to be string",
+		nil,
+	)
+}

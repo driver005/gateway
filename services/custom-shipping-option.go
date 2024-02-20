@@ -38,7 +38,7 @@ func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config *sql.Options
 			nil,
 		)
 	}
-	var res *models.CustomShippingOption
+	var res *models.CustomShippingOption = &models.CustomShippingOption{}
 	query := sql.BuildQuery(models.CustomShippingOption{Model: core.Model{Id: id}}, config)
 	if err := s.r.CustomShippingOptionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

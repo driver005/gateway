@@ -127,17 +127,11 @@ func (s *NewTotalsService) getLineItemTotals(item models.LineItem, taxRate *floa
 	}
 
 	if len(totals.TaxLines) > 0 {
-		taxTotal, err := s.r.TaxCalculationStrategy().Calculate([]models.LineItem{item}, totals.TaxLines, calculationContext)
-		if err != nil {
-			return nil, err
-		}
+		taxTotal := s.r.TaxCalculationStrategy().Calculate([]models.LineItem{item}, []interface{}{totals.TaxLines}, calculationContext)
 
 		noDiscountContext := calculationContext
 		noDiscountContext.AllocationMap = types.LineAllocationsMap{}
-		originalTaxTotal, err := s.r.TaxCalculationStrategy().Calculate([]models.LineItem{item}, totals.TaxLines, noDiscountContext)
-		if err != nil {
-			return nil, err
-		}
+		originalTaxTotal := s.r.TaxCalculationStrategy().Calculate([]models.LineItem{item}, []interface{}{totals.TaxLines}, noDiscountContext)
 
 		feature = true
 		if feature && item.IncludesTax {
@@ -388,12 +382,8 @@ func (s *NewTotalsService) getShippingMethodTotals(
 	feature := false
 
 	if len(totals.TaxLines) > 0 {
-		var err *utils.ApplictaionError
 		includesTax := feature && shippingMethod.IncludesTax
-		totals.OriginalTaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{}, totals.TaxLines, calculationContext)
-		if err != nil {
-			return totals, err
-		}
+		totals.OriginalTaxTotal = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{}, []interface{}{totals.TaxLines}, calculationContext)
 		totals.TaxTotal = totals.OriginalTaxTotal
 
 		if includesTax {

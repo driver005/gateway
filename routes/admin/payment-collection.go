@@ -8,11 +8,12 @@ import (
 )
 
 type PaymentCollection struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewPaymentCollection(r Registry) *PaymentCollection {
-	m := PaymentCollection{r: r}
+	m := PaymentCollection{r: r, name: "payment_collection"}
 	return &m
 }
 
@@ -150,7 +151,9 @@ func (m *PaymentCollection) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/payment-collections/{id}
@@ -297,7 +300,9 @@ func (m *PaymentCollection) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/payment-collections/{id}
@@ -528,5 +533,7 @@ func (m *PaymentCollection) MarkAuthorized(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

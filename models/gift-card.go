@@ -101,14 +101,14 @@ import (
 type GiftCard struct {
 	core.Model
 
-	Code       string        `json:"code"`
-	Value      float64       `json:"value"`
-	Balance    float64       `json:"balance"`
-	RegionId   uuid.NullUUID `json:"region_id"`
-	Region     *Region       `json:"region" gorm:"foreignKey:id;references:region_id"`
-	OrderId    uuid.NullUUID `json:"order_id" gorm:"default:null"`
-	Order      *Order        `json:"order" gorm:"foreignKey:id;references:order_id"`
-	IsDisabled bool          `json:"is_disabled" gorm:"default:null"`
-	TaxRate    float64       `json:"tax_rate"`
-	EndsAt     *time.Time    `json:"ends_at" gorm:"default:null"`
+	Code       string        `json:"code"  gorm:"column:code"`
+	Value      float64       `json:"value"  gorm:"column:value"`
+	Balance    float64       `json:"balance"  gorm:"column:balance"`
+	RegionId   uuid.NullUUID `json:"region_id"  gorm:"column:region_id"`
+	Region     *Region       `json:"region"  gorm:"column:region;foreignKey:RegionId"`
+	OrderId    uuid.NullUUID `json:"order_id"  gorm:"column:order_id"`
+	Order      *Order        `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	IsDisabled bool          `json:"is_disabled"  gorm:"column:is_disabled;default:false"`
+	TaxRate    float64       `json:"tax_rate"  gorm:"column:tax_rate"`
+	EndsAt     *time.Time    `json:"ends_at"  gorm:"column:ends_at"`
 }

@@ -167,32 +167,32 @@ import (
 type OrderEdit struct {
 	core.Model
 
-	Status              OrderEditStatus    `json:"status"`
-	OrderId             uuid.NullUUID      `json:"order_id"`
-	Order               *Order             `json:"order" gorm:"foreignKey:id;references:order_id"`
-	Changes             []OrderItemChange  `json:"changes" gorm:"foreignKey:id"`
-	InternalNote        string             `json:"internal_note" gorm:"default:null"`
-	CreatedBy           uuid.UUID          `json:"created_by"`
-	RequestedBy         uuid.UUID          `json:"requested_by" gorm:"default:null"`
-	RequestedAt         *time.Time         `json:"requested_at" gorm:"default:null"`
-	ConfirmedBy         uuid.UUID          `json:"confirmed_by" gorm:"default:null"`
-	ConfirmedAt         *time.Time         `json:"confirmed_at" gorm:"default:null"`
-	DeclinedBy          uuid.UUID          `json:"declined_by" gorm:"default:null"`
-	CanceledBy          uuid.UUID          `json:"canceled_by" gorm:"default:null"`
-	DeclinedAt          *time.Time         `json:"declined_at" gorm:"default:null"`
-	DeclinedReason      string             `json:"declined_reason" gorm:"default:null"`
-	CanceledAt          *time.Time         `json:"canceled_at" gorm:"default:null"`
-	ShippingTotal       float64            `json:"shipping_total" gorm:"default:null"`
-	Subtotal            float64            `json:"subtotal" gorm:"default:null"`
-	DiscountTotal       float64            `json:"discount_total" gorm:"default:null"`
-	TaxTotal            float64            `json:"tax_total" gorm:"default:null"`
-	Total               float64            `json:"total" gorm:"default:null"`
-	DifferenceDue       float64            `json:"difference_due" gorm:"default:null"`
-	Items               []LineItem         `json:"items" gorm:"foreignKey:id"`
-	PaymentCollectionId uuid.NullUUID      `json:"payment_collection_id"`
-	PaymentCollection   *PaymentCollection `json:"region,omitempty" gorm:"foreignKey:id;references:payment_collection_id"`
-	GiftCardTotal       float64            `json:"gift_card_total" gorm:"default:null"`
-	GiftCardTaxTotal    float64            `json:"gift_card_tax_total" gorm:"default:null"`
+	Status              OrderEditStatus    `json:"status"  gorm:"column:status"`
+	OrderId             uuid.NullUUID      `json:"order_id"  gorm:"column:order_id"`
+	Order               *Order             `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	Changes             []OrderItemChange  `json:"changes"  gorm:"column:changes;foreignKey:Id"`
+	InternalNote        string             `json:"internal_note"  gorm:"column:internal_note"`
+	CreatedBy           uuid.UUID          `json:"created_by"  gorm:"column:created_by"`
+	RequestedBy         uuid.UUID          `json:"requested_by"  gorm:"column:requested_by"`
+	RequestedAt         *time.Time         `json:"requested_at"  gorm:"column:requested_at"`
+	ConfirmedBy         uuid.UUID          `json:"confirmed_by"  gorm:"column:confirmed_by"`
+	ConfirmedAt         *time.Time         `json:"confirmed_at"  gorm:"column:confirmed_at"`
+	DeclinedBy          uuid.UUID          `json:"declined_by"  gorm:"column:declined_by"`
+	CanceledBy          uuid.UUID          `json:"canceled_by"  gorm:"column:canceled_by"`
+	DeclinedAt          *time.Time         `json:"declined_at"  gorm:"column:declined_at"`
+	DeclinedReason      string             `json:"declined_reason"  gorm:"column:declined_reason"`
+	CanceledAt          *time.Time         `json:"canceled_at"  gorm:"column:canceled_at"`
+	ShippingTotal       float64            `json:"shipping_total"  gorm:"column:shipping_total"`
+	Subtotal            float64            `json:"subtotal"  gorm:"column:subtotal"`
+	DiscountTotal       float64            `json:"discount_total"  gorm:"column:discount_total"`
+	TaxTotal            float64            `json:"tax_total"  gorm:"column:tax_total"`
+	Total               float64            `json:"total"  gorm:"column:total"`
+	DifferenceDue       float64            `json:"difference_due"  gorm:"column:difference_due"`
+	Items               []LineItem         `json:"items"  gorm:"column:items;foreignKey:Id"`
+	PaymentCollectionId uuid.NullUUID      `json:"payment_collection_id"  gorm:"column:payment_collection_id"`
+	PaymentCollection   *PaymentCollection `json:"region"  gorm:"column:region;foreignKey:PaymentCollectionId"`
+	GiftCardTotal       float64            `json:"gift_card_total"  gorm:"column:gift_card_total"`
+	GiftCardTaxTotal    float64            `json:"gift_card_tax_total"  gorm:"column:gift_card_tax_total"`
 }
 
 type OrderEditStatus string

@@ -98,16 +98,16 @@ import (
 type PaymentSession struct {
 	core.Model
 
-	CartId              uuid.NullUUID        `json:"cart_id"`
-	Cart                *Cart                `json:"cart" gorm:"foreignKey:id;references:cart_id"`
-	ProviderId          uuid.NullUUID        `json:"provider_id"`
-	IsSelected          bool                 `json:"is_selected" gorm:"default:null"`
-	IsInitiated         bool                 `json:"is_initiated" gorm:"default:null"`
-	Status              PaymentSessionStatus `json:"status"`
-	Data                core.JSONB           `json:"data" gorm:"default:null"`
-	Amount              float64              `json:"amount" gorm:"default:null"`
-	PaymentAuthorizedAt *time.Time           `json:"payment_authorized_at" gorm:"default:null"`
-	IdempotencyKey      string               `json:"idempotency_key" gorm:"default:null"`
+	CartId              uuid.NullUUID        `json:"cart_id"  gorm:"column:cart_id"`
+	Cart                *Cart                `json:"cart"  gorm:"column:cart;foreignKey:CartId"`
+	ProviderId          uuid.NullUUID        `json:"provider_id"  gorm:"column:provider_id"`
+	IsSelected          bool                 `json:"is_selected"  gorm:"column:is_selected"`
+	IsInitiated         bool                 `json:"is_initiated"  gorm:"column:is_initiated;default:false"`
+	Status              PaymentSessionStatus `json:"status"  gorm:"column:status"`
+	Data                core.JSONB           `json:"data"  gorm:"column:data"`
+	Amount              float64              `json:"amount"  gorm:"column:amount"`
+	PaymentAuthorizedAt *time.Time           `json:"payment_authorized_at"  gorm:"column:payment_authorized_at"`
+	IdempotencyKey      string               `json:"idempotency_key"  gorm:"column:idempotency_key"`
 }
 
 type PaymentSessionStatus string

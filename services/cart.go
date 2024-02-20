@@ -69,7 +69,7 @@ func (s *CartService) Retrieve(id uuid.UUID, config *sql.Options, totalsConfig T
 			nil,
 		)
 	}
-	var res *models.Cart
+	var res *models.Cart = &models.Cart{}
 
 	featurev2 := true
 	if featurev2 {
@@ -96,7 +96,7 @@ func (s *CartService) Retrieve(id uuid.UUID, config *sql.Options, totalsConfig T
 }
 
 func (s *CartService) RetrieveLegacy(id uuid.UUID, config *sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
-	var res *models.Cart
+	var res *models.Cart = &models.Cart{}
 	query := sql.BuildQuery(models.Cart{Model: core.Model{Id: id}}, config)
 
 	selects, relations, totalsToSelect := s.transformQueryForTotals(config)
@@ -132,7 +132,7 @@ func (s *CartService) RetrieveWithTotals(id uuid.UUID, config *sql.Options, tota
 }
 
 func (s *CartService) Create(data *types.CartCreateProps) (*models.Cart, *utils.ApplictaionError) {
-	var cart *models.Cart
+	var cart *models.Cart = &models.Cart{}
 
 	if data.Context != nil {
 		cart.Context = utils.MergeMaps(cart.Context, data.Context)
@@ -299,7 +299,7 @@ func (s *CartService) Create(data *types.CartCreateProps) (*models.Cart, *utils.
 }
 
 func (s *CartService) getValidatedSalesChannel(salesChannelId uuid.UUID) (*models.SalesChannel, *utils.ApplictaionError) {
-	var salesChannel *models.SalesChannel
+	var salesChannel *models.SalesChannel = &models.SalesChannel{}
 	featurev2 := true
 	if salesChannelId != uuid.Nil {
 		if featurev2 {
@@ -477,7 +477,7 @@ func (s *CartService) AddLineItem(
 		}
 	}
 
-	var currentItem *models.LineItem
+	var currentItem *models.LineItem = &models.LineItem{}
 
 	if lineItem.ShouldMerge {
 		existingItems, err := s.r.LineItemService().SetContext(s.ctx).List(models.LineItem{
@@ -955,7 +955,7 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *types.CartUp
 		cart = c
 	}
 
-	// var originalCartCustomer *models.Customer
+	// var originalCartCustomer *models.Customer = &models.Customer{}
 	// if cart.Customer != nil {
 	// 	originalCartCustomer = cart.Customer
 	// }
@@ -1968,7 +1968,7 @@ func (s *CartService) AddShippingMethod(id uuid.UUID, cart *models.Cart, optionI
 }
 
 func (s *CartService) findCustomShippingOption(cartCustomShippingOptions []models.CustomShippingOption, optionId uuid.UUID) (*models.CustomShippingOption, *utils.ApplictaionError) {
-	var customOption *models.CustomShippingOption
+	var customOption *models.CustomShippingOption = &models.CustomShippingOption{}
 	for _, cso := range cartCustomShippingOptions {
 		if cso.ShippingOptionId.UUID == optionId {
 			customOption = &cso

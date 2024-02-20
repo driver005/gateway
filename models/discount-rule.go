@@ -107,9 +107,9 @@ const (
 type DiscountRule struct {
 	core.Model
 
-	Type        DiscountRuleType    `json:"type"`
-	Description string              `json:"description" gorm:"default:null"`
-	Value       float64             `json:"value"`
-	Allocation  AllocationType      `json:"allocation" gorm:"default:null"`
-	Conditions  []DiscountCondition `json:"conditions" gorm:"foreignKey:id"`
+	Type        DiscountRuleType    `json:"type"  gorm:"column:type"`
+	Description string              `json:"description"  gorm:"column:description"`
+	Value       float64             `json:"value"  gorm:"column:value"`
+	Allocation  AllocationType      `json:"allocation"  gorm:"column:allocation"`
+	Conditions  []DiscountCondition `json:"conditions"  gorm:"column:conditions;foreignKey:Id"`
 }

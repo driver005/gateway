@@ -101,7 +101,7 @@ func (s *OrderService) ListAndCount(selector *types.FilterableOrder, config *sql
 }
 
 func (s *OrderService) Retrieve(selector models.Order, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
-	var res *models.Order
+	var res *models.Order = &models.Order{}
 	query := sql.BuildQuery(selector, config)
 
 	if err := s.r.OrderRepository().FindOne(s.ctx, res, query); err != nil {
@@ -111,7 +111,7 @@ func (s *OrderService) Retrieve(selector models.Order, config *sql.Options) (*mo
 }
 
 func (s *OrderService) RetrieveWithTotals(selector models.Order, config *sql.Options, context types.TotalsContext) (*models.Order, *utils.ApplictaionError) {
-	var res *models.Order
+	var res *models.Order = &models.Order{}
 	query := sql.BuildQuery(selector, config)
 
 	selects, relations, totalsToSelect := s.transformQueryForTotals(config)
@@ -219,7 +219,7 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 		return nil, err
 	}
 
-	var cart *models.Cart
+	var cart *models.Cart = &models.Cart{}
 	if id != uuid.Nil {
 		cart, err = s.r.CartService().SetContext(s.ctx).RetrieveWithTotals(id, &sql.Options{Relations: []string{"region", "payment", "items"}}, TotalsConfig{})
 		if err != nil {

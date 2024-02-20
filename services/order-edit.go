@@ -43,7 +43,7 @@ func (s *OrderEditService) Retrieve(id uuid.UUID, config *sql.Options) (*models.
 			nil,
 		)
 	}
-	var res *models.OrderEdit
+	var res *models.OrderEdit = &models.OrderEdit{}
 	query := sql.BuildQuery(models.OrderEdit{Model: core.Model{Id: id}}, config)
 	if err := s.r.OrderEditRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -230,7 +230,7 @@ func (s *OrderEditService) UpdateLineItem(id uuid.UUID, itemId uuid.UUID, quanti
 		)
 	}
 
-	var change *models.OrderItemChange
+	var change *models.OrderItemChange = &models.OrderItemChange{}
 	changes, err := s.r.OrderItemChangeService().List(models.OrderItemChange{LineItemId: uuid.NullUUID{UUID: itemId}}, &sql.Options{Selects: []string{"line_item_id", "original_line_item_id"}})
 	if err != nil {
 		return err
@@ -623,7 +623,7 @@ func (s *OrderEditService) RetrieveActive(orderId uuid.UUID, config *sql.Options
 			nil,
 		)
 	}
-	var res *models.OrderEdit
+	var res *models.OrderEdit = &models.OrderEdit{}
 	query := sql.BuildQuery(models.OrderEdit{
 		OrderId:     uuid.NullUUID{UUID: orderId},
 		ConfirmedAt: &time.Time{},

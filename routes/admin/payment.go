@@ -7,11 +7,12 @@ import (
 )
 
 type Payment struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewPayment(r Registry) *Payment {
-	m := Payment{r: r}
+	m := Payment{r: r, name: "payment"}
 	return &m
 }
 
@@ -144,7 +145,9 @@ func (m *Payment) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/payments/{id}/capture
@@ -270,7 +273,9 @@ func (m *Payment) Capture(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/payments/{id}/refund
@@ -422,5 +427,7 @@ func (m *Payment) Refund(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

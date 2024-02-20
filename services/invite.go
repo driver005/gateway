@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const DEFAULT_VALID_DURATION = 1000 * 60 * 60 * 24 * 7
+const DEFAULT_VALID_DURATION = time.Hour * 24 * 7
 
 type InviteService struct {
 	ctx context.Context
@@ -43,7 +43,7 @@ func (s *InviteService) List(selector *types.FilterableInvite, config *sql.Optio
 	return res, nil
 }
 
-func (s *InviteService) Create(data *types.CreateInviteInput, validDuration int) *utils.ApplictaionError {
+func (s *InviteService) Create(data *types.CreateInviteInput, validDuration time.Duration) *utils.ApplictaionError {
 	if validDuration == -1 {
 		validDuration = DEFAULT_VALID_DURATION
 	}
@@ -61,13 +61,12 @@ func (s *InviteService) Create(data *types.CreateInviteInput, validDuration int)
 	invite.UserEmail = data.Email
 
 	if err := s.r.InviteRepository().FindOne(s.ctx, invite, sql.Query{}); err != nil {
-		data := &models.Invite{
+		invite = &models.Invite{
 			Role:      data.Role,
-			Token:     "",
 			UserEmail: data.Email,
 		}
 
-		if err := s.r.InviteRepository().Save(s.ctx, data); err != nil {
+		if err := s.r.InviteRepository().Save(s.ctx, invite); err != nil {
 			return err
 		}
 	}
@@ -105,8 +104,11 @@ func (s *InviteService) Create(data *types.CreateInviteInput, validDuration int)
 }
 
 func (s *InviteService) Delete(inviteId uuid.UUID) *utils.ApplictaionError {
-	var invite *models.Invite
-	if err := s.r.InviteRepository().FindOne(s.ctx, invite, sql.Query{}); err == nil {
+	var invite *models.Invite = &models.Invite{}
+
+	invite.Id = inviteId
+
+	if err := s.r.InviteRepository().FindOne(s.ctx, invite, sql.Query{}); err != nil {
 		return err
 	}
 
@@ -117,8 +119,8 @@ func (s *InviteService) Delete(inviteId uuid.UUID) *utils.ApplictaionError {
 	return nil
 }
 
-func (s *InviteService) Accept(token string, user *models.User) (*models.User, *utils.ApplictaionError) {
-	var invite *models.Invite
+func (s *InviteService) Accept(token string, user *types.AcceptCustomer) (*models.User, *utils.ApplictaionError) {
+	var invite *models.Invite = &models.Invite{}
 	_, claim, er := s.r.TockenService().SetContext(s.ctx).VerifyToken(token)
 	if er != nil {
 		return nil, utils.NewApplictaionError(
@@ -128,11 +130,17 @@ func (s *InviteService) Accept(token string, user *models.User) (*models.User, *
 		)
 	}
 
-	invite.Id = claim["invite_id"].(uuid.UUID)
+	id, err := utils.ParseToUUID(claim["invite_id"])
+	if err != nil {
+		return nil, err
+	}
+
+	invite.Id = id
 
 	if err := s.r.InviteRepository().FindOne(s.ctx, invite, sql.Query{}); err != nil {
 		return nil, err
 	}
+
 	if invite == nil || invite.UserEmail != claim["user_email"].(string) || time.Now().After(*invite.ExpiresAt) {
 		return nil, utils.NewApplictaionError(
 			utils.CONFLICT,
@@ -154,12 +162,13 @@ func (s *InviteService) Accept(token string, user *models.User) (*models.User, *
 		Role:      invite.Role,
 		FirstName: user.FirstName,
 		LastName:  user.FirstName,
+		Password:  user.Password,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.Delete(invite.Id); err == nil {
+	if err := s.Delete(invite.Id); err != nil {
 		return nil, err
 	}
 
@@ -167,7 +176,7 @@ func (s *InviteService) Accept(token string, user *models.User) (*models.User, *
 }
 
 func (s *InviteService) Resend(id uuid.UUID) *utils.ApplictaionError {
-	var invite *models.Invite
+	var invite *models.Invite = &models.Invite{}
 
 	invite.Id = id
 

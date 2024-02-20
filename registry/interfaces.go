@@ -2,17 +2,18 @@ package registry
 
 import (
 	"github.com/driver005/gateway/interfaces"
+	"github.com/driver005/gateway/strategies"
 )
 
 func (m *Base) PriceSelectionStrategy() interfaces.IPriceSelectionStrategy {
 	if m.priceSelectionStrategy == nil {
-		m.priceSelectionStrategy = nil
+		m.priceSelectionStrategy = strategies.NewPriceSelectionStrategy(m)
 	}
 	return m.priceSelectionStrategy
 }
 func (m *Base) TaxCalculationStrategy() interfaces.ITaxCalculationStrategy {
 	if m.taxCalculationStrategy == nil {
-		m.taxCalculationStrategy = nil
+		m.taxCalculationStrategy = strategies.NewTaxCalculationStrategy(m)
 	}
 	return m.taxCalculationStrategy
 }
@@ -58,7 +59,7 @@ func (m *Base) BatchJobStrategy() interfaces.IBatchJobStrategy {
 
 func (m *Base) CartCompletionStrategy() interfaces.ICartCompletionStrategy {
 	if m.cartCompletionStrategy == nil {
-		m.cartCompletionStrategy = nil
+		m.cartCompletionStrategy = strategies.NewCartCompletionStrategy(m)
 	}
 	return m.cartCompletionStrategy
 }

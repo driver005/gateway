@@ -17,18 +17,18 @@ import (
 var enumRegex = regexp.MustCompile(`enum=([\w ]+)`)
 var oneOfRegex = regexp.MustCompile(`oneof=([\w ]+)`) // validator.v9 enum tag is oneof
 
-func parseYamlFile(data *OpenAPI, path string) (*OpenAPI, error) {
+func parseYamlFile(data *OpenAPI, path string) error {
 	yamlFile, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = yaml.Unmarshal(yamlFile, data)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return data, nil
+	return nil
 }
 
 func parseFile(path string) (*ast.File, error) {

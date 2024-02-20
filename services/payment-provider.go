@@ -44,7 +44,7 @@ func (s *PaymentProviderService) RegisterInstalledProviders(providers uuid.UUIDs
 	}
 
 	for _, p := range providers {
-		var model *models.PaymentProvider
+		var model *models.PaymentProvider = &models.PaymentProvider{}
 		model.IsInstalled = true
 		model.Id = p
 
@@ -535,6 +535,5 @@ func (s *PaymentProviderService) throwFromPaymentProcessorError(errObj *interfac
 		utils.INVALID_DATA,
 		fmt.Sprintf("%s %s", errObj.Error, errObj.Detail),
 		errObj.Code,
-		nil,
 	)
 }

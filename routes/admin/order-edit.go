@@ -11,11 +11,12 @@ import (
 )
 
 type OrderEdit struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewOrderEdit(r Registry) *OrderEdit {
-	m := OrderEdit{r: r}
+	m := OrderEdit{r: r, name: "order_edit"}
 	return &m
 }
 
@@ -158,7 +159,9 @@ func (m *OrderEdit) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/order-edits
@@ -291,10 +294,10 @@ func (m *OrderEdit) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"order_edits": result,
+		"count":       count,
+		"offset":      config.Skip,
+		"limit":       config.Take,
 	})
 }
 
@@ -424,7 +427,9 @@ func (m *OrderEdit) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/order-edits/{id}
@@ -566,7 +571,9 @@ func (m *OrderEdit) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/order-edits/{id}
@@ -817,7 +824,9 @@ func (m *OrderEdit) AddLineItem(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/order-edits/{id}/cancel
@@ -946,7 +955,9 @@ func (m *OrderEdit) Cancel(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/order-edits/{id}/confirm
@@ -1073,7 +1084,9 @@ func (m *OrderEdit) Confirm(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/order-edits/{id}/request
@@ -1240,7 +1253,9 @@ func (m *OrderEdit) RequestConfirmation(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/order-edits/{id}/items/{item_id}
@@ -1388,7 +1403,9 @@ func (m *OrderEdit) DeleteLineItem(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/order-edits/{id}/changes/{change_id}
@@ -1654,5 +1671,7 @@ func (m *OrderEdit) UpdateLineItem(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

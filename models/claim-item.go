@@ -109,17 +109,17 @@ import (
 type ClaimItem struct {
 	core.Model
 
-	Images       []ClaimImage    `json:"images" gorm:"foreignKey:id"`
-	ClaimOrderId uuid.NullUUID   `json:"claim_order_id"`
-	ClaimOrder   *ClaimOrder     `json:"claim_order" gorm:"foreignKey:id;references:claim_order_id"`
-	ItemId       uuid.NullUUID   `json:"item_id"`
-	Item         *LineItem       `json:"item" gorm:"foreignKey:id;references:item_id"`
-	VariantId    uuid.NullUUID   `json:"variant_id"`
-	Variant      *ProductVariant `json:"variant" gorm:"foreignKey:id;references:variant_id"`
-	Reason       ClaimReasonType `json:"reason"`
-	Note         string          `json:"note" gorm:"default:null"`
-	Quantity     int             `json:"quantity"`
-	Tags         []ClaimTag      `json:"tags" gorm:"foreignKey:id"`
+	Images       []ClaimImage    `json:"images"  gorm:"column:images;foreignKey:Id"`
+	ClaimOrderId uuid.NullUUID   `json:"claim_order_id"  gorm:"column:claim_order_id"`
+	ClaimOrder   *ClaimOrder     `json:"claim_order"  gorm:"column:claim_order;foreignKey:ClaimOrderId"`
+	ItemId       uuid.NullUUID   `json:"item_id"  gorm:"column:item_id"`
+	Item         *LineItem       `json:"item"  gorm:"column:item;foreignKey:ItemId"`
+	VariantId    uuid.NullUUID   `json:"variant_id"  gorm:"column:variant_id"`
+	Variant      *ProductVariant `json:"variant"  gorm:"column:variant;foreignKey:VariantId"`
+	Reason       ClaimReasonType `json:"reason"  gorm:"column:reason"`
+	Note         string          `json:"note"  gorm:"column:note"`
+	Quantity     int             `json:"quantity"  gorm:"column:quantity"`
+	Tags         []ClaimTag      `json:"tags"  gorm:"column:tags;many2many:claim_item_tags"`
 }
 
 type ClaimReasonType string

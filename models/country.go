@@ -67,11 +67,11 @@ import (
 type Country struct {
 	core.Model
 
-	Iso2        string        `json:"iso_2"`
-	Iso3        string        `json:"iso_3"`
-	NumCode     string        `json:"num_code"`
-	Name        string        `json:"name"`
-	DisplayName string        `json:"display_name"`
-	RegionId    uuid.NullUUID `json:"region_id" gorm:"default:null"`
-	Region      Region        `json:"region" gorm:"default:null"`
+	Iso2        string        `json:"iso_2"  gorm:"column:iso_2;uniqueIndex"`
+	Iso3        string        `json:"iso_3"  gorm:"column:iso_3"`
+	NumCode     string        `json:"num_code"  gorm:"column:num_code"`
+	Name        string        `json:"name"  gorm:"column:name"`
+	DisplayName string        `json:"display_name"  gorm:"column:display_name"`
+	RegionId    uuid.NullUUID `json:"region_id"  gorm:"column:region_id"`
+	Region      Region        `json:"region"  gorm:"column:region;foreignKey:RegionId"`
 }

@@ -103,7 +103,7 @@ func (s *CustomerService) Count() (*int64, *utils.ApplictaionError) {
 }
 
 func (s *CustomerService) Retrieve(selector models.Customer, config *sql.Options) (*models.Customer, *utils.ApplictaionError) {
-	var res *models.Customer
+	var res *models.Customer = &models.Customer{}
 	query := sql.BuildQuery[models.Customer](selector, config)
 
 	if err := s.r.CustomerRepository().FindOne(s.ctx, res, query); err != nil {
@@ -120,7 +120,7 @@ func (s *CustomerService) RetrieveByEmail(email string, config *sql.Options) (*m
 			nil,
 		)
 	}
-	var res *models.Customer
+	var res *models.Customer = &models.Customer{}
 
 	query := sql.BuildQuery[models.Customer](models.Customer{Email: strings.ToLower(email)}, config)
 
@@ -201,7 +201,7 @@ func (s *CustomerService) Create(data *types.CreateCustomerInput) (*models.Custo
 		)
 	}
 
-	var model *models.Customer
+	var model *models.Customer = &models.Customer{}
 
 	model.Email = strings.ToLower(data.Email)
 

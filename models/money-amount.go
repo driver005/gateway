@@ -100,15 +100,16 @@ import (
 type MoneyAmount struct {
 	core.Model
 
-	Amount       float64         `json:"amount"`
-	Currency     *Currency       `json:"currency" gorm:"foreignKey:code;references:currency_code"`
-	CurrencyCode string          `json:"currency_code"`
-	MaxQuantity  int             `json:"max_quantity" gorm:"default:null"`
-	MinQuantity  int             `json:"min_quantity" gorm:"default:null"`
-	PriceList    *PriceList      `json:"price_list" gorm:"foreignKey:id;references:price_list_id"`
-	PriceListId  uuid.NullUUID   `json:"price_list_id" gorm:"default:null"`
-	Region       *Region         `json:"region" gorm:"foreignKey:id;references:region_id"`
-	RegionId     uuid.NullUUID   `json:"region_id" gorm:"default:null"`
-	Variant      *ProductVariant `json:"variant" gorm:"foreignKey:id;references:variant_id"`
-	VariantId    uuid.NullUUID   `json:"variant_id" gorm:"default:null"`
+	Amount       float64          `json:"amount"  gorm:"column:amount"`
+	Currency     *Currency        `json:"currency"  gorm:"column:currency;foreignKey:CurrencyCode;foreignKey:Code"`
+	CurrencyCode string           `json:"currency_code"  gorm:"column:currency_code"`
+	MaxQuantity  int              `json:"max_quantity"  gorm:"column:max_quantity"`
+	MinQuantity  int              `json:"min_quantity"  gorm:"column:min_quantity"`
+	PriceList    *PriceList       `json:"price_list"  gorm:"column:price_list;foreignKey:PriceListId"`
+	PriceListId  uuid.NullUUID    `json:"price_list_id"  gorm:"column:price_list_id"`
+	Region       *Region          `json:"region"  gorm:"column:region;foreignKey:RegionId"`
+	RegionId     uuid.NullUUID    `json:"region_id"  gorm:"column:region_id"`
+	Variant      *ProductVariant  `json:"variant"  gorm:"column:variant;foreignKey:VariantId"`
+	VariantId    uuid.NullUUID    `json:"variant_id"  gorm:"column:variant_id"`
+	Variants     []ProductVariant `json:"variants"  gorm:"column:variants;many2many:product_variant_money_amount"`
 }

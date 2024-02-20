@@ -67,8 +67,8 @@ import (
 type ProductOption struct {
 	core.Model
 
-	Product   *Product             `json:"product" gorm:"foreignKey:id;references:product_id"`
-	ProductId uuid.NullUUID        `json:"product_id"`
-	Title     string               `json:"title"`
-	Values    []ProductOptionValue `json:"values" gorm:"foreignKey:id"`
+	Product   *Product             `json:"product"  gorm:"column:product;foreignKey:ProductId"`
+	ProductId uuid.NullUUID        `json:"product_id"  gorm:"column:product_id"`
+	Title     string               `json:"title"  gorm:"column:title"`
+	Values    []ProductOptionValue `json:"values"  gorm:"column:values;foreignKey:Id"`
 }

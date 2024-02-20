@@ -51,5 +51,5 @@ iption: An optional key-value map with additional details
 type Image struct {
 	core.Model
 
-	Url string `json:"url"`
+	Url string `json:"url"  gorm:"column:url"`
 }

@@ -78,7 +78,7 @@ type FilterableBatchJob struct {
 
 	Status         []models.BatchJobStatus `json:"status,omitempty" validate:"omitempty"`
 	Type           []string                `json:"type,omitempty" validate:"omitempty"`
-	CreatedBy      uuid.UUIDs              `json:"created_at,omitempty" validate:"omitempty"`
+	CreatedBy      uuid.UUIDs              `json:"created_by,omitempty" validate:"omitempty"`
 	ConfirmedAt    *core.TimeModel         `json:"confirmed_at,omitempty" validate:"omitempty"`
 	PreProcessedAt *core.TimeModel         `json:"pre_processed_at,omitempty" validate:"omitempty"`
 	CompletedAt    *core.TimeModel         `json:"completed_at,omitempty" validate:"omitempty"`

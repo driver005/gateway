@@ -54,7 +54,7 @@ func (s *NotificationService) RegisterInstalledProviders(providers uuid.UUIDs) *
 	}
 
 	for _, p := range providers {
-		var model *models.NotificationProvider
+		var model *models.NotificationProvider = &models.NotificationProvider{}
 		model.IsInstalled = true
 		model.Id = p
 
@@ -93,7 +93,7 @@ func (s *NotificationService) ListAndCount(selector *types.FilterableNotificatio
 }
 
 func (s *NotificationService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Notification, *utils.ApplictaionError) {
-	var res *models.Notification
+	var res *models.Notification = &models.Notification{}
 	query := sql.BuildQuery(&models.Notification{Model: core.Model{Id: id}}, config)
 	if err := s.r.NotificationRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

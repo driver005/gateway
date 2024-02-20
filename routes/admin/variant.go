@@ -41,11 +41,12 @@ type AdminGetVariantsParams struct {
 }
 
 type Variant struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewVariant(r Registry) *Variant {
-	m := Variant{r: r}
+	m := Variant{r: r, name: "variant"}
 	return &m
 }
 
@@ -179,12 +180,14 @@ func (m *Variant) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	variant, err := m.r.PricingService().SetAdminVariantPricing([]models.ProductVariant{*rawVariant}, &interfaces.PricingContext{})
+	result, err := m.r.PricingService().SetAdminVariantPricing([]models.ProductVariant{*rawVariant}, &interfaces.PricingContext{})
 	if err != nil {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(variant)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/variants
@@ -469,7 +472,7 @@ func (m *Variant) List(context fiber.Ctx) error {
 		variants = v
 	}
 
-	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
 		"variants": variants,
 		"count":    count,
 		"offset":   config.Skip,
@@ -657,7 +660,7 @@ func (m *Variant) GetInventory(context fiber.Ctx) error {
 		}
 	}
 
-	return context.Status(fiber.StatusOK).JSON(map[string]interface{}{
-		"variant": responseVariant,
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): responseVariant,
 	})
 }

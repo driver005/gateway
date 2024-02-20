@@ -40,7 +40,7 @@ func (s *ProductTypeService) Retrieve(id uuid.UUID, config *sql.Options) (*model
 		)
 	}
 
-	var res *models.ProductType
+	var res *models.ProductType = &models.ProductType{}
 
 	query := sql.BuildQuery(models.ProductType{Model: core.Model{Id: id}}, config)
 

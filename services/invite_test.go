@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
@@ -83,7 +84,7 @@ func TestInviteService_List(t *testing.T) {
 func TestInviteService_Create(t *testing.T) {
 	type args struct {
 		data          *types.CreateInviteInput
-		validDuration int
+		validDuration time.Duration
 	}
 	tests := []struct {
 		name string
@@ -126,13 +127,13 @@ func TestInviteService_Delete(t *testing.T) {
 func TestInviteService_Accept(t *testing.T) {
 	type args struct {
 		token string
-		user  *models.User
+		user  *types.AcceptCustomer
 	}
 	tests := []struct {
 		name  string
 		s     *InviteService
 		args  args
-		want  *models.User
+		want  *types.AcceptCustomer
 		want1 *utils.ApplictaionError
 	}{
 		// TODO: Add test cases.

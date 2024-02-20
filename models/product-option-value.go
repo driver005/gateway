@@ -71,9 +71,9 @@ import (
 type ProductOptionValue struct {
 	core.Model
 
-	Option    *ProductOption  `json:"option" gorm:"foreignKey:id;references:option_id"`
-	OptionId  uuid.NullUUID   `json:"option_id"`
-	Value     string          `json:"value"`
-	Variant   *ProductVariant `json:"variant" gorm:"foreignKey:id;references:variant_id"`
-	VariantId uuid.NullUUID   `json:"variant_id"`
+	Option    *ProductOption  `json:"option"  gorm:"column:option;foreignKey:OptionId"`
+	OptionId  uuid.NullUUID   `json:"option_id"  gorm:"column:option_id"`
+	Value     string          `json:"value"  gorm:"column:value"`
+	Variant   *ProductVariant `json:"variant"  gorm:"column:variant;foreignKey:VariantId"`
+	VariantId uuid.NullUUID   `json:"variant_id"  gorm:"column:variant_id"`
 }

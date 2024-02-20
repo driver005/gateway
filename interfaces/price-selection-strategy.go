@@ -54,5 +54,5 @@ type ProductPricing struct {
 type IPriceSelectionStrategy interface {
 	CalculateVariantPrice(data []Pricing, context *PricingContext) (map[uuid.UUID]PriceSelectionResult, *utils.ApplictaionError)
 
-	OnVariantsPricesUpdate(variantIds uuid.UUIDs) *utils.ApplictaionError
+	OnVariantsPricesUpdate(variantIds uuid.UUIDs) error
 }

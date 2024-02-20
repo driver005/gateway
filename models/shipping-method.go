@@ -119,25 +119,25 @@ import (
 type ShippingMethod struct {
 	core.Model
 
-	ShippingOptionId uuid.NullUUID           `json:"shipping_option_id"`
-	ShippingOption   *ShippingOption         `json:"shipping_option" gorm:"foreignKey:id;references:shipping_option_id"`
-	OrderId          uuid.NullUUID           `json:"order_id" gorm:"default:null"`
-	Order            *Order                  `json:"order" gorm:"foreignKey:id;references:order_id"`
-	ReturnId         uuid.NullUUID           `json:"return_id" gorm:"default:null"`
-	ReturnOrder      *Return                 `json:"return_order" gorm:"foreignKey:id;references:return_id"`
-	SwapId           uuid.NullUUID           `json:"swap_id" gorm:"default:null"`
-	Swap             *Swap                   `json:"swap" gorm:"foreignKey:id;references:swap_id"`
-	CartId           uuid.NullUUID           `json:"cart_id" gorm:"default:null"`
-	Cart             *Cart                   `json:"cart" gorm:"foreignKey:id;references:cart_id"`
-	ClaimOrderId     uuid.NullUUID           `json:"claim_order_id" gorm:"default:null"`
-	ClaimOrder       *ClaimOrder             `json:"claim_order" gorm:"foreignKey:id;references:claim_order_id"`
-	TaxLines         []ShippingMethodTaxLine `json:"tax_lines" gorm:"foreignKey:id"`
-	Price            float64                 `json:"price"`
-	Subtotal         float64                 `json:"subtotal" gorm:"default:null"`
-	TaxTotal         float64                 `json:"tax_total" gorm:"default:null"`
-	Total            float64                 `json:"total" gorm:"default:null"`
-	OriginalTotal    float64                 `json:"original_total" gorm:"default:null"`
-	OriginalTaxTotal float64                 `json:"original_tax_total" gorm:"default:null"`
-	Data             core.JSONB              `json:"data" gorm:"default:null"`
-	IncludesTax      bool                    `json:"includes_tax" gorm:"default:null"`
+	ShippingOptionId uuid.NullUUID           `json:"shipping_option_id"  gorm:"column:shipping_option_id"`
+	ShippingOption   *ShippingOption         `json:"shipping_option"  gorm:"column:shipping_option;foreignKey:ShippingOptionId"`
+	OrderId          uuid.NullUUID           `json:"order_id"  gorm:"column:order_id"`
+	Order            *Order                  `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	ReturnId         uuid.NullUUID           `json:"return_id"  gorm:"column:return_id"`
+	ReturnOrder      *Return                 `json:"return_order"  gorm:"column:return_order;foreignKey:ReturnId"`
+	SwapId           uuid.NullUUID           `json:"swap_id"  gorm:"column:swap_id"`
+	Swap             *Swap                   `json:"swap"  gorm:"column:swap;foreignKey:SwapId"`
+	CartId           uuid.NullUUID           `json:"cart_id"  gorm:"column:cart_id"`
+	Cart             *Cart                   `json:"cart"  gorm:"column:cart;foreignKey:CartId"`
+	ClaimOrderId     uuid.NullUUID           `json:"claim_order_id"  gorm:"column:claim_order_id"`
+	ClaimOrder       *ClaimOrder             `json:"claim_order"  gorm:"column:claim_order;foreignKey:ClaimOrderId"`
+	TaxLines         []ShippingMethodTaxLine `json:"tax_lines"  gorm:"column:tax_lines;foreignKey:Id"`
+	Price            float64                 `json:"price"  gorm:"column:price"`
+	Subtotal         float64                 `json:"subtotal"  gorm:"column:subtotal"`
+	TaxTotal         float64                 `json:"tax_total"  gorm:"column:tax_total"`
+	Total            float64                 `json:"total"  gorm:"column:total"`
+	OriginalTotal    float64                 `json:"original_total"  gorm:"column:original_total"`
+	OriginalTaxTotal float64                 `json:"original_tax_total"  gorm:"column:original_tax_total"`
+	Data             core.JSONB              `json:"data"  gorm:"column:data"`
+	IncludesTax      bool                    `json:"includes_tax"  gorm:"column:includes_tax"`
 }

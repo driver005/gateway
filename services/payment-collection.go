@@ -42,7 +42,7 @@ func (s *PaymentCollectionService) Retrieve(id uuid.UUID, config *sql.Options) (
 		)
 	}
 
-	var res *models.PaymentCollection
+	var res *models.PaymentCollection = &models.PaymentCollection{}
 	query := sql.BuildQuery(models.OAuth{Model: core.Model{Id: id}}, config)
 
 	if err := s.r.PaymentCollectionRepository().FindOne(s.ctx, res, query); err != nil {
@@ -151,7 +151,7 @@ func (s *PaymentCollectionService) SetPaymentSessionsBatch(id uuid.UUID, payment
 		)
 	}
 
-	var customer *models.Customer
+	var customer *models.Customer = &models.Customer{}
 	if customerId != uuid.Nil {
 		c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, &sql.Options{
 			Selects: []string{"id", "email", "metadata"},
@@ -313,7 +313,7 @@ func (s *PaymentCollectionService) RefreshPaymentSession(id uuid.UUID, sessionId
 		)
 	}
 
-	var customer *models.Customer
+	var customer *models.Customer = &models.Customer{}
 	if customerId != uuid.Nil {
 		c, err := s.r.CustomerService().SetContext(s.ctx).RetrieveById(customerId, &sql.Options{
 			Selects: []string{"id", "email", "metadata"},

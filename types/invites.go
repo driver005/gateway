@@ -68,6 +68,12 @@ type CreateInviteInput struct {
 //	      type: string
 //	      format: password
 type AcceptInvite struct {
-	Token string       `json:"token"`
-	User  *models.User `json:"user"`
+	Token string          `json:"token"`
+	User  *AcceptCustomer `json:"user"`
+}
+
+type AcceptCustomer struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Password  string `json:"password"`
 }

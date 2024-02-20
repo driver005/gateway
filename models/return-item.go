@@ -82,16 +82,16 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ReturnItem struct {
-	ReturnId          uuid.NullUUID `json:"return_id" gorm:"primarykey"`
-	ReturnOrder       *Return       `json:"return_order" gorm:"foreignKey:id;references:return_id"`
-	ItemId            uuid.NullUUID `json:"item_id"`
-	Item              *LineItem     `json:"item" gorm:"foreignKey:id;references:item_id"`
-	Quantity          int           `json:"quantity" gorm:"default:null"`
-	IsRequested       bool          `json:"is_requested" gorm:"default:null"`
-	RequestedQuantity int           `json:"requested_quantity" gorm:"default:null"`
-	RecievedQuantity  int           `json:"recieved_quantity" gorm:"default:null"`
-	ReasonId          uuid.NullUUID `json:"reason_id" gorm:"default:null"`
-	Reason            *ReturnReason `json:"reason" gorm:"foreignKey:id;references:reason_id"`
-	Note              string        `json:"note" gorm:"default:null"`
-	Metadata          core.JSONB    `json:"metadata" gorm:"default:null"`
+	ReturnId          uuid.NullUUID `json:"return_id"  gorm:"column:return_id;primarykey"`
+	ReturnOrder       *Return       `json:"return_order"  gorm:"column:return_order;foreignKey:ReturnId"`
+	ItemId            uuid.NullUUID `json:"item_id"  gorm:"column:item_id"`
+	Item              *LineItem     `json:"item"  gorm:"column:item;foreignKey:ItemId"`
+	Quantity          int           `json:"quantity"  gorm:"column:quantity"`
+	IsRequested       bool          `json:"is_requested"  gorm:"column:is_requested;default:true"`
+	RequestedQuantity int           `json:"requested_quantity"  gorm:"column:requested_quantity"`
+	RecievedQuantity  int           `json:"recieved_quantity"  gorm:"column:recieved_quantity"`
+	ReasonId          uuid.NullUUID `json:"reason_id"  gorm:"column:reason_id"`
+	Reason            *ReturnReason `json:"reason"  gorm:"column:reason;foreignKey:ReasonId"`
+	Note              string        `json:"note"  gorm:"column:note"`
+	Metadata          core.JSONB    `json:"metadata"  gorm:"column:metadata"`
 }

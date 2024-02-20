@@ -34,7 +34,7 @@ func (s *PricingService) SetContext(context context.Context) *PricingService {
 }
 
 func (s *PricingService) collectPricingContext(context *interfaces.PricingContext) (*interfaces.PricingContext, *utils.ApplictaionError) {
-	var region *models.Region
+	var region *models.Region = &models.Region{}
 	var pricingContext *interfaces.PricingContext
 
 	pricingContext.AutomaticTaxes = false

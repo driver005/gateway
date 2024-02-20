@@ -9,11 +9,12 @@ import (
 )
 
 type Region struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewRegion(r Registry) *Region {
-	m := Region{r: r}
+	m := Region{r: r, name: "region"}
 	return &m
 }
 
@@ -154,7 +155,9 @@ func (m *Region) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/regions
@@ -362,10 +365,10 @@ func (m *Region) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"regions": result,
+		"count":   count,
+		"offset":  config.Skip,
+		"limit":   config.Take,
 	})
 }
 
@@ -527,7 +530,9 @@ func (m *Region) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/regions/{id}
@@ -670,7 +675,9 @@ func (m *Region) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/regions/{id}
@@ -946,7 +953,9 @@ func (m *Region) AddCountry(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/regions/{id}/fulfillment-providers
@@ -1096,7 +1105,9 @@ func (m *Region) AddFullfilmentProvider(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/regions/{id}/payment-providers
@@ -1246,7 +1257,9 @@ func (m *Region) AddPaymentProvider(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/regions/{id}/fulfillment-options
@@ -1395,7 +1408,9 @@ func (m *Region) GetFulfillmentOptions(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/regions/{id}/countries/{country_code}
@@ -1538,7 +1553,9 @@ func (m *Region) RemoveCountry(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/regions/{id}/fulfillment-providers/{provider_id}
@@ -1679,7 +1696,9 @@ func (m *Region) RemoveFullfilmentProvider(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/regions/{id}/payment-providers/{provider_id}
@@ -1820,5 +1839,7 @@ func (m *Region) RemovePaymentProvider(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

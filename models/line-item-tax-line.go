@@ -66,9 +66,9 @@ import (
 type LineItemTaxLine struct {
 	core.Model
 
-	ItemId uuid.NullUUID `json:"item_id"`
-	Item   *LineItem     `json:"item" gorm:"foreignKey:id;references:item_id"`
-	Code   string        `json:"code" gorm:"default:null"`
-	Name   string        `json:"name"`
-	Rate   float64       `json:"rate"`
+	ItemId uuid.NullUUID `json:"item_id"  gorm:"column:item_id"`
+	Item   *LineItem     `json:"item"  gorm:"column:item;foreignKey:ItemId"`
+	Code   string        `json:"code"  gorm:"column:code"`
+	Name   string        `json:"name"  gorm:"column:name"`
+	Rate   float64       `json:"rate"  gorm:"column:rate"`
 }

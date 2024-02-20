@@ -9,11 +9,12 @@ import (
 )
 
 type SalesChannel struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewSalesChannel(r Registry) *SalesChannel {
-	m := SalesChannel{r: r}
+	m := SalesChannel{r: r, name: "sales_channel"}
 	return &m
 }
 
@@ -150,7 +151,9 @@ func (m *SalesChannel) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/sales-channels
@@ -350,10 +353,10 @@ func (m *SalesChannel) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"sales_channels": result,
+		"count":          count,
+		"offset":         config.Skip,
+		"limit":          config.Take,
 	})
 }
 
@@ -488,7 +491,9 @@ func (m *SalesChannel) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/sales-channels/{id}
@@ -631,7 +636,9 @@ func (m *SalesChannel) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/sales-channels/{id}
@@ -918,7 +925,9 @@ func (m *SalesChannel) AddProductsBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/sales-channels/{id}/products/batch
@@ -1078,7 +1087,9 @@ func (m *SalesChannel) DeleteProductsBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/sales-channels/{id}/stock-locations
@@ -1224,7 +1235,9 @@ func (m *SalesChannel) AddStockLocation(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/sales-channels/{id}/stock-locations

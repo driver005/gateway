@@ -129,21 +129,21 @@ import (
 type Payment struct {
 	core.Model
 
-	SwapId         uuid.NullUUID `json:"swap_id" gorm:"default:null"`
-	Swap           *Swap         `json:"swap" gorm:"foreignKey:id;references:swap_id"`
-	CartId         uuid.NullUUID `json:"cart_id" gorm:"default:null"`
-	Cart           *Cart         `json:"cart" gorm:"foreignKey:id;references:cart_id"`
-	OrderId        uuid.NullUUID `json:"order_id" gorm:"default:null"`
-	Order          *Order        `json:"order" gorm:"foreignKey:id;references:order_id"`
-	Amount         float64       `json:"amount"`
-	CurrencyCode   string        `json:"currency_code"`
-	Currency       *Currency     `json:"currency" gorm:"foreignKey:code;references:currency_code"`
-	AmountRefunded float64       `json:"amount_refunded" gorm:"default:null"`
-	ProviderId     uuid.NullUUID `json:"provider_id"`
-	Data           core.JSONB    `json:"data" gorm:"default:null"`
-	CapturedAt     *time.Time    `json:"captured_at" gorm:"default:null"`
-	CanceledAt     *time.Time    `json:"canceled_at" gorm:"default:null"`
-	IdempotencyKey string        `json:"idempotency_key" gorm:"default:null"`
+	SwapId         uuid.NullUUID `json:"swap_id"  gorm:"column:swap_id"`
+	Swap           *Swap         `json:"swap"  gorm:"column:swap;foreignKey:SwapId"`
+	CartId         uuid.NullUUID `json:"cart_id"  gorm:"column:cart_id"`
+	Cart           *Cart         `json:"cart"  gorm:"column:cart;foreignKey:CartId"`
+	OrderId        uuid.NullUUID `json:"order_id"  gorm:"column:order_id"`
+	Order          *Order        `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	Amount         float64       `json:"amount"  gorm:"column:amount"`
+	CurrencyCode   string        `json:"currency_code"  gorm:"column:currency_code"`
+	Currency       *Currency     `json:"currency"  gorm:"column:currency;foreignKey:CurrencyCode;foreignKey:Code"`
+	AmountRefunded float64       `json:"amount_refunded"  gorm:"column:amount_refunded;default:0"`
+	ProviderId     uuid.NullUUID `json:"provider_id"  gorm:"column:provider_id"`
+	Data           core.JSONB    `json:"data"  gorm:"column:data"`
+	CapturedAt     *time.Time    `json:"captured_at"  gorm:"column:captured_at"`
+	CanceledAt     *time.Time    `json:"canceled_at"  gorm:"column:canceled_at"`
+	IdempotencyKey string        `json:"idempotency_key"  gorm:"column:idempotency_key"`
 }
 
 type PaymentStatus string

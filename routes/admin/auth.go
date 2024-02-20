@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"fmt"
+
 	"github.com/driver005/gateway/api"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
@@ -9,20 +11,21 @@ import (
 )
 
 type Auth struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewAuth(r Registry) *Auth {
-	m := Auth{r: r}
+	m := Auth{r: r, name: "user"}
 	return &m
 }
 
 func (m *Auth) SetRoutes(router fiber.Router) {
 	route := router.Group("/auth")
-	route.Get("", m.GetSession, m.r.Middleware().Authenticate()...)
+	route.Get("", m.GetSession, m.r.Middleware().Authenticate())
 	route.Post("", m.CreateSession)
-	route.Delete("", m.DeleteSession, m.r.Middleware().Authenticate()...)
-	route.Post("/tocken", m.GetTocken, m.r.Middleware().Authenticate()...)
+	route.Delete("", m.DeleteSession, m.r.Middleware().Authenticate())
+	route.Post("/tocken", m.GetTocken, m.r.Middleware().Authenticate())
 }
 
 // @oas:path [post] /admin/auth
@@ -143,6 +146,7 @@ func (m *Auth) SetRoutes(router fiber.Router) {
 func (m *Auth) CreateSession(context fiber.Ctx) error {
 	sess, er := m.r.Session().Get(context)
 	if er != nil {
+		fmt.Println(er)
 		return er
 	}
 
@@ -153,14 +157,16 @@ func (m *Auth) CreateSession(context fiber.Ctx) error {
 
 	result := m.r.AuthService().SetContext(context.Context()).Authenticate(req.Email, req.Password)
 	if result.Success && result.User != nil {
-		sess.Set("user_id", result.User.Id)
+		sess.Set("user_id", result.User.Id.String())
 		if err := sess.Save(); err != nil {
 			return err
 		}
 		result.User.PasswordHash = ""
-		return context.Status(fiber.StatusOK).JSON(&result.User)
+		return context.Status(fiber.StatusOK).JSON(fiber.Map{
+			(m.name): result.User,
+		})
 	} else {
-		return context.Status(fiber.StatusUnauthorized).JSON(result)
+		return context.SendStatus(fiber.StatusUnauthorized)
 	}
 }
 
@@ -380,13 +386,15 @@ func (m *Auth) DeleteSession(context fiber.Ctx) error {
 func (m *Auth) GetSession(context fiber.Ctx) error {
 	userId := utils.GetUser(context)
 
-	user, err := m.r.UserService().SetContext(context.Context()).Retrieve(userId, &sql.Options{})
+	result, err := m.r.UserService().SetContext(context.Context()).Retrieve(userId, &sql.Options{})
 	if err != nil {
 		return err
 	}
 
-	user.PasswordHash = ""
-	return context.Status(fiber.StatusOK).JSON(&user)
+	result.PasswordHash = ""
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/auth/token
@@ -491,8 +499,10 @@ func (m *Auth) GetTocken(context fiber.Ctx) error {
 			return err
 		}
 
-		return context.Status(fiber.StatusOK).JSON(tocken)
+		return context.Status(fiber.StatusOK).JSON(fiber.Map{
+			"access_token": tocken,
+		})
 	} else {
-		return context.Status(fiber.StatusUnauthorized).JSON(result)
+		return context.SendStatus(fiber.StatusUnauthorized)
 	}
 }

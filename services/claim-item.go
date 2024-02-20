@@ -41,7 +41,7 @@ func (s *ClaimItemService) Retrieve(claimItemId uuid.UUID, config *sql.Options) 
 			nil,
 		)
 	}
-	var res *models.ClaimItem
+	var res *models.ClaimItem = &models.ClaimItem{}
 
 	query := sql.BuildQuery[models.ClaimItem](models.ClaimItem{Model: core.Model{Id: claimItemId}}, config)
 

@@ -120,17 +120,17 @@ import (
 type Discount struct {
 	core.Model
 
-	Code             string        `json:"code"`
-	IsDynamic        bool          `json:"is_dynamic"`
-	RuleId           uuid.NullUUID `json:"rule_id" gorm:"default:null"`
-	Rule             *DiscountRule `json:"rule" gorm:"foreignKey:id;references:rule_id"`
-	IsDisabled       bool          `json:"is_disabled" gorm:"default:null"`
-	ParentDiscountId uuid.NullUUID `json:"parent_discount_id" gorm:"default:null"`
-	ParentDiscount   *Discount     `json:"parent_discount" gorm:"foreignKey:id;references:parent_discount_id"`
-	StartsAt         *time.Time    `json:"starts_at" gorm:"default:null"`
-	EndsAt           *time.Time    `json:"ends_at" gorm:"default:null"`
-	ValidDuration    *time.Time    `json:"valid_duration" gorm:"default:null"`
-	Regions          []Region      `json:"regions" gorm:"foreignKey:id"`
-	UsageLimit       int           `json:"usage_limit" gorm:"default:null"`
-	UsageCount       int           `json:"usage_count" gorm:"default:null"`
+	Code             string        `json:"code"  gorm:"column:code"`
+	IsDynamic        bool          `json:"is_dynamic"  gorm:"column:is_dynamic"`
+	RuleId           uuid.NullUUID `json:"rule_id"  gorm:"column:rule_id"`
+	Rule             *DiscountRule `json:"rule"  gorm:"column:rule;foreignKey:RuleId"`
+	IsDisabled       bool          `json:"is_disabled"  gorm:"column:is_disabled"`
+	ParentDiscountId uuid.NullUUID `json:"parent_discount_id"  gorm:"column:parent_discount_id"`
+	ParentDiscount   *Discount     `json:"parent_discount"  gorm:"column:parent_discount;foreignKey:ParentDiscountId"`
+	StartsAt         *time.Time    `json:"starts_at"  gorm:"column:starts_at;default:'CURRENT_TIMESTAMP'"`
+	EndsAt           *time.Time    `json:"ends_at"  gorm:"column:ends_at"`
+	ValidDuration    *time.Time    `json:"valid_duration"  gorm:"column:valid_duration"`
+	Regions          []Region      `json:"regions"  gorm:"column:regions;many2many:discount_regions"`
+	UsageLimit       int           `json:"usage_limit"  gorm:"column:usage_limit"`
+	UsageCount       int           `json:"usage_count"  gorm:"column:usage_count;default:0"`
 }

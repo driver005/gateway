@@ -117,18 +117,18 @@ import (
 type PaymentCollection struct {
 	core.Model
 
-	Type             PaymentCollectionType   `json:"type"`
-	Status           PaymentCollectionStatus `json:"status"`
-	Description      string                  `json:"description"`
-	Amount           float64                 `json:"amount"`
-	AuthorizedAmount float64                 `json:"authorized_amount"`
-	RegionId         uuid.NullUUID           `json:"region_id"`
-	Region           *Region                 `json:"region,omitempty" gorm:"foreignKey:id;references:region_id"`
-	CurrencyCode     string                  `json:"currency_code"`
-	Currency         *Currency               `json:"currency,omitempty"`
-	PaymentSessions  []PaymentSession        `json:"payment_sessions,omitempty"`
-	Payments         []Payment               `json:"payments,omitempty"`
-	CreatedBy        uuid.UUID               `json:"created_by"`
+	Type             PaymentCollectionType   `json:"type"  gorm:"column:type"`
+	Status           PaymentCollectionStatus `json:"status"  gorm:"column:status"`
+	Description      string                  `json:"description"  gorm:"column:description"`
+	Amount           float64                 `json:"amount"  gorm:"column:amount"`
+	AuthorizedAmount float64                 `json:"authorized_amount"  gorm:"column:authorized_amount"`
+	RegionId         uuid.NullUUID           `json:"region_id"  gorm:"column:region_id"`
+	Region           *Region                 `json:"region"  gorm:"column:region;foreignKey:RegionId"`
+	CurrencyCode     string                  `json:"currency_code"  gorm:"column:currency_code"`
+	Currency         *Currency               `json:"currency"  gorm:"column:currency;foreignKey:CurrencyCode;foreignKey:Code"`
+	PaymentSessions  []PaymentSession        `json:"payment_sessions"  gorm:"column:payment_sessions;many2many:payment_collection_sessions"`
+	Payments         []Payment               `json:"payments"  gorm:"column:payments;many2many:payment_collection_payments"`
+	CreatedBy        uuid.UUID               `json:"created_by"  gorm:"column:created_by"`
 }
 
 type PaymentCollectionStatus string

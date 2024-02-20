@@ -125,7 +125,7 @@ func (s *ProductVariantInventoryService) ConfirmInventory(variantId uuid.UUID, q
 }
 
 func (s *ProductVariantInventoryService) Retrieve(inventoryItemId uuid.UUID, variantId uuid.UUID) (*models.ProductVariantInventoryItem, *utils.ApplictaionError) {
-	var res *models.ProductVariantInventoryItem
+	var res *models.ProductVariantInventoryItem = &models.ProductVariantInventoryItem{}
 
 	query := sql.BuildQuery(models.ProductVariantInventoryItem{InventoryItemId: uuid.NullUUID{UUID: inventoryItemId}, VariantId: uuid.NullUUID{UUID: variantId}}, &sql.Options{})
 

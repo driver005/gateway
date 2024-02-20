@@ -33,7 +33,7 @@ import "github.com/driver005/gateway/core"
 type StagedJob struct {
 	core.Model
 
-	EventName string     `json:"event_name"`
-	Data      core.JSONB `json:"data" gorm:"default:null"`
-	Options   core.JSONB `json:"options" gorm:"default:null"`
+	EventName string     `json:"event_name"  gorm:"column:event_name"`
+	Data      core.JSONB `json:"data"  gorm:"column:data"`
+	Options   core.JSONB `json:"options"  gorm:"column:options;default:{}"`
 }

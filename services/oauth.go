@@ -38,7 +38,7 @@ func (s *OAuthService) SetContext(context context.Context) *OAuthService {
 }
 
 func (s *OAuthService) RetrieveByName(appName string, config *sql.Options) (*models.OAuth, *utils.ApplictaionError) {
-	var res *models.OAuth
+	var res *models.OAuth = &models.OAuth{}
 	query := sql.BuildQuery(models.OAuth{ApplicationName: appName}, config)
 
 	if err := s.r.OAuthRepository().FindOne(s.ctx, res, query); err != nil {
@@ -57,7 +57,7 @@ func (s *OAuthService) Retrieve(id uuid.UUID, config *sql.Options) (*models.OAut
 		)
 	}
 
-	var res *models.OAuth
+	var res *models.OAuth = &models.OAuth{}
 	query := sql.BuildQuery(models.OAuth{Model: core.Model{Id: id}}, config)
 
 	if err := s.r.OAuthRepository().FindOne(s.ctx, res, query); err != nil {

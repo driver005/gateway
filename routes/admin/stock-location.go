@@ -7,11 +7,12 @@ import (
 )
 
 type StockLocation struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewStockLocation(r Registry) *StockLocation {
-	m := StockLocation{r: r}
+	m := StockLocation{r: r, name: "stock_location"}
 	return &m
 }
 
@@ -112,7 +113,9 @@ func (m *StockLocation) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/stock-locations
@@ -315,10 +318,10 @@ func (m *StockLocation) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"stock_locations": result,
+		"count":           count,
+		"offset":          config.Skip,
+		"limit":           config.Take,
 	})
 }
 
@@ -455,7 +458,9 @@ func (m *StockLocation) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/stock-locations/{id}
@@ -598,7 +603,9 @@ func (m *StockLocation) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/stock-locations/{id}

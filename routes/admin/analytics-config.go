@@ -7,11 +7,12 @@ import (
 )
 
 type AnalyticsConfig struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewAnalyticsConfig(r Registry) *AnalyticsConfig {
-	m := AnalyticsConfig{r: r}
+	m := AnalyticsConfig{r: r, name: "analytics_config"}
 	return &m
 }
 
@@ -27,12 +28,14 @@ func (m *AnalyticsConfig) SetRoutes(router fiber.Router) {
 func (m *AnalyticsConfig) Get(context fiber.Ctx) error {
 	userId := api.GetUser(context)
 
-	user, err := m.r.AnalyticsConfigService().SetContext(context.Context()).Retrive(userId)
+	result, err := m.r.AnalyticsConfigService().SetContext(context.Context()).Retrive(userId)
 	if err != nil {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(user)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // No OAS for this route, for internal use only.
@@ -49,7 +52,9 @@ func (m *AnalyticsConfig) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // No OAS for this route, for internal use only.
@@ -66,7 +71,9 @@ func (m *AnalyticsConfig) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // No OAS for this route, for internal use only.

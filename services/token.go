@@ -26,7 +26,7 @@ func (s *TockenService) SetContext(context context.Context) *TockenService {
 
 func (s *TockenService) VerifyToken(tocken string) (*jwt.Token, jwt.MapClaims, error) {
 	var claims jwt.MapClaims
-	token, err := jwt.ParseWithClaims(tocken, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tocken, &claims, func(token *jwt.Token) (interface{}, error) {
 		return s.secretKey, nil
 	})
 
@@ -43,7 +43,7 @@ func (s *TockenService) VerifyToken(tocken string) (*jwt.Token, jwt.MapClaims, e
 
 func (s *TockenService) VerifyTokenWithSecret(tocken string, secret []byte) (*jwt.Token, jwt.MapClaims, error) {
 	var claims jwt.MapClaims
-	token, err := jwt.ParseWithClaims(tocken, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tocken, &claims, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
 

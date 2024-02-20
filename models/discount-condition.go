@@ -108,15 +108,15 @@ import (
 type DiscountCondition struct {
 	core.Model
 
-	Type               DiscountConditionType     `json:"type" gorm:"type:enum('products','product_types','product_collections','product_tags','customer_groups')"`
-	Operator           DiscountConditionOperator `json:"operator"`
-	DiscountRuleId     uuid.NullUUID             `json:"discount_rule_id"`
-	DiscountRule       *DiscountRule             `json:"discount_rule" gorm:"foreignKey:id;references:discount_rule_id"`
-	Products           []Product                 `json:"products" gorm:"many2many:discount_condition_product"`
-	ProductTypes       []ProductType             `json:"product_types" gorm:"many2many:discount_condition_product_types"`
-	ProductTags        []ProductTag              `json:"product_tags" gorm:"many2many:discount_condition_product_tag"`
-	ProductCollections []ProductCollection       `json:"product_collections" gorm:"many2many:discount_condition_product_collection"`
-	CustomerGroups     []CustomerGroup           `json:"customer_groups" gorm:"many2many:discount_condition_customer_group"`
+	Type               DiscountConditionType     `json:"type"  gorm:"column:type"`
+	Operator           DiscountConditionOperator `json:"operator"  gorm:"column:operator"`
+	DiscountRuleId     uuid.NullUUID             `json:"discount_rule_id"  gorm:"column:discount_rule_id"`
+	DiscountRule       *DiscountRule             `json:"discount_rule"  gorm:"column:discount_rule;foreignKey:DiscountRuleId"`
+	Products           []Product                 `json:"products"  gorm:"column:products;many2many:discount_condition_product"`
+	ProductTypes       []ProductType             `json:"product_types"  gorm:"column:product_types;many2many:discount_condition_product_type"`
+	ProductTags        []ProductTag              `json:"product_tags"  gorm:"column:product_tags;many2many:discount_condition_product_tag"`
+	ProductCollections []ProductCollection       `json:"product_collections"  gorm:"column:product_collections;many2many:discount_condition_product_collection"`
+	CustomerGroups     []CustomerGroup           `json:"customer_groups"  gorm:"column:customer_groups;many2many:discount_condition_customer_group"`
 }
 
 // The status of the Price List

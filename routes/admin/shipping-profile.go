@@ -7,11 +7,12 @@ import (
 )
 
 type ShippingProfile struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewShippingProfile(r Registry) *ShippingProfile {
-	m := ShippingProfile{r: r}
+	m := ShippingProfile{r: r, name: "shipping_profile"}
 	return &m
 }
 
@@ -147,7 +148,9 @@ func (m *ShippingProfile) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/shipping-profiles
@@ -271,7 +274,9 @@ func (m *ShippingProfile) List(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		"shipping_profiles": result,
+	})
 }
 
 // @oas:path [post] /admin/shipping-profiles
@@ -408,7 +413,9 @@ func (m *ShippingProfile) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/shipping-profiles/{id}
@@ -553,7 +560,9 @@ func (m *ShippingProfile) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/shipping-profiles/{id}

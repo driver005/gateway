@@ -28,7 +28,7 @@ func (r *Routes) SetAdminRoutes() {
 	r.r.AdminUser().UnauthenticatedUserRoutes(admin)
 	r.r.AdminInvite().UnauthenticatedInviteRoutes(admin)
 
-	admin.Use(utils.ConvertMiddleware(r.r.Middleware().Authenticate())...)
+	admin.Use(r.r.Middleware().Authenticate())
 
 	r.r.AdminAnalyticsConfig().SetRoutes(admin)
 	r.r.AdminApp().SetRoutes(admin)

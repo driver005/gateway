@@ -38,7 +38,7 @@ func (s *CurrencyService) RetrieveByCode(code string) (*models.Currency, *utils.
 			nil,
 		)
 	}
-	var res *models.Currency
+	var res *models.Currency = &models.Currency{}
 
 	query := sql.BuildQuery(models.Currency{Code: strings.ToLower(code)}, &sql.Options{})
 

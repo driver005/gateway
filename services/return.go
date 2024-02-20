@@ -52,14 +52,14 @@ func (s *ReturnService) GetFulfillmentItems(order *models.Order, items []types.O
 	}
 	toReturn := make([]models.ReturnItem, len(items))
 	for i, data := range items {
-		var item *models.LineItem
+		var item *models.LineItem = &models.LineItem{}
 		for _, it := range merged {
 			if it.Id == data.ItemId {
 				item = &it
 				break
 			}
 		}
-		if item == nil {
+		if reflect.DeepEqual(item, &models.LineItem{}) {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
 				"Item not found",
@@ -184,7 +184,7 @@ func (s *ReturnService) Retrieve(returnId uuid.UUID, config *sql.Options) (*mode
 		)
 	}
 
-	var res *models.Return
+	var res *models.Return = &models.Return{}
 
 	query := sql.BuildQuery(models.Return{Model: core.Model{Id: returnId}}, config)
 	if err := s.r.ReturnRepository().FindOne(s.ctx, res, query); err != nil {
@@ -202,7 +202,7 @@ func (s *ReturnService) RetrieveBySwap(swapId uuid.UUID, relations []string) (*m
 		)
 	}
 
-	var res *models.Return
+	var res *models.Return = &models.Return{}
 
 	query := sql.BuildQuery(models.Return{SwapId: uuid.NullUUID{UUID: swapId}}, &sql.Options{
 		Relations: relations,
@@ -421,14 +421,14 @@ func (s *ReturnService) Fulfill(returnId uuid.UUID) (*models.Return, *utils.Appl
 		return nil, err
 	}
 	for i, item := range returnData.Items {
-		var found *models.LineItem
+		var found *models.LineItem = &models.LineItem{}
 		for _, it := range items {
 			if it.Id == item.ItemId.UUID {
 				found = &it
 				break
 			}
 		}
-		if found == nil {
+		if reflect.DeepEqual(found, &models.LineItem{}) {
 			return nil, utils.NewApplictaionError(
 				utils.INVALID_DATA,
 				"Item not found",
@@ -550,7 +550,7 @@ func (s *ReturnService) Receive(returnId uuid.UUID, receivedItems []types.OrderR
 	}
 
 	for _, line := range newLines {
-		var orderItem *models.LineItem
+		var orderItem *models.LineItem = &models.LineItem{}
 		for _, item := range order.Items {
 			if item.Id == line.ItemId.UUID {
 				orderItem = &item

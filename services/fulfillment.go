@@ -114,9 +114,9 @@ func (s *FulfillmentService) Retrieve(fulfillmentId uuid.UUID, config *sql.Optio
 			nil,
 		)
 	}
-	var res *models.Fulfillment
+	var res *models.Fulfillment = &models.Fulfillment{}
 	query := sql.BuildQuery(models.Fulfillment{Model: core.Model{Id: fulfillmentId}}, config)
-	if err := s.r.FulfillmentRepository().FindOne(s.ctx, res, query); err == nil {
+	if err := s.r.FulfillmentRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Fulfillment with id `+fulfillmentId.String()+` was not found`,

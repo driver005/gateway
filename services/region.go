@@ -62,7 +62,7 @@ func (s *RegionService) Create(data *types.CreateRegionInput) (*models.Region, *
 			return nil, err
 		}
 
-		var currency *models.Currency
+		var currency *models.Currency = &models.Currency{}
 		query := sql.BuildQuery(models.Currency{Code: strings.ToLower(data.CurrencyCode)}, &sql.Options{})
 		if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
 			return nil, err
@@ -106,7 +106,7 @@ func (s *RegionService) Update(regionId uuid.UUID, Update *types.UpdateRegionInp
 		if err := s.validateCurrency(Update.CurrencyCode); err != nil {
 			return nil, err
 		}
-		var currency *models.Currency
+		var currency *models.Currency = &models.Currency{}
 		query := sql.BuildQuery(models.Currency{Code: strings.ToLower(Update.CurrencyCode)}, &sql.Options{})
 		if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
 			return nil, err
@@ -158,7 +158,7 @@ func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UU
 	}
 
 	if data.TaxProviderId != uuid.Nil {
-		var provider *models.TaxProvider
+		var provider *models.TaxProvider = &models.TaxProvider{}
 		query := sql.BuildQuery(models.TaxProvider{Model: core.Model{Id: data.TaxProviderId}}, &sql.Options{})
 		err := s.r.TaxProviderRepository().FindOne(s.ctx, provider, query)
 		if err != nil {
@@ -171,7 +171,7 @@ func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UU
 
 	if data.PaymentProviders != nil {
 		for _, paymentProvider := range data.PaymentProviders {
-			var provider *models.PaymentProvider
+			var provider *models.PaymentProvider = &models.PaymentProvider{}
 			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: paymentProvider}}, &sql.Options{})
 			err := s.r.PaymentProviderRepository().FindOne(s.ctx, provider, query)
 			if err != nil {
@@ -184,7 +184,7 @@ func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UU
 
 	if data.FulfillmentProviders != nil {
 		for _, fulfillmentProviders := range data.FulfillmentProviders {
-			var provider *models.FulfillmentProvider
+			var provider *models.FulfillmentProvider = &models.FulfillmentProvider{}
 			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: fulfillmentProviders}}, &sql.Options{})
 			err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, provider, query)
 			if err != nil {
@@ -304,9 +304,9 @@ func (s *RegionService) Retrieve(regionId uuid.UUID, config *sql.Options) (*mode
 		)
 	}
 
-	var res *models.Region
+	var res *models.Region = &models.Region{}
 	query := sql.BuildQuery(models.Region{Model: core.Model{Id: regionId}}, config)
-	if err := s.r.RegionRepository().FindOne(s.ctx, res, query); err == nil {
+	if err := s.r.RegionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`Region with id `+regionId.String()+` was not found`,
@@ -333,6 +333,7 @@ func (s *RegionService) ListAndCount(selector *types.FilterableRegion, config *s
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return res, count, nil
 }
 
@@ -430,9 +431,9 @@ func (s *RegionService) AddPaymentProvider(regionId uuid.UUID, providerId uuid.U
 		return region, nil
 	}
 
-	var paymentProvider *models.PaymentProvider
+	var paymentProvider *models.PaymentProvider = &models.PaymentProvider{}
 	query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: providerId}}, &sql.Options{})
-	if err := s.r.PaymentProviderRepository().FindOne(s.ctx, paymentProvider, query); err == nil {
+	if err := s.r.PaymentProviderRepository().FindOne(s.ctx, paymentProvider, query); err != nil {
 		return nil, err
 	}
 
@@ -489,9 +490,9 @@ func (s *RegionService) AddFulfillmentProvider(regionId uuid.UUID, providerId uu
 		return region, nil
 	}
 
-	var fulfillmentProvider *models.FulfillmentProvider
+	var fulfillmentProvider *models.FulfillmentProvider = &models.FulfillmentProvider{}
 	query := sql.BuildQuery(models.FulfillmentProvider{Model: core.Model{Id: providerId}}, &sql.Options{})
-	if err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, fulfillmentProvider, query); err == nil {
+	if err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, fulfillmentProvider, query); err != nil {
 		return nil, err
 	}
 

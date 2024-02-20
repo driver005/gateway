@@ -7,11 +7,12 @@ import (
 )
 
 type Currencie struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewCurrencie(r Registry) *Currencie {
-	m := Currencie{r: r}
+	m := Currencie{r: r, name: "currency"}
 	return &m
 }
 
@@ -154,10 +155,10 @@ func (m *Currencie) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"currencies": result,
+		"count":      count,
+		"offset":     config.Skip,
+		"limit":      config.Take,
 	})
 }
 
@@ -297,5 +298,7 @@ func (m *Currencie) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

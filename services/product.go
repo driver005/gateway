@@ -134,7 +134,7 @@ func (s *ProductService) RetrieveByExternalId(externalId string, config *sql.Opt
 }
 
 func (s *ProductService) Retrieve(selector models.Product, config *sql.Options) (*models.Product, *utils.ApplictaionError) {
-	var res *models.Product
+	var res *models.Product = &models.Product{}
 
 	query := sql.BuildQuery(selector, config)
 
@@ -219,7 +219,7 @@ func (s *ProductService) IsProductInSalesChannels(id uuid.UUID, salesChannelIds 
 
 func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product, *utils.ApplictaionError) {
 	var err *utils.ApplictaionError
-	var product *models.Product
+	var product *models.Product = &models.Product{}
 
 	if !reflect.ValueOf(data.Thumbnail).IsZero() && len(data.Images) > 0 {
 		product.Thumbnail = data.Images[0]

@@ -71,7 +71,7 @@ func (s *UserService) Retrieve(userId uuid.UUID, config *sql.Options) (*models.U
 			nil,
 		)
 	}
-	var res *models.User
+	var res *models.User = &models.User{}
 
 	query := sql.BuildQuery(types.FilterableUser{
 		FilterModel: core.FilterModel{
@@ -93,7 +93,7 @@ func (s *UserService) RetrieveByApiToken(apiToken string, relations []string) (*
 			nil,
 		)
 	}
-	var res *models.User
+	var res *models.User = &models.User{}
 
 	query := sql.BuildQuery[models.User](models.User{ApiToken: apiToken}, &sql.Options{
 		Relations: relations,
@@ -113,7 +113,7 @@ func (s *UserService) RetrieveByEmail(email string, config *sql.Options) (*model
 			nil,
 		)
 	}
-	var res *models.User
+	var res *models.User = &models.User{}
 
 	query := sql.BuildQuery(types.FilterableUser{Email: strings.ToLower(email)}, config)
 

@@ -43,7 +43,7 @@ func (s *LineItemService) Retrieve(lineItemId uuid.UUID, config *sql.Options) (*
 			nil,
 		)
 	}
-	var res *models.LineItem
+	var res *models.LineItem = &models.LineItem{}
 
 	query := sql.BuildQuery(models.LineItem{Model: core.Model{Id: lineItemId}}, config)
 

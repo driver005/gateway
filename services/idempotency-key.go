@@ -77,7 +77,7 @@ func (s *IdempotencyKeyService) Retrieve(idempotencyKey string) (*models.Idempot
 		)
 	}
 
-	var res *models.IdempotencyKey
+	var res *models.IdempotencyKey = &models.IdempotencyKey{}
 	query := sql.BuildQuery(models.IdempotencyKey{IdempotencyKey: idempotencyKey}, &sql.Options{})
 	if err := s.r.IdempotencyKeyRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

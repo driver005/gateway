@@ -4,7 +4,7 @@
 
 # Server configuration
 [server]
-port = 8080
+port = 9000
 host = "127.0.0.1"
 server_name = "Test_App"
 # This is the grace time (in seconds) given to the server to stop the execution
@@ -14,7 +14,7 @@ timeout = 30
 request_body_limit = 32_768
 # Proxy server configuration for connecting to payment gateways.
 # Don't define the fields if a Proxy isn't needed. Empty strings will cause failure.
-admin_cors = "http://localhost:8000"
+admin_cors = "http://localhost:7001"
 store_cors = "http://localhost:8000"
 
 # Main SQL data store credentials

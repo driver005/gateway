@@ -9,11 +9,12 @@ import (
 )
 
 type PriceList struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewPriceList(r Registry) *PriceList {
-	m := PriceList{r: r}
+	m := PriceList{r: r, name: "price_list"}
 	return &m
 }
 
@@ -154,7 +155,9 @@ func (m *PriceList) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/price-lists
@@ -382,10 +385,10 @@ func (m *PriceList) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"price_lists": result,
+		"count":       count,
+		"offset":      config.Skip,
+		"limit":       config.Take,
 	})
 }
 
@@ -554,7 +557,9 @@ func (m *PriceList) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/price-lists/{id}
@@ -697,7 +702,9 @@ func (m *PriceList) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/price-lists/{id}
@@ -989,7 +996,9 @@ func (m *PriceList) AddPricesBatch(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/price-lists/{id}/prices/batch
@@ -1813,9 +1822,9 @@ func (m *PriceList) ListPriceListProducts(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"products": result,
+		"count":    count,
+		"offset":   config.Skip,
+		"limit":    config.Take,
 	})
 }

@@ -7,11 +7,12 @@ import (
 )
 
 type TaxRate struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewTaxRate(r Registry) *TaxRate {
-	m := TaxRate{r: r}
+	m := TaxRate{r: r, name: "tax_rate"}
 	return &m
 }
 
@@ -166,7 +167,9 @@ func (m *TaxRate) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/tax-rates
@@ -349,10 +352,10 @@ func (m *TaxRate) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"tax_rates": result,
+		"count":     count,
+		"offset":    config.Skip,
+		"limit":     config.Take,
 	})
 }
 
@@ -521,7 +524,9 @@ func (m *TaxRate) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/tax-rates/{id}
@@ -681,7 +686,9 @@ func (m *TaxRate) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/tax-rates/{id}
@@ -978,7 +985,9 @@ func (m *TaxRate) AddProductTypes(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/tax-rates/{id}/products/batch
@@ -1144,7 +1153,9 @@ func (m *TaxRate) AddToProducts(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/tax-rates/{id}/shipping-options/batch
@@ -1314,7 +1325,9 @@ func (m *TaxRate) AddToShippingOptions(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/tax-rates/{id}/product-types/batch
@@ -1486,7 +1499,9 @@ func (m *TaxRate) RemoveFromProductTypes(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/tax-rates/{id}/products/batch
@@ -1652,7 +1667,9 @@ func (m *TaxRate) RemoveFromProducts(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/tax-rates/{id}/shipping-options/batch
@@ -1822,5 +1839,7 @@ func (m *TaxRate) RemoveFromShippingOptions(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

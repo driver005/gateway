@@ -7,11 +7,12 @@ import (
 )
 
 type ProductTag struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewProductTag(r Registry) *ProductTag {
-	m := ProductTag{r: r}
+	m := ProductTag{r: r, name: "product_tags"}
 	return &m
 }
 
@@ -214,9 +215,9 @@ func (m *ProductTag) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"product_tags": result,
+		"count":        count,
+		"offset":       config.Skip,
+		"limit":        config.Take,
 	})
 }

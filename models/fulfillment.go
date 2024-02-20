@@ -142,23 +142,24 @@ import (
 type Fulfillment struct {
 	core.Model
 
-	ClaimOrderId    uuid.NullUUID        `json:"claim_order_id" gorm:"default:null"`
-	ClaimOrder      *ClaimOrder          `json:"claim_order" gorm:"foreignKey:id;references:claim_order_id"`
-	SwapId          uuid.NullUUID        `json:"swap_id" gorm:"default:null"`
-	Swap            *Swap                `json:"swap" gorm:"foreignKey:id;references:swap_id"`
-	OrderId         uuid.NullUUID        `json:"order_id" gorm:"default:null"`
-	Order           *Order               `json:"order" gorm:"foreignKey:id;references:order_id"`
-	ProviderId      uuid.NullUUID        `json:"provider_id"`
-	Provider        *FulfillmentProvider `json:"provider" gorm:"foreignKey:id;references:provider_id"`
-	LocationId      uuid.UUID            `json:"location_id"`
-	Items           []FulfillmentItem    `json:"items" gorm:"foreignKey:fulfillment_id"`
-	TrackingLinks   []TrackingLink       `json:"tracking_links" gorm:"foreignKey:id"`
-	TrackingNumbers string               `json:"tracking_numbers" gorm:"default:null"`
-	Data            core.JSONB           `json:"data" gorm:"default:null"`
-	ShippedAt       *time.Time           `json:"shipped_at" gorm:"default:null"`
-	NoNotification  bool                 `json:"no_notification" gorm:"default:null"`
-	CanceledAt      *time.Time           `json:"canceled_at" gorm:"default:null"`
-	IdempotencyKey  string               `json:"idempotency_key" gorm:"default:null"`
+	ClaimOrderId uuid.NullUUID        `json:"claim_order_id"  gorm:"column:claim_order_id"`
+	ClaimOrder   *ClaimOrder          `json:"claim_order"  gorm:"column:claim_order;foreignKey:ClaimOrderId"`
+	SwapId       uuid.NullUUID        `json:"swap_id"  gorm:"column:swap_id"`
+	Swap         *Swap                `json:"swap"  gorm:"column:swap;foreignKey:SwapId"`
+	OrderId      uuid.NullUUID        `json:"order_id"  gorm:"column:order_id"`
+	Order        *Order               `json:"order"  gorm:"column:order;foreignKey:OrderId"`
+	ProviderId   uuid.NullUUID        `json:"provider_id"  gorm:"column:provider_id"`
+	Provider     *FulfillmentProvider `json:"provider"  gorm:"column:provider;foreignKey:ProviderId"`
+	LocationId   uuid.UUID            `json:"location_id"  gorm:"column:location_id"`
+	//TODO:ADD
+	Items           []FulfillmentItem `json:"items"  gorm:"column:items;foreignKey:FulfillmentId"`
+	TrackingLinks   []TrackingLink    `json:"tracking_links"  gorm:"column:tracking_links;foreignKey:Id"`
+	TrackingNumbers []string          `json:"tracking_numbers"  gorm:"column:tracking_numbers;default:[]"`
+	Data            core.JSONB        `json:"data"  gorm:"column:data"`
+	ShippedAt       *time.Time        `json:"shipped_at"  gorm:"column:shipped_at"`
+	NoNotification  bool              `json:"no_notification"  gorm:"column:no_notification"`
+	CanceledAt      *time.Time        `json:"canceled_at"  gorm:"column:canceled_at"`
+	IdempotencyKey  string            `json:"idempotency_key"  gorm:"column:idempotency_key"`
 }
 
 type FulfillmentStatus string

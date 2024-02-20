@@ -7,11 +7,12 @@ import (
 )
 
 type Note struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewNote(r Registry) *Note {
-	m := Note{r: r}
+	m := Note{r: r, name: "note"}
 	return &m
 }
 
@@ -140,7 +141,9 @@ func (m *Note) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/notes
@@ -266,7 +269,7 @@ func (m *Note) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
+		"notes":  result,
 		"count":  count,
 		"offset": config.Skip,
 		"limit":  config.Take,
@@ -408,7 +411,9 @@ func (m *Note) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/notes/{id}
@@ -549,7 +554,9 @@ func (m *Note) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/notes/{id}

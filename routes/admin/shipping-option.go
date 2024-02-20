@@ -7,11 +7,12 @@ import (
 )
 
 type ShippingOption struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewShippingOption(r Registry) *ShippingOption {
-	m := ShippingOption{r: r}
+	m := ShippingOption{r: r, name: "shipping_option"}
 	return &m
 }
 
@@ -145,7 +146,9 @@ func (m *ShippingOption) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/shipping-options
@@ -362,10 +365,10 @@ func (m *ShippingOption) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"shipping_options": result,
+		"count":            count,
+		"offset":           config.Skip,
+		"limit":            config.Take,
 	})
 }
 
@@ -522,7 +525,9 @@ func (m *ShippingOption) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/shipping-options/{id}
@@ -683,7 +688,9 @@ func (m *ShippingOption) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/shipping-options/{id}

@@ -79,13 +79,13 @@ import (
 type OrderItemChange struct {
 	core.Model
 
-	Type               OrderEditItemChangeType `json:"type"`
-	OrderEditId        uuid.NullUUID           `json:"order_edit_id"`
-	OrderEdit          *OrderEdit              `json:"order_edit" gorm:"foreignKey:id;references:order_edit_id"`
-	OriginalLineItemId uuid.NullUUID           `json:"original_line_item_id" gorm:"default:null"`
-	OriginalLineItem   *LineItem               `json:"original_line_item" gorm:"foreignKey:id;references:original_line_item_id"`
-	LineItemId         uuid.NullUUID           `json:"line_item_id" gorm:"default:null"`
-	LineItem           *LineItem               `json:"line_item" gorm:"foreignKey:id;references:line_item_id"`
+	Type               OrderEditItemChangeType `json:"type"  gorm:"column:type"`
+	OrderEditId        uuid.NullUUID           `json:"order_edit_id"  gorm:"column:order_edit_id"`
+	OrderEdit          *OrderEdit              `json:"order_edit"  gorm:"column:order_edit;foreignKey:OrderEditId"`
+	OriginalLineItemId uuid.NullUUID           `json:"original_line_item_id"  gorm:"column:original_line_item_id"`
+	OriginalLineItem   *LineItem               `json:"original_line_item"  gorm:"column:original_line_item;foreignKey:OriginalLineItemId"`
+	LineItemId         uuid.NullUUID           `json:"line_item_id"  gorm:"column:line_item_id"`
+	LineItem           *LineItem               `json:"line_item"  gorm:"column:line_item;foreignKey:LineItemId"`
 }
 
 type OrderEditItemChangeType string

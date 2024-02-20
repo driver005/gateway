@@ -198,10 +198,7 @@ func (s *TotalsService) GetShippingMethodTotals(shippingMethod models.ShippingMe
 		}
 		if len(totals.TaxLines) > 0 {
 			includesTax := true
-			totals.OriginalTaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{}, totals.TaxLines, calculationContext)
-			if err != nil {
-				return nil, err
-			}
+			totals.OriginalTaxTotal = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{}, []interface{}{totals.TaxLines}, calculationContext)
 			totals.TaxTotal = totals.OriginalTaxTotal
 			if includesTax {
 				totals.Subtotal -= totals.TaxTotal
@@ -425,10 +422,7 @@ func (s *TotalsService) GetTaxTotal(cart *models.Cart, order *models.Order, forc
 	if order != nil {
 		lineItem = order.Items
 	}
-	toReturn, err := s.r.TaxCalculationStrategy().Calculate(lineItem, taxLines, calculationContext)
-	if err != nil {
-		return 0, err
-	}
+	toReturn := s.r.TaxCalculationStrategy().Calculate(lineItem, taxLines, calculationContext)
 	if cart != nil && cart.Region.GiftCardsTaxable {
 		return s.Rounded(toReturn - giftCardTotal.TaxTotal), nil
 	}
@@ -804,16 +798,8 @@ func (s *TotalsService) GetLineItemTotals(lineItem models.LineItem, cart *models
 		}
 	}
 	if len(lineItemTotals.TaxLines) > 0 {
-		var err *utils.ApplictaionError
-		lineItemTotals.TaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{lineItem}, lineItemTotals.TaxLines, calculationContext)
-		if err != nil {
-			return nil, err
-		}
-		noDiscountContext := calculationContext
-		lineItemTotals.OriginalTaxTotal, err = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{lineItem}, lineItemTotals.TaxLines, noDiscountContext)
-		if err != nil {
-			return nil, err
-		}
+		lineItemTotals.TaxTotal = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{lineItem}, []interface{}{lineItemTotals.TaxLines}, calculationContext)
+		lineItemTotals.OriginalTaxTotal = s.r.TaxCalculationStrategy().Calculate([]models.LineItem{lineItem}, []interface{}{lineItemTotals.TaxLines}, calculationContext)
 		if feature && lineItem.IncludesTax {
 			lineItemTotals.Subtotal += lineItem.UnitPrice*float64(lineItem.Quantity) - lineItemTotals.OriginalTaxTotal
 			lineItemTotals.Total += lineItemTotals.Subtotal

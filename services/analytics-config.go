@@ -30,7 +30,7 @@ func (s *AnalyticsConfigService) SetContext(context context.Context) *AnalyticsC
 }
 
 func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsConfig, *utils.ApplictaionError) {
-	var model *models.AnalyticsConfig
+	var model *models.AnalyticsConfig = &models.AnalyticsConfig{}
 	if err := s.r.AnalyticsConfigRepository().FindOne(s.ctx, model, sql.BuildQuery[models.AnalyticsConfig](
 		models.AnalyticsConfig{
 			UserId: userId,

@@ -40,7 +40,7 @@ func (s *ProductTagService) Retrieve(id uuid.UUID, config *sql.Options) (*models
 		)
 	}
 
-	var res *models.ProductTag
+	var res *models.ProductTag = &models.ProductTag{}
 
 	query := sql.BuildQuery(models.ProductTag{Model: core.Model{Id: id}}, config)
 

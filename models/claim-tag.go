@@ -46,6 +46,6 @@ import "github.com/google/uuid"
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ClaimTag struct {
-	Id    uuid.UUID `json:"id gorm:primarykey"`
-	Value string    `json:"value"`
+	Id    uuid.UUID `json:"id gorm:primarykey"  gorm:"column:id gorm:primarykey"`
+	Value string    `json:"value"  gorm:"column:value"`
 }

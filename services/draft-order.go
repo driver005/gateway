@@ -41,7 +41,7 @@ func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config *sql.Options
 		)
 	}
 
-	var draftOrder *models.DraftOrder
+	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 
 	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: draftOrderId}}, config)
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
@@ -52,7 +52,7 @@ func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config *sql.Options
 }
 
 func (s *DraftOrderService) RetrieveByCartId(cartId uuid.UUID, config *sql.Options) (*models.DraftOrder, *utils.ApplictaionError) {
-	var draftOrder *models.DraftOrder
+	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 
 	query := sql.BuildQuery(models.DraftOrder{CartId: uuid.NullUUID{UUID: cartId}}, config)
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
@@ -114,7 +114,7 @@ func (s *DraftOrderService) Create(data *types.DraftOrderCreate) (*models.DraftO
 		return nil, err
 	}
 
-	var draftOrder *models.DraftOrder
+	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 	draftOrder.CartId = uuid.NullUUID{UUID: createdCart.Id}
 	if !reflect.ValueOf(data.NoNotificationOrder).IsZero() {
 		draftOrder.NoNotificationOrder = data.NoNotificationOrder
@@ -222,7 +222,7 @@ func (s *DraftOrderService) Create(data *types.DraftOrderCreate) (*models.DraftO
 }
 
 func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UUID) (*models.DraftOrder, *utils.ApplictaionError) {
-	var draftOrder *models.DraftOrder
+	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 
 	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, &sql.Options{})
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
@@ -242,7 +242,7 @@ func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UU
 }
 
 func (s *DraftOrderService) Update(id uuid.UUID, data *models.DraftOrder) (*models.DraftOrder, *utils.ApplictaionError) {
-	var draftOrder *models.DraftOrder
+	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 
 	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, &sql.Options{})
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {

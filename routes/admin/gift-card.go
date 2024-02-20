@@ -7,11 +7,12 @@ import (
 )
 
 type GiftCard struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewGiftCard(r Registry) *GiftCard {
-	m := GiftCard{r: r}
+	m := GiftCard{r: r, name: "gift_card"}
 	return &m
 }
 
@@ -140,7 +141,9 @@ func (m *GiftCard) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/gift-cards
@@ -269,10 +272,10 @@ func (m *GiftCard) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"gift_cards": result,
+		"count":      count,
+		"offset":     config.Skip,
+		"limit":      config.Take,
 	})
 }
 
@@ -409,7 +412,9 @@ func (m *GiftCard) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/gift-cards/{id}
@@ -550,7 +555,9 @@ func (m *GiftCard) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/gift-cards/{id}

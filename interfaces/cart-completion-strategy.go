@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"github.com/driver005/gateway/core"
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/types"
 	"github.com/driver005/gateway/utils"
@@ -9,7 +10,7 @@ import (
 
 type CartCompletionResponse struct {
 	ResponseCode int
-	ResponseBody map[string]interface{}
+	ResponseBody core.JSONB
 }
 
 type ICartCompletionStrategy interface {

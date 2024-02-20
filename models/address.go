@@ -125,17 +125,17 @@ import (
 type Address struct {
 	core.Model
 
-	Address1    string        `json:"address_1" gorm:"default:null"`
-	Address2    string        `json:"address_2" gorm:"default:null"`
-	City        string        `json:"city" gorm:"default:null"`
-	Company     string        `json:"company" gorm:"default:null"`
-	Country     *Country      `json:"country" gorm:"foreignKey:id;references:country_code"`
-	CountryCode string        `json:"country_code" gorm:"default:null"`
-	Customer    *Customer     `json:"customer" gorm:"foreignKey:id;references:customer_id"`
-	CustomerId  uuid.NullUUID `json:"customer_id" gorm:"default:null"`
-	FirstName   string        `json:"first_name" gorm:"default:null"`
-	LastName    string        `json:"last_name" gorm:"default:null"`
-	Phone       string        `json:"phone" gorm:"default:null"`
-	PostalCode  string        `json:"postal_code" gorm:"default:null"`
-	Province    string        `json:"province" gorm:"default:null"`
+	Address1    string        `json:"address_1"  gorm:"column:address_1"`
+	Address2    string        `json:"address_2"  gorm:"column:address_2"`
+	City        string        `json:"city"  gorm:"column:city"`
+	Company     string        `json:"company"  gorm:"column:company"`
+	Country     *Country      `json:"country"  gorm:"column:country;foreignKey:CountryCode;foreignKey:Iso2"`
+	CountryCode string        `json:"country_code"  gorm:"column:country_code"`
+	Customer    *Customer     `json:"customer"  gorm:"column:customer;foreignKey:CustomerId"`
+	CustomerId  uuid.NullUUID `json:"customer_id"  gorm:"column:customer_id"`
+	FirstName   string        `json:"first_name"  gorm:"column:first_name"`
+	LastName    string        `json:"last_name"  gorm:"column:last_name"`
+	Phone       string        `json:"phone"  gorm:"column:phone"`
+	PostalCode  string        `json:"postal_code"  gorm:"column:postal_code"`
+	Province    string        `json:"province"  gorm:"column:province"`
 }

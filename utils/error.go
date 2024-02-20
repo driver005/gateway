@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -82,7 +81,7 @@ func ErrorHandler(ctx fiber.Ctx, err error) error {
 		switch e.Type {
 		case QueryRunnerAlreadyReleasedError, TransactionAlreadyStartedError, TransactionNotStartedError, CONFLICT:
 			e.Code = "invalid_state_error"
-			e.Message = "The request conflicted with another request. You may retry the request with the provided Idempotency-Key."
+			// e.Message = "The request conflicted with another request. You may retry the request with the provided Idempotency-Key."
 			statusCode = 409
 		case UNAUTHORIZED:
 			statusCode = 401
@@ -106,8 +105,6 @@ func ErrorHandler(ctx fiber.Ctx, err error) error {
 			e.Type = "unknown_error"
 		}
 	}
-
-	fmt.Println(err)
 
 	// Set Content-Type: application/json; charset=utf-8
 	ctx.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSONCharsetUTF8)

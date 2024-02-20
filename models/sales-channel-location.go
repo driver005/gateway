@@ -51,7 +51,7 @@ import (
 type SalesChannelLocation struct {
 	core.Model
 
-	SalesChannelId uuid.NullUUID `json:"sales_channel_id"`
-	LocationId     uuid.NullUUID `json:"location_id"`
-	SalesChannel   *interface{}  `json:"sales_channel,omitempty" gorm:"foreignKey:id;references:location_id"`
+	SalesChannelId uuid.NullUUID `json:"sales_channel_id"  gorm:"column:sales_channel_id"`
+	LocationId     uuid.NullUUID `json:"location_id"  gorm:"column:location_id"`
+	SalesChannel   *SalesChannel `json:"sales_channel"  gorm:"column:sales_channel;foreignKey:SalesChannelId"`
 }

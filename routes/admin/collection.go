@@ -7,11 +7,12 @@ import (
 )
 
 type Collection struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewCollection(r Registry) *Collection {
-	m := Collection{r: r}
+	m := Collection{r: r, name: "collection"}
 	return &m
 }
 
@@ -143,7 +144,9 @@ func (m *Collection) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/collections
@@ -340,10 +343,10 @@ func (m *Collection) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"collections": result,
+		"count":       count,
+		"offset":      config.Skip,
+		"limit":       config.Take,
 	})
 }
 
@@ -476,7 +479,9 @@ func (m *Collection) Create(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/collections/{id}
@@ -615,7 +620,9 @@ func (m *Collection) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/collections/{id}
@@ -886,7 +893,9 @@ func (m *Collection) AddProducts(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/collections/{id}/products/batch

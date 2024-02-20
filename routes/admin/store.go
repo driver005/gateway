@@ -10,11 +10,12 @@ import (
 )
 
 type Store struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewStore(r Registry) *Store {
-	m := Store{r: r}
+	m := Store{r: r, name: "store"}
 	return &m
 }
 
@@ -146,7 +147,9 @@ func (m *Store) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/store
@@ -278,7 +281,9 @@ func (m *Store) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/store/currencies/{code}
@@ -404,7 +409,9 @@ func (m *Store) AddCurrency(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [delete] /admin/store/currencies/{code}
@@ -529,7 +536,9 @@ func (m *Store) RemoveCurrency(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/store/payment-providers

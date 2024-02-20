@@ -24,6 +24,6 @@ import "github.com/google/uuid"
 //	  type: boolean
 //	  default: true
 type NotificationProvider struct {
-	Id          uuid.UUID `json:"id gorm:primarykey"`
-	IsInstalled bool      `json:"is_installed" gorm:"default:null"`
+	Id          uuid.UUID `json:"id gorm:primarykey"  gorm:"column:id gorm:primarykey"`
+	IsInstalled bool      `json:"is_installed"  gorm:"column:is_installed;default:true"`
 }

@@ -39,7 +39,7 @@ func (s *DiscountConditionService) Retrieve(conditionId uuid.UUID, config *sql.O
 		)
 	}
 
-	var res *models.DiscountCondition
+	var res *models.DiscountCondition = &models.DiscountCondition{}
 	query := sql.BuildQuery[models.DiscountCondition](models.DiscountCondition{Model: core.Model{Id: conditionId}}, &sql.Options{})
 
 	if err := s.r.DiscountConditionRepository().FindOne(s.ctx, res, query); err != nil {
@@ -50,7 +50,7 @@ func (s *DiscountConditionService) Retrieve(conditionId uuid.UUID, config *sql.O
 }
 
 func (s *DiscountConditionService) ResolveConditionType(data *types.DiscountConditionInput) (*models.DiscountCondition, *utils.ApplictaionError) {
-	var model *models.DiscountCondition
+	var model *models.DiscountCondition = &models.DiscountCondition{}
 	switch {
 	case data.Products != nil:
 		model.Type = models.DiscountConditionTypeProducts

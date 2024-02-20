@@ -20,11 +20,12 @@ import (
 const includes bool = true
 
 type Order struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewOrder(r Registry) *Order {
-	m := Order{r: r}
+	m := Order{r: r, name: "order"}
 	return &m
 }
 
@@ -187,7 +188,9 @@ func (m *Order) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/orders
@@ -451,7 +454,7 @@ func (m *Order) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
+		"orders": result,
 		"count":  count,
 		"offset": config.Skip,
 		"limit":  config.Take,
@@ -600,7 +603,9 @@ func (m *Order) Update(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/shipping-methods
@@ -760,7 +765,9 @@ func (m *Order) AddShippingMethod(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/archive
@@ -895,7 +902,9 @@ func (m *Order) Archive(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/cancel
@@ -1030,7 +1039,9 @@ func (m *Order) Cancel(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 
 }
 
@@ -1193,7 +1204,9 @@ func (m *Order) CancelSwap(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/claims/{claim_id}/cancel
@@ -1346,7 +1359,9 @@ func (m *Order) CancelClaim(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/claims/{claim_id}/fulfillments/{fulfillment_id}/cancel
@@ -1521,7 +1536,9 @@ func (m *Order) CancelFullfillmentClaim(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/swaps/{swap_id}/fulfillments/{fulfillment_id}/cancel
@@ -1697,7 +1714,9 @@ func (m *Order) CancelFullfillmentSwap(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/fulfillments/{fulfillment_id}/cancel
@@ -1867,7 +1886,9 @@ func (m *Order) CancelFullfillment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/capture
@@ -2002,7 +2023,9 @@ func (m *Order) CapturePayment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/complete
@@ -2137,7 +2160,9 @@ func (m *Order) Complete(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/claims/{claim_id}/shipments
@@ -2306,7 +2331,9 @@ func (m *Order) CreateClaimShippment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 //
@@ -2802,7 +2829,9 @@ func (m *Order) CreateFulfillment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/line-items/{line_item_id}/reserve
@@ -3087,7 +3116,9 @@ func (m *Order) CreateShipment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/swaps/{swap_id}/shipments
@@ -3263,7 +3294,9 @@ func (m *Order) CreateSwapShipment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/swaps
@@ -3730,7 +3763,9 @@ func (m *Order) FulfillClaim(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 //
@@ -3940,7 +3975,9 @@ func (m *Order) FulfillSwap(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/orders/{id}/reservations
@@ -4191,7 +4228,9 @@ func (m *Order) ProcessSwapPayment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/refund
@@ -4347,7 +4386,9 @@ func (m *Order) RefundPayment(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [post] /admin/orders/{id}/return
@@ -4779,5 +4820,7 @@ func (m *Order) UpdateClaim(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

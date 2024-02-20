@@ -125,18 +125,18 @@ import (
 type Region struct {
 	core.Model
 
-	Name                 string                `json:"name"`
-	CurrencyCode         string                `json:"currency_code"`
-	Currency             *Currency             `json:"currency" gorm:"foreignKey:code;references:currency_code"`
-	TaxRate              float64               `json:"tax_rate"`
-	TaxRates             []TaxRate             `json:"tax_rates" gorm:"foreignKey:id"`
-	TaxCode              string                `json:"tax_code" gorm:"default:null"`
-	GiftCardsTaxable     bool                  `json:"gift_cards_taxable" gorm:"default:null"`
-	AutomaticTaxes       bool                  `json:"automatic_taxes" gorm:"default:null"`
-	Countries            []Country             `json:"countries" gorm:"foreignKey:id"`
-	TaxProviderId        uuid.NullUUID         `json:"tax_provider_id" gorm:"default:null"`
-	TaxProvider          *TaxProvider          `json:"tax_provider" gorm:"foreignKey:id;references:tax_provider_id"`
-	PaymentProviders     []PaymentProvider     `json:"payment_providers" gorm:"foreignKey:id"`
-	FulfillmentProviders []FulfillmentProvider `json:"fulfillment_providers" gorm:"foreignKey:id"`
-	IncludesTax          bool                  `json:"includes_tax" gorm:"default:null"`
+	Name                 string                `json:"name"  gorm:"column:name"`
+	CurrencyCode         string                `json:"currency_code"  gorm:"column:currency_code"`
+	Currency             *Currency             `json:"currency"  gorm:"column:currency;foreignKey:CurrencyCode;foreignKey:Code"`
+	TaxRate              float64               `json:"tax_rate"  gorm:"column:tax_rate"`
+	TaxRates             []TaxRate             `json:"tax_rates"  gorm:"column:tax_rates;foreignKey:Id"`
+	TaxCode              string                `json:"tax_code"  gorm:"column:tax_code"`
+	GiftCardsTaxable     bool                  `json:"gift_cards_taxable"  gorm:"column:gift_cards_taxable;default:true"`
+	AutomaticTaxes       bool                  `json:"automatic_taxes"  gorm:"column:automatic_taxes;default:true"`
+	Countries            []Country             `json:"countries"  gorm:"column:countries;foreignKey:Id"`
+	TaxProviderId        uuid.NullUUID         `json:"tax_provider_id"  gorm:"column:tax_provider_id"`
+	TaxProvider          *TaxProvider          `json:"tax_provider"  gorm:"column:tax_provider;foreignKey:TaxProviderId"`
+	PaymentProviders     []PaymentProvider     `json:"payment_providers"  gorm:"column:payment_providers;many2many:region_payment_providers;"`
+	FulfillmentProviders []FulfillmentProvider `json:"fulfillment_providers"  gorm:"column:fulfillment_providers;many2many:region_fulfillment_providers;"`
+	IncludesTax          bool                  `json:"includes_tax"  gorm:"column:includes_tax"`
 }

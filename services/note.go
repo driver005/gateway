@@ -32,7 +32,7 @@ func (s *NoteService) SetContext(context context.Context) *NoteService {
 }
 
 func (s *NoteService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Note, *utils.ApplictaionError) {
-	var res *models.Note
+	var res *models.Note = &models.Note{}
 	query := sql.BuildQuery(&models.Note{Model: core.Model{Id: id}}, config)
 	if err := s.r.NoteRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

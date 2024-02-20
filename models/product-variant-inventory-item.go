@@ -55,8 +55,8 @@ import (
 type ProductVariantInventoryItem struct {
 	core.Model
 
-	InventoryItemId  uuid.NullUUID   `json:"inventory_item_id"`
-	VariantId        uuid.NullUUID   `json:"variant_id"`
-	Variant          *ProductVariant `json:"variant,omitempty"  gorm:"foreignKey:id;references:variant_id"`
-	RequiredQuantity int             `json:"required_quantity"`
+	InventoryItemId  uuid.NullUUID   `json:"inventory_item_id"  gorm:"column:inventory_item_id"`
+	VariantId        uuid.NullUUID   `json:"variant_id"  gorm:"column:variant_id"`
+	Variant          *ProductVariant `json:"variant"  gorm:"column:variant;foreignKey:VariantId"`
+	RequiredQuantity int             `json:"required_quantity"  gorm:"column:required_quantity;default:0"`
 }

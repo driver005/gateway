@@ -36,8 +36,8 @@ func (s *StoreService) Create() (*models.Store, *utils.ApplictaionError) {
 		return store, nil
 	}
 
-	var model *models.Store
-	var usd *models.Currency
+	var model *models.Store = &models.Store{}
+	var usd *models.Currency = &models.Currency{}
 
 	query := sql.BuildQuery(models.Currency{Code: "usd"}, &sql.Options{})
 	if err := s.r.CurrencyRepository().FindOne(s.ctx, usd, query); err != nil {
@@ -174,12 +174,12 @@ func (s *StoreService) Update(data *types.UpdateStoreInput) (*models.Store, *uti
 }
 
 func (s *StoreService) AddCurrency(code string) (*models.Store, *utils.ApplictaionError) {
-	var currency *models.Currency
+	var currency *models.Currency = &models.Currency{}
 	query := sql.BuildQuery(models.Currency{Code: strings.ToLower(code)}, &sql.Options{})
 	if err := s.r.CurrencyRepository().FindOne(s.ctx, currency, query); err != nil {
 		return nil, err
 	}
-	if currency == nil {
+	if reflect.DeepEqual(currency, &models.Currency{}) {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			"Currency "+code+" not found",

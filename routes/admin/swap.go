@@ -7,11 +7,12 @@ import (
 )
 
 type Swap struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewSwap(r Registry) *Swap {
-	m := Swap{r: r}
+	m := Swap{r: r, name: "swap"}
 	return &m
 }
 
@@ -137,7 +138,9 @@ func (m *Swap) Get(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }
 
 // @oas:path [get] /admin/swaps
@@ -262,7 +265,7 @@ func (m *Swap) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
+		"swaps":  result,
 		"count":  count,
 		"offset": config.Skip,
 		"limit":  config.Take,

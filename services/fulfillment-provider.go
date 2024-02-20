@@ -52,7 +52,7 @@ func (s *FulfillmentProviderService) RegisterInstalledProviders(providers uuid.U
 	}
 
 	for _, p := range providers {
-		var model *models.FulfillmentProvider
+		var model *models.FulfillmentProvider = &models.FulfillmentProvider{}
 		model.IsInstalled = true
 		model.Id = p
 

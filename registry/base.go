@@ -19,6 +19,7 @@ import (
 	"github.com/driver005/gateway/routes/store"
 	"github.com/driver005/gateway/services"
 	"github.com/driver005/gateway/sql"
+	"github.com/driver005/gateway/strategies"
 	"github.com/driver005/gateway/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/sarulabs/di"
@@ -447,7 +448,7 @@ func (m *Base) Init(ctx context.Context) error {
 				SingularTable: true,
 			},
 			DisableForeignKeyConstraintWhenMigrating: true,
-			Logger:                                   dbLogger.Default.LogMode(dbLogger.Silent),
+			Logger:                                   dbLogger.Default.LogMode(dbLogger.Info),
 		})
 
 		if err != nil {
@@ -524,6 +525,12 @@ func (m *Base) Routes() *routes.Routes {
 func (m *Base) AddRoutes(router *fiber.App) {
 	m.NewRouter(router)
 	m.Routes().SetRoutes()
+}
+
+func (m *Base) Strategies() {
+	m.cartCompletionStrategy = strategies.NewCartCompletionStrategy(m)
+	m.priceSelectionStrategy = strategies.NewPriceSelectionStrategy(m)
+	m.taxCalculationStrategy = strategies.NewTaxCalculationStrategy(m)
 }
 
 func (m *Base) Setup() {

@@ -28,5 +28,5 @@ import (
 type PaymentProvider struct {
 	core.Model
 
-	IsInstalled bool `json:"is_installed" gorm:"default:null"`
+	IsInstalled bool `json:"is_installed"  gorm:"column:is_installed;default:true"`
 }

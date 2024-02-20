@@ -47,9 +47,9 @@ import "github.com/driver005/gateway/core"
 type OAuth struct {
 	core.Model
 
-	DisplayName     string     `json:"display_name"`
-	ApplicationName string     `json:"application_name"`
-	InstallUrl      string     `json:"install_url" gorm:"default:null"`
-	UninstallUrl    string     `json:"uninstall_url" gorm:"default:null"`
-	Data            core.JSONB `json:"data" gorm:"default:null"`
+	DisplayName     string     `json:"display_name"  gorm:"column:display_name"`
+	ApplicationName string     `json:"application_name"  gorm:"column:application_name"`
+	InstallUrl      string     `json:"install_url"  gorm:"column:install_url"`
+	UninstallUrl    string     `json:"uninstall_url"  gorm:"column:uninstall_url"`
+	Data            core.JSONB `json:"data"  gorm:"column:data"`
 }

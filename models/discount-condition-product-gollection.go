@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/driver005/gateway/core"
 	"github.com/google/uuid"
 )
@@ -53,9 +55,11 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type DiscountConditionProductCollection struct {
-	ProductCollectionId uuid.NullUUID      `json:"product_collection_id"`
-	ProductCollection   *ProductCollection `json:"product_collection" gorm:"foreignKey:id;references:product_collection_id"`
-	ConditionId         uuid.NullUUID      `json:"condition_id"`
-	DiscountCondition   *DiscountCondition `json:"discount_condition" gorm:"foreignKey:id;references:condition_id"`
-	Metadata            core.JSONB         `json:"metadata" gorm:"default:null"`
+	ProductCollectionId uuid.NullUUID      `json:"product_collection_id"  gorm:"column:product_collection_id;primary_key"`
+	ConditionId         uuid.NullUUID      `json:"condition_id"  gorm:"column:condition_id;primary_key"`
+	ProductCollection   *ProductCollection `json:"product_collection"  gorm:"column:product_collection;foreignKey:ProductCollectionId"`
+	DiscountCondition   *DiscountCondition `json:"discount_condition"  gorm:"column:discount_condition;foreignKey:ConditionId"`
+	CreatedAt           time.Time          `json:"created_at"  gorm:"column:created_at;created_at"`
+	UpdatedAt           time.Time          `json:"updated_at"  gorm:"column:updated_at;updated_at"`
+	Metadata            core.JSONB         `json:"metadata"  gorm:"column:metadata"`
 }

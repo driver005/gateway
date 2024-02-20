@@ -66,7 +66,7 @@ func (s *DiscountService) ListAndCount(selector *types.FilterableDiscount, confi
 }
 
 func (s *DiscountService) Create(data *types.CreateDiscountInput) (*models.Discount, *utils.ApplictaionError) {
-	var discount *models.Discount
+	var discount *models.Discount = &models.Discount{}
 
 	conditions := data.Rule.Conditions
 	ruleToCreate := data.Rule
@@ -171,15 +171,15 @@ func (s *DiscountService) Retrieve(discountId uuid.UUID, config *sql.Options) (*
 			nil,
 		)
 	}
-	var discount *models.Discount
+	var discount *models.Discount = &models.Discount{}
 	query := sql.BuildQuery(models.Discount{Model: core.Model{Id: discountId}}, config)
 	if err := s.r.DiscountRepository().FindOne(s.ctx, discount, query); err != nil {
 		return nil, err
 	}
-	if discount == nil {
+	if reflect.DeepEqual(discount, &models.Discount{}) {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
-			fmt.Sprintf("models.Discount with id %s was not found", discountId),
+			fmt.Sprintf("Discount with id %s was not found", discountId),
 			nil,
 		)
 	}
@@ -187,13 +187,13 @@ func (s *DiscountService) Retrieve(discountId uuid.UUID, config *sql.Options) (*
 }
 
 func (s *DiscountService) RetrieveByCode(discountCode string, config *sql.Options) (*models.Discount, *utils.ApplictaionError) {
-	var discount *models.Discount
+	var discount *models.Discount = &models.Discount{}
 
 	query := sql.BuildQuery(models.Discount{Code: strings.ToUpper(strings.TrimSpace(discountCode))}, config)
 	if err := s.r.DiscountRepository().FindOne(s.ctx, discount, query); err != nil {
 		return nil, err
 	}
-	if discount == nil {
+	if reflect.DeepEqual(discount, &models.Discount{}) {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
 			fmt.Sprintf("Discounts with code %s was not found", discountCode),
@@ -362,12 +362,12 @@ func (s *DiscountService) CreateDynamicCode(discountId uuid.UUID, data *types.Cr
 }
 
 func (s *DiscountService) DeleteDynamicCode(discountId uuid.UUID, code string) *utils.ApplictaionError {
-	var discount *models.Discount
+	var discount *models.Discount = &models.Discount{}
 	query := sql.BuildQuery(models.Discount{ParentDiscountId: uuid.NullUUID{UUID: discountId}, Code: code}, &sql.Options{})
 	if err := s.r.DiscountRepository().FindOne(s.ctx, discount, query); err != nil {
 		return err
 	}
-	if discount == nil {
+	if reflect.DeepEqual(discount, &models.Discount{}) {
 		return nil
 	}
 	return s.r.DiscountRepository().SoftRemove(s.ctx, discount)

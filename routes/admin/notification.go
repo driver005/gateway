@@ -7,11 +7,12 @@ import (
 )
 
 type Notification struct {
-	r Registry
+	r    Registry
+	name string
 }
 
 func NewNotification(r Registry) *Notification {
-	m := Notification{r: r}
+	m := Notification{r: r, name: "notification"}
 	return &m
 }
 
@@ -153,10 +154,10 @@ func (m *Notification) List(context fiber.Ctx) error {
 	}
 
 	return context.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data":   result,
-		"count":  count,
-		"offset": config.Skip,
-		"limit":  config.Take,
+		"notifications": result,
+		"count":         count,
+		"offset":        config.Skip,
+		"limit":         config.Take,
 	})
 }
 
@@ -290,5 +291,7 @@ func (m *Notification) Resend(context fiber.Ctx) error {
 		return err
 	}
 
-	return context.Status(fiber.StatusOK).JSON(result)
+	return context.Status(fiber.StatusOK).JSON(fiber.Map{
+		(m.name): result,
+	})
 }

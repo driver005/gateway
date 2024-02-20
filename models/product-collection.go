@@ -60,7 +60,7 @@ import "github.com/driver005/gateway/core"
 type ProductCollection struct {
 	core.Model
 
-	Title    string    `json:"title"`
-	Handle   string    `json:"handle" gorm:"default:null"`
-	Products []Product `json:"products" gorm:"foreignKey:id"`
+	Title    string    `json:"title"  gorm:"column:title"`
+	Handle   string    `json:"handle"  gorm:"column:handle"`
+	Products []Product `json:"products"  gorm:"column:products;foreignKey:Id"`
 }

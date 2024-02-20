@@ -61,10 +61,10 @@ import (
 type LineItemAdjustment struct {
 	core.Model
 
-	ItemId      uuid.NullUUID `json:"item_id"`
-	Item        *LineItem     `json:"item" gorm:"foreignKey:id;references:item_id"`
-	Description string        `json:"description"`
-	DiscountId  uuid.NullUUID `json:"discount_id" gorm:"default:null"`
-	Discount    *Discount     `json:"discount" gorm:"foreignKey:id;references:discount_id"`
-	Amount      float64       `json:"amount"`
+	ItemId      uuid.NullUUID `json:"item_id"  gorm:"column:item_id"`
+	Item        *LineItem     `json:"item"  gorm:"column:item;foreignKey:ItemId"`
+	Description string        `json:"description"  gorm:"column:description"`
+	DiscountId  uuid.NullUUID `json:"discount_id"  gorm:"column:discount_id"`
+	Discount    *Discount     `json:"discount"  gorm:"column:discount;foreignKey:DiscountId"`
+	Amount      float64       `json:"amount"  gorm:"column:amount"`
 }

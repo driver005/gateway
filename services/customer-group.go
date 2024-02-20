@@ -41,9 +41,9 @@ func (s *CustomerGroupService) Retrieve(customerGroupId uuid.UUID, config *sql.O
 		)
 	}
 
-	var res *models.CustomerGroup
+	var res *models.CustomerGroup = &models.CustomerGroup{}
 	query := sql.BuildQuery(models.CustomerGroup{Model: core.Model{Id: customerGroupId}}, config)
-	if err := s.r.CustomerGroupRepository().FindOne(s.ctx, res, query); err == nil {
+	if err := s.r.CustomerGroupRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
 			`CustomerGroup with id `+customerGroupId.String()+` was not found`,

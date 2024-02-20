@@ -96,16 +96,16 @@ import (
 type Notification struct {
 	core.Model
 
-	EventName          string                `json:"event_name" gorm:"default:null"`
-	ResourceType       string                `json:"resource_type"`
-	ResourceId         uuid.NullUUID         `json:"resource_id"`
-	CustomerId         uuid.NullUUID         `json:"customer_id" gorm:"default:null"`
-	Customer           *Customer             `json:"customer" gorm:"foreignKey:id;references:customer_id"`
-	To                 string                `json:"to"`
-	Data               core.JSONB            `json:"data" gorm:"default:null"`
-	ParentId           uuid.NullUUID         `json:"parent_id" gorm:"default:null"`
-	ParentNotification *NotificationProvider `json:"parent_notification" gorm:"foreignKey:id;references:parent_id"`
-	Resends            []Notification        `json:"resends" gorm:"foreignKey:id"`
-	ProviderId         uuid.NullUUID         `json:"provider_id" gorm:"default:null"`
-	Provider           *NotificationProvider `json:"provider" gorm:"foreignKey:id;references:provider_id"`
+	EventName          string                `json:"event_name"  gorm:"column:event_name"`
+	ResourceType       string                `json:"resource_type"  gorm:"column:resource_type"`
+	ResourceId         uuid.NullUUID         `json:"resource_id"  gorm:"column:resource_id"`
+	CustomerId         uuid.NullUUID         `json:"customer_id"  gorm:"column:customer_id"`
+	Customer           *Customer             `json:"customer"  gorm:"column:customer;foreignKey:CustomerId"`
+	To                 string                `json:"to"  gorm:"column:to"`
+	Data               core.JSONB            `json:"data"  gorm:"column:data"`
+	ParentId           uuid.NullUUID         `json:"parent_id"  gorm:"column:parent_id"`
+	ParentNotification *NotificationProvider `json:"parent_notification"  gorm:"column:parent_notification;foreignKey:ParentId"`
+	Resends            []Notification        `json:"resends"  gorm:"column:resends;foreignKey:Id"`
+	ProviderId         uuid.NullUUID         `json:"provider_id"  gorm:"column:provider_id"`
+	Provider           *NotificationProvider `json:"provider"  gorm:"column:provider;foreignKey:ProviderId"`
 }

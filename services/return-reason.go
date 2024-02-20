@@ -106,7 +106,7 @@ func (s *ReturnReasonService) Retrieve(returnReasonId uuid.UUID, config *sql.Opt
 		)
 	}
 
-	var res *models.ReturnReason
+	var res *models.ReturnReason = &models.ReturnReason{}
 
 	query := sql.BuildQuery(models.ReturnReason{Model: core.Model{Id: returnReasonId}}, config)
 	if err := s.r.ReturnReasonRepository().FindOne(s.ctx, res, query); err != nil {
