@@ -134,21 +134,21 @@ import (
 type Return struct {
 	core.Model
 
-	Status         ReturnStatus    `json:"status"  gorm:"column:status;default:'requested'"`
-	Items          []ReturnItem    `json:"items"  gorm:"column:items;foreignKey:ReturnId"`
-	SwapId         uuid.NullUUID   `json:"swap_id"  gorm:"column:swap_id"`
-	Swap           *Swap           `json:"swap"  gorm:"column:swap;foreignKey:SwapId"`
-	OrderId        uuid.NullUUID   `json:"order_id"  gorm:"column:order_id"`
-	Order          *Order          `json:"order"  gorm:"column:order;foreignKey:OrderId"`
-	ClaimOrderId   uuid.NullUUID   `json:"claim_order_id"  gorm:"column:claim_order_id"`
-	ClaimOrder     *ClaimOrder     `json:"claim_order"  gorm:"column:claim_order;foreignKey:ClaimOrderId"`
-	ShippingMethod *ShippingMethod `json:"shipping_method"  gorm:"column:shipping_method;foreignKey:Id"`
-	ShippingData   core.JSONB      `json:"shipping_data"  gorm:"column:shipping_data"`
-	RefundAmount   float64         `json:"refund_amount"  gorm:"column:refund_amount"`
-	NoNotification bool            `json:"no_notification"  gorm:"column:no_notification"`
-	LocationId     uuid.UUID       `json:"location_id"  gorm:"column:location_id"`
-	IdempotencyKey string          `json:"idempotency_key"  gorm:"column:idempotency_key"`
-	ReceivedAt     *time.Time      `json:"received_at"  gorm:"column:received_at"`
+	Status         ReturnStatus    `json:"status" gorm:"column:status;default:'requested'"`
+	Items          []ReturnItem    `json:"items" gorm:"foreignKey:ReturnId"`
+	SwapId         uuid.NullUUID   `json:"swap_id" gorm:"column:swap_id"`
+	Swap           *Swap           `json:"swap" gorm:"foreignKey:SwapId"`
+	OrderId        uuid.NullUUID   `json:"order_id" gorm:"column:order_id"`
+	Order          *Order          `json:"order" gorm:"foreignKey:OrderId"`
+	ClaimOrderId   uuid.NullUUID   `json:"claim_order_id" gorm:"column:claim_order_id"`
+	ClaimOrder     *ClaimOrder     `json:"claim_order" gorm:"foreignKey:ClaimOrderId"`
+	ShippingMethod *ShippingMethod `json:"shipping_method" gorm:"foreignKey:Id"`
+	ShippingData   core.JSONB      `json:"shipping_data" gorm:"column:shipping_data"`
+	RefundAmount   float64         `json:"refund_amount" gorm:"column:refund_amount"`
+	NoNotification bool            `json:"no_notification" gorm:"column:no_notification"`
+	LocationId     uuid.NullUUID   `json:"location_id" gorm:"column:location_id"`
+	IdempotencyKey string          `json:"idempotency_key" gorm:"column:idempotency_key"`
+	ReceivedAt     *time.Time      `json:"received_at" gorm:"column:received_at"`
 }
 
 // ReturnStatus represents the status of a return

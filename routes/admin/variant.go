@@ -623,7 +623,7 @@ func (m *Variant) GetInventory(context fiber.Ctx) error {
 				Id: channel.Id,
 			},
 			Name:        channel.Name,
-			LocationIds: locationIds,
+			LocationIds: core.UUIDSlice(locationIds),
 		})
 	}
 

@@ -28,5 +28,5 @@ import (
 type TaxProvider struct {
 	core.Model
 
-	IsInstalled bool `json:"is_installed"  gorm:"column:is_installed;default:true"`
+	IsInstalled bool `json:"is_installed" gorm:"column:is_installed;default:true"`
 }

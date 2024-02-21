@@ -93,7 +93,7 @@ func (s *ClaimItemService) Update(id uuid.UUID, data *types.UpdateClaimItemInput
 		for _, tag := range data.Tags {
 			if tag.Id != uuid.Nil {
 				item.Tags = append(item.Tags, models.ClaimTag{
-					Id:    tag.Id,
+					Id:    uuid.NullUUID{UUID: tag.Id},
 					Value: tag.Value,
 				})
 			} else {

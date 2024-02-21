@@ -6,6 +6,7 @@ import (
 
 	"github.com/driver005/gateway/core"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // @oas:schema:Fulfillment
@@ -142,24 +143,26 @@ import (
 type Fulfillment struct {
 	core.Model
 
-	ClaimOrderId uuid.NullUUID        `json:"claim_order_id"  gorm:"column:claim_order_id"`
-	ClaimOrder   *ClaimOrder          `json:"claim_order"  gorm:"column:claim_order;foreignKey:ClaimOrderId"`
-	SwapId       uuid.NullUUID        `json:"swap_id"  gorm:"column:swap_id"`
-	Swap         *Swap                `json:"swap"  gorm:"column:swap;foreignKey:SwapId"`
-	OrderId      uuid.NullUUID        `json:"order_id"  gorm:"column:order_id"`
-	Order        *Order               `json:"order"  gorm:"column:order;foreignKey:OrderId"`
-	ProviderId   uuid.NullUUID        `json:"provider_id"  gorm:"column:provider_id"`
-	Provider     *FulfillmentProvider `json:"provider"  gorm:"column:provider;foreignKey:ProviderId"`
-	LocationId   uuid.UUID            `json:"location_id"  gorm:"column:location_id"`
+	ClaimOrderId uuid.NullUUID        `json:"claim_order_id" gorm:"column:claim_order_id"`
+	ClaimOrder   *ClaimOrder          `json:"claim_order" gorm:"foreignKey:ClaimOrderId"`
+	SwapId       uuid.NullUUID        `json:"swap_id" gorm:"column:swap_id"`
+	Swap         *Swap                `json:"swap" gorm:"foreignKey:SwapId"`
+	OrderId      uuid.NullUUID        `json:"order_id" gorm:"column:order_id"`
+	Order        *Order               `json:"order" gorm:"foreignKey:OrderId"`
+	ProviderId   uuid.NullUUID        `json:"provider_id" gorm:"column:provider_id"`
+	Provider     *FulfillmentProvider `json:"provider" gorm:"foreignKey:ProviderId"`
+	LocationId   uuid.NullUUID        `json:"location_id" gorm:"column:location_id"`
 	//TODO:ADD
-	Items           []FulfillmentItem `json:"items"  gorm:"column:items;foreignKey:FulfillmentId"`
-	TrackingLinks   []TrackingLink    `json:"tracking_links"  gorm:"column:tracking_links;foreignKey:Id"`
-	TrackingNumbers []string          `json:"tracking_numbers"  gorm:"column:tracking_numbers;default:[]"`
-	Data            core.JSONB        `json:"data"  gorm:"column:data"`
-	ShippedAt       *time.Time        `json:"shipped_at"  gorm:"column:shipped_at"`
-	NoNotification  bool              `json:"no_notification"  gorm:"column:no_notification"`
-	CanceledAt      *time.Time        `json:"canceled_at"  gorm:"column:canceled_at"`
-	IdempotencyKey  string            `json:"idempotency_key"  gorm:"column:idempotency_key"`
+	Items         []FulfillmentItem `json:"items" gorm:"foreignKey:FulfillmentId"`
+	TrackingLinks []TrackingLink    `json:"tracking_links" gorm:"foreignKey:Id"`
+
+	//TODO: add ;default:[]
+	TrackingNumbers pq.StringArray `json:"tracking_numbers" gorm:"column:tracking_numbers;type:text[];default:[]"`
+	Data            core.JSONB     `json:"data" gorm:"column:data"`
+	ShippedAt       *time.Time     `json:"shipped_at" gorm:"column:shipped_at"`
+	NoNotification  bool           `json:"no_notification" gorm:"column:no_notification"`
+	CanceledAt      *time.Time     `json:"canceled_at" gorm:"column:canceled_at"`
+	IdempotencyKey  string         `json:"idempotency_key" gorm:"column:idempotency_key"`
 }
 
 type FulfillmentStatus string

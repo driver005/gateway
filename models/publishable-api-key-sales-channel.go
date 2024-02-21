@@ -41,6 +41,6 @@ import "github.com/google/uuid"
 //	  type: string
 //	  format: date-time
 type PublishableApiKeySalesChannel struct {
-	SalesChannelId   uuid.NullUUID `json:"sales_channel_id"  gorm:"column:sales_channel_id"`
-	PublishableKeyId uuid.NullUUID `json:"publishable_key_id"  gorm:"column:publishable_key_id"`
+	SalesChannelId   uuid.NullUUID `json:"sales_channel_id" gorm:"column:sales_channel_id"`
+	PublishableKeyId uuid.NullUUID `json:"publishable_key_id" gorm:"column:publishable_key_id"`
 }

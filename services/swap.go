@@ -742,7 +742,7 @@ func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *types.CreateSh
 				Metadata: metadata,
 			},
 			SwapId:     uuid.NullUUID{UUID: swap.Id},
-			LocationId: config.LocationId,
+			LocationId: uuid.NullUUID{UUID: config.LocationId},
 		},
 	)
 

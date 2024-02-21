@@ -123,20 +123,20 @@ import (
 type ShippingOption struct {
 	core.Model
 
-	Amount       float64                     `json:"amount"  gorm:"column:amount"`
-	Data         core.JSONB                  `json:"data"  gorm:"column:data"`
-	IncludesTax  bool                        `json:"includes_tax"  gorm:"column:includes_tax"`
-	IsReturn     bool                        `json:"is_return"  gorm:"column:is_return;default:false"`
-	AdminOnly    bool                        `json:"admin_only"  gorm:"column:admin_only;default:false"`
-	Name         string                      `json:"name"  gorm:"column:name"`
-	PriceType    ShippingOptionPriceType     `json:"price_type"  gorm:"column:price_type"`
-	Profile      *ShippingProfile            `json:"profile"  gorm:"column:profile;foreignKey:ProfileId"`
-	ProfileId    uuid.NullUUID               `json:"profile_id"  gorm:"column:profile_id"`
-	Provider     *FulfillmentProvider        `json:"provider"  gorm:"column:provider;foreignKey:ProviderId"`
-	ProviderId   uuid.NullUUID               `json:"provider_id"  gorm:"column:provider_id"`
-	Region       *Region                     `json:"region"  gorm:"column:region;foreignKey:RegionId"`
-	RegionId     uuid.NullUUID               `json:"region_id"  gorm:"column:region_id"`
-	Requirements []ShippingOptionRequirement `json:"requirements"  gorm:"column:requirements;foreignKey:Id"`
+	Amount       float64                     `json:"amount" gorm:"column:amount"`
+	Data         core.JSONB                  `json:"data" gorm:"column:data"`
+	IncludesTax  bool                        `json:"includes_tax" gorm:"column:includes_tax"`
+	IsReturn     bool                        `json:"is_return" gorm:"column:is_return;default:false"`
+	AdminOnly    bool                        `json:"admin_only" gorm:"column:admin_only;default:false"`
+	Name         string                      `json:"name" gorm:"column:name"`
+	PriceType    ShippingOptionPriceType     `json:"price_type" gorm:"column:price_type"`
+	Profile      *ShippingProfile            `json:"profile" gorm:"foreignKey:ProfileId"`
+	ProfileId    uuid.NullUUID               `json:"profile_id" gorm:"column:profile_id"`
+	Provider     *FulfillmentProvider        `json:"provider" gorm:"foreignKey:ProviderId"`
+	ProviderId   uuid.NullUUID               `json:"provider_id" gorm:"column:provider_id"`
+	Region       *Region                     `json:"region" gorm:"foreignKey:RegionId"`
+	RegionId     uuid.NullUUID               `json:"region_id" gorm:"column:region_id"`
+	Requirements []ShippingOptionRequirement `json:"requirements" gorm:"foreignKey:Id"`
 }
 
 // The type of pricing calculation that is used when creatin Shipping Methods from the Shipping Option. Can be `flat_rate` for fixed prices or `calculated` if the Fulfillment Provider can provide price calulations.

@@ -351,7 +351,7 @@ func (s *RegionService) Delete(regionId uuid.UUID) *utils.ApplictaionError {
 
 	for _, country := range data.Countries {
 		country.RegionId = uuid.NullUUID{}
-		country.Region = models.Region{}
+		country.Region = &models.Region{}
 
 		if err := s.r.CountryRepository().Update(s.ctx, &country); err != nil {
 			return err

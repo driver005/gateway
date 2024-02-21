@@ -67,9 +67,9 @@ import (
 type ShippingMethodTaxLine struct {
 	core.Model
 
-	ShippingMethodId uuid.NullUUID   `json:"shipping_method_id"  gorm:"column:shipping_method_id"`
-	ShippingMethod   *ShippingMethod `json:"shipping_method"  gorm:"column:shipping_method;foreignKey:ShippingMethodId"`
-	Code             string          `json:"code"  gorm:"column:code"`
-	Name             string          `json:"name"  gorm:"column:name"`
-	Rate             float64         `json:"rate"  gorm:"column:rate"`
+	ShippingMethodId uuid.NullUUID   `json:"shipping_method_id" gorm:"column:shipping_method_id"`
+	ShippingMethod   *ShippingMethod `json:"shipping_method" gorm:"foreignKey:ShippingMethodId"`
+	Code             string          `json:"code" gorm:"column:code"`
+	Name             string          `json:"name" gorm:"column:name"`
+	Rate             float64         `json:"rate" gorm:"column:rate"`
 }

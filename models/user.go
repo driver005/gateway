@@ -79,12 +79,12 @@ import (
 type User struct {
 	core.Model
 
-	Role         UserRole `json:"role"  gorm:"column:role;default:member"`
-	Email        string   `json:"email"  gorm:"column:email"`
-	FirstName    string   `json:"first_name"  gorm:"column:first_name"`
-	LastName     string   `json:"last_name"  gorm:"column:last_name"`
-	PasswordHash string   `json:"password_hash"  gorm:"column:password_hash"`
-	ApiToken     string   `json:"api_token"  gorm:"column:api_token"`
+	Role         UserRole `json:"role" gorm:"column:role;default:'member'"`
+	Email        string   `json:"email" gorm:"column:email"`
+	FirstName    string   `json:"first_name" gorm:"column:first_name"`
+	LastName     string   `json:"last_name" gorm:"column:last_name"`
+	PasswordHash string   `json:"password_hash" gorm:"column:password_hash"`
+	ApiToken     string   `json:"api_token" gorm:"column:api_token"`
 }
 
 type UserRole string

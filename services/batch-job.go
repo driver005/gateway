@@ -82,7 +82,7 @@ func (s *BatchJobService) Create(data *types.BatchJobCreateProps) (*models.Batch
 		Type:      data.Type,
 		Status:    models.BatchJobStatusCreated,
 		Context:   data.Context,
-		CreatedBy: data.CreatedBy,
+		CreatedBy: uuid.NullUUID{UUID: data.CreatedBy},
 		DryRun:    data.DryRun,
 	}
 	if err := s.r.BatchJobRepository().Save(s.ctx, model); err != nil {

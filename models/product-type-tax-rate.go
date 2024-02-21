@@ -53,9 +53,9 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ProductTypeTaxRate struct {
-	ProductTypeId uuid.NullUUID `json:"product_type_id"  gorm:"column:product_type_id"`
-	ProductType   *ProductType  `json:"product_type"  gorm:"column:product_type;foreignKey:ProductTypeId"`
-	RateId        uuid.NullUUID `json:"rate_id"  gorm:"column:rate_id"`
-	TaxRate       *TaxRate      `json:"tax_rate"  gorm:"column:tax_rate;foreignKey:RateId"`
-	Metadata      core.JSONB    `json:"metadata"  gorm:"column:metadata"`
+	ProductTypeId uuid.NullUUID `json:"product_type_id" gorm:"column:product_type_id"`
+	ProductType   *ProductType  `json:"product_type" gorm:"foreignKey:ProductTypeId"`
+	RateId        uuid.NullUUID `json:"rate_id" gorm:"column:rate_id"`
+	TaxRate       *TaxRate      `json:"tax_rate" gorm:"foreignKey:RateId"`
+	Metadata      core.JSONB    `json:"metadata" gorm:"column:metadata"`
 }

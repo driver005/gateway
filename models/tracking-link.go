@@ -75,9 +75,9 @@ import (
 type TrackingLink struct {
 	core.Model
 
-	Url            string        `json:"url"  gorm:"column:url"`
-	TrackingNumber string        `json:"tracking_number"  gorm:"column:tracking_number"`
-	FulfillmentId  uuid.NullUUID `json:"fulfillment_id"  gorm:"column:fulfillment_id"`
-	Fulfillment    *Fulfillment  `json:"fulfillment"  gorm:"column:fulfillment;foreignKey:FulfillmentId"`
-	IdempotencyKey string        `json:"idempotency_key"  gorm:"column:idempotency_key"`
+	Url            string        `json:"url" gorm:"column:url"`
+	TrackingNumber string        `json:"tracking_number" gorm:"column:tracking_number"`
+	FulfillmentId  uuid.NullUUID `json:"fulfillment_id" gorm:"column:fulfillment_id"`
+	Fulfillment    *Fulfillment  `json:"fulfillment" gorm:"foreignKey:FulfillmentId"`
+	IdempotencyKey string        `json:"idempotency_key" gorm:"column:idempotency_key"`
 }

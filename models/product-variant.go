@@ -181,26 +181,26 @@ import (
 type ProductVariant struct {
 	core.Model
 
-	AllowBackorder    bool                 `json:"allow_backorder"  gorm:"column:allow_backorder;default:false"`
-	Purchasable       bool                 `json:"purchasable"  gorm:"column:purchasable"`
-	Barcode           string               `json:"barcode"  gorm:"column:barcode"`
-	Ean               string               `json:"ean"  gorm:"column:ean"`
-	Height            float64              `json:"height"  gorm:"column:height"`
-	HsCode            string               `json:"hs_code"  gorm:"column:hs_code"`
-	InventoryQuantity int                  `json:"inventory_quantity"  gorm:"column:inventory_quantity"`
-	Length            float64              `json:"length"  gorm:"column:length"`
-	ManageInventory   bool                 `json:"manage_inventory"  gorm:"column:manage_inventory;default:true"`
-	Material          string               `json:"material"  gorm:"column:material"`
-	MIdCode           string               `json:"mid_code"  gorm:"column:mid_code"`
-	Options           []ProductOptionValue `json:"options"  gorm:"column:options;foreignKey:Id"`
-	OriginCountry     string               `json:"origin_country"  gorm:"column:origin_country"`
-	Prices            []MoneyAmount        `json:"prices"  gorm:"column:prices;many2many:product_variant_money_amount"`
-	Product           *Product             `json:"product"  gorm:"column:product;foreignKey:ProductId"`
-	ProductId         uuid.NullUUID        `json:"product_id"  gorm:"column:product_id"`
-	Sku               string               `json:"sku"  gorm:"column:sku"`
-	Title             string               `json:"title"  gorm:"column:title"`
-	Upc               string               `json:"upc"  gorm:"column:upc"`
-	VariantRank       int                  `json:"variant_rank"  gorm:"column:variant_rank;default:0"`
-	Weight            float64              `json:"weight"  gorm:"column:weight"`
-	Width             float64              `json:"width"  gorm:"column:width"`
+	AllowBackorder    bool                 `json:"allow_backorder" gorm:"column:allow_backorder;default:false"`
+	Purchasable       bool                 `json:"purchasable" gorm:"column:purchasable"`
+	Barcode           string               `json:"barcode" gorm:"column:barcode"`
+	Ean               string               `json:"ean" gorm:"column:ean"`
+	Height            float64              `json:"height" gorm:"column:height"`
+	HsCode            string               `json:"hs_code" gorm:"column:hs_code"`
+	InventoryQuantity int                  `json:"inventory_quantity" gorm:"column:inventory_quantity"`
+	Length            float64              `json:"length" gorm:"column:length"`
+	ManageInventory   bool                 `json:"manage_inventory" gorm:"column:manage_inventory;default:true"`
+	Material          string               `json:"material" gorm:"column:material"`
+	MIdCode           string               `json:"mid_code" gorm:"column:mid_code"`
+	Options           []ProductOptionValue `json:"options" gorm:"foreignKey:Id"`
+	OriginCountry     string               `json:"origin_country" gorm:"column:origin_country"`
+	Prices            []MoneyAmount        `json:"prices" gorm:"many2many:product_variant_money_amount"`
+	Product           *Product             `json:"product" gorm:"foreignKey:ProductId"`
+	ProductId         uuid.NullUUID        `json:"product_id" gorm:"column:product_id"`
+	Sku               string               `json:"sku" gorm:"column:sku"`
+	Title             string               `json:"title" gorm:"column:title"`
+	Upc               string               `json:"upc" gorm:"column:upc"`
+	VariantRank       int                  `json:"variant_rank" gorm:"column:variant_rank;default:0"`
+	Weight            float64              `json:"weight" gorm:"column:weight"`
+	Width             float64              `json:"width" gorm:"column:width"`
 }

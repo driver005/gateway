@@ -61,7 +61,7 @@ import "github.com/driver005/gateway/core"
 type CustomerGroup struct {
 	core.Model
 
-	Name       string      `json:"name"  gorm:"column:name"`
-	Customers  []Customer  `json:"customers"  gorm:"column:customers;many2many:customer_group_customers"`
-	PriceLists []PriceList `json:"price_lists"  gorm:"column:price_lists;many2many:price_list_customer_groups"`
+	Name       string      `json:"name" gorm:"column:name"`
+	Customers  []Customer  `json:"customers" gorm:"many2many:customer_group_customers"`
+	PriceLists []PriceList `json:"price_lists" gorm:"many2many:price_list_customer_groups"`
 }

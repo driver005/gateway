@@ -120,17 +120,17 @@ import (
 type Discount struct {
 	core.Model
 
-	Code             string        `json:"code"  gorm:"column:code"`
-	IsDynamic        bool          `json:"is_dynamic"  gorm:"column:is_dynamic"`
-	RuleId           uuid.NullUUID `json:"rule_id"  gorm:"column:rule_id"`
-	Rule             *DiscountRule `json:"rule"  gorm:"column:rule;foreignKey:RuleId"`
-	IsDisabled       bool          `json:"is_disabled"  gorm:"column:is_disabled"`
-	ParentDiscountId uuid.NullUUID `json:"parent_discount_id"  gorm:"column:parent_discount_id"`
-	ParentDiscount   *Discount     `json:"parent_discount"  gorm:"column:parent_discount;foreignKey:ParentDiscountId"`
-	StartsAt         *time.Time    `json:"starts_at"  gorm:"column:starts_at;default:'CURRENT_TIMESTAMP'"`
-	EndsAt           *time.Time    `json:"ends_at"  gorm:"column:ends_at"`
-	ValidDuration    *time.Time    `json:"valid_duration"  gorm:"column:valid_duration"`
-	Regions          []Region      `json:"regions"  gorm:"column:regions;many2many:discount_regions"`
-	UsageLimit       int           `json:"usage_limit"  gorm:"column:usage_limit"`
-	UsageCount       int           `json:"usage_count"  gorm:"column:usage_count;default:0"`
+	Code             string        `json:"code" gorm:"column:code"`
+	IsDynamic        bool          `json:"is_dynamic" gorm:"column:is_dynamic"`
+	RuleId           uuid.NullUUID `json:"rule_id" gorm:"column:rule_id"`
+	Rule             *DiscountRule `json:"rule" gorm:"foreignKey:RuleId"`
+	IsDisabled       bool          `json:"is_disabled" gorm:"column:is_disabled"`
+	ParentDiscountId uuid.NullUUID `json:"parent_discount_id" gorm:"column:parent_discount_id"`
+	ParentDiscount   *Discount     `json:"parent_discount" gorm:"foreignKey:ParentDiscountId"`
+	StartsAt         *time.Time    `json:"starts_at" gorm:"column:starts_at;default:'CURRENT_TIMESTAMP'"`
+	EndsAt           *time.Time    `json:"ends_at" gorm:"column:ends_at"`
+	ValidDuration    *time.Time    `json:"valid_duration" gorm:"column:valid_duration"`
+	Regions          []Region      `json:"regions" gorm:"many2many:discount_regions"`
+	UsageLimit       int           `json:"usage_limit" gorm:"column:usage_limit"`
+	UsageCount       int           `json:"usage_count" gorm:"column:usage_count;default:0"`
 }

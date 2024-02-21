@@ -26,7 +26,7 @@ func (h *Handler) CanAccessBatchJob(context fiber.Ctx) error {
 		userId = user.Id
 	}
 
-	if batch.CreatedBy != userId {
+	if batch.CreatedBy.UUID != userId {
 		return utils.NewApplictaionError(
 			utils.NOT_ALLOWED,
 			"Cannot access a batch job that does not belong to the logged in user",

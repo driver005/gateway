@@ -55,11 +55,11 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ShippingTaxRate struct {
-	ShippingOptionId uuid.NullUUID   `json:"shipping_option_id"  gorm:"column:shipping_option_id;primaryKey"`
-	RateId           uuid.NullUUID   `json:"rate_id"  gorm:"column:rate_id;primaryKey"`
-	ShippingOption   *ShippingOption `json:"shipping_option"  gorm:"column:shipping_option;foreignKey:ShippingOptionId"`
-	TaxRate          *TaxRate        `json:"tax_rate"  gorm:"column:tax_rate;foreignKey:RateId"`
-	CreatedAt        time.Time       `json:"created_at"  gorm:"column:created_at;created_at"`
-	UpdatedAt        time.Time       `json:"updated_at"  gorm:"column:updated_at;updated_at"`
-	Metadata         core.JSONB      `json:"metadata"  gorm:"column:metadata"`
+	ShippingOptionId uuid.NullUUID   `json:"shipping_option_id" gorm:"column:shipping_option_id;primaryKey"`
+	RateId           uuid.NullUUID   `json:"rate_id" gorm:"column:rate_id;primaryKey"`
+	ShippingOption   *ShippingOption `json:"shipping_option" gorm:"foreignKey:ShippingOptionId"`
+	TaxRate          *TaxRate        `json:"tax_rate" gorm:"foreignKey:RateId"`
+	CreatedAt        time.Time       `json:"created_at" gorm:"column:created_at;created_at"`
+	UpdatedAt        time.Time       `json:"updated_at" gorm:"column:updated_at;updated_at"`
+	Metadata         core.JSONB      `json:"metadata" gorm:"column:metadata"`
 }

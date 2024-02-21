@@ -104,15 +104,15 @@ import (
 type Customer struct {
 	core.Model
 
-	Email             string          `json:"email"  gorm:"column:email"`
-	FirstName         string          `json:"first_name"  gorm:"column:first_name"`
-	LastName          string          `json:"last_name"  gorm:"column:last_name"`
-	BillingAddressId  uuid.NullUUID   `json:"billing_address_id"  gorm:"column:billing_address_id"`
-	BillingAddress    *Address        `json:"billing_address"  gorm:"column:billing_address;foreignKey:BillingAddressId"`
-	ShippingAddresses []Address       `json:"shipping_addresses"  gorm:"column:shipping_addresses;foreignKey:Id"`
-	PasswordHash      string          `json:"password_hash"  gorm:"column:password_hash"`
-	Phone             string          `json:"phone"  gorm:"column:phone"`
-	HasAccount        bool            `json:"has_account"  gorm:"column:has_account;default:false"`
-	Orders            []Order         `json:"orders"  gorm:"column:orders;foreignKey:Id"`
-	Groups            []CustomerGroup `json:"groups"  gorm:"column:groups;many2many:customer_group_customers"`
+	Email             string          `json:"email" gorm:"column:email"`
+	FirstName         string          `json:"first_name" gorm:"column:first_name"`
+	LastName          string          `json:"last_name" gorm:"column:last_name"`
+	BillingAddressId  uuid.NullUUID   `json:"billing_address_id" gorm:"column:billing_address_id"`
+	BillingAddress    *Address        `json:"billing_address" gorm:"foreignKey:BillingAddressId"`
+	ShippingAddresses []Address       `json:"shipping_addresses" gorm:"foreignKey:Id"`
+	PasswordHash      string          `json:"password_hash" gorm:"column:password_hash"`
+	Phone             string          `json:"phone" gorm:"column:phone"`
+	HasAccount        bool            `json:"has_account" gorm:"column:has_account;default:false"`
+	Orders            []Order         `json:"orders" gorm:"foreignKey:Id"`
+	Groups            []CustomerGroup `json:"groups" gorm:"many2many:customer_group_customers"`
 }

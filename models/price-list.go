@@ -94,15 +94,15 @@ import (
 type PriceList struct {
 	core.Model
 
-	CustomerGroups []CustomerGroup `json:"customer_groups"  gorm:"column:customer_groups;many2many:price_list_customer_groups"`
-	Description    string          `json:"description"  gorm:"column:description"`
-	EndsAt         *time.Time      `json:"ends_at"  gorm:"column:ends_at"`
-	IncludesTax    bool            `json:"includes_tax"  gorm:"column:includes_tax"`
-	Name           string          `json:"name"  gorm:"column:name"`
-	Prices         []MoneyAmount   `json:"prices"  gorm:"column:prices;foreignKey:Id"`
-	StartsAt       *time.Time      `json:"starts_at"  gorm:"column:starts_at"`
-	Status         PriceListStatus `json:"status"  gorm:"column:status;default:'draft'"`
-	Type           PriceListType   `json:"type"  gorm:"column:type;default:'sale'"`
+	CustomerGroups []CustomerGroup `json:"customer_groups" gorm:"many2many:price_list_customer_groups"`
+	Description    string          `json:"description" gorm:"column:description"`
+	EndsAt         *time.Time      `json:"ends_at" gorm:"column:ends_at"`
+	IncludesTax    bool            `json:"includes_tax" gorm:"column:includes_tax"`
+	Name           string          `json:"name" gorm:"column:name"`
+	Prices         []MoneyAmount   `json:"prices" gorm:"foreignKey:Id"`
+	StartsAt       *time.Time      `json:"starts_at" gorm:"column:starts_at"`
+	Status         PriceListStatus `json:"status" gorm:"column:status;default:'draft'"`
+	Type           PriceListType   `json:"type" gorm:"column:type;default:'sale'"`
 }
 
 // The status of the Price List

@@ -77,12 +77,12 @@ import (
 type IdempotencyKey struct {
 	core.Model
 
-	IdempotencyKey string     `json:"idempotency_key"  gorm:"column:idempotency_key"`
-	LockedAt       *time.Time `json:"locked_at"  gorm:"column:locked_at"`
-	RequestMethod  string     `json:"request_method"  gorm:"column:request_method"`
-	RequestParams  core.JSONB `json:"request_params"  gorm:"column:request_params"`
-	RequestPath    string     `json:"request_path"  gorm:"column:request_path"`
-	ResponseCode   int        `json:"response_code"  gorm:"column:response_code"`
-	ResponseBody   core.JSONB `json:"response_body"  gorm:"column:response_body"`
-	RecoveryPoint  string     `json:"recovery_point"  gorm:"column:recovery_point;default:started"`
+	IdempotencyKey string     `json:"idempotency_key" gorm:"column:idempotency_key"`
+	LockedAt       *time.Time `json:"locked_at" gorm:"column:locked_at"`
+	RequestMethod  string     `json:"request_method" gorm:"column:request_method"`
+	RequestParams  core.JSONB `json:"request_params" gorm:"column:request_params"`
+	RequestPath    string     `json:"request_path" gorm:"column:request_path"`
+	ResponseCode   int        `json:"response_code" gorm:"column:response_code"`
+	ResponseBody   core.JSONB `json:"response_body" gorm:"column:response_body"`
+	RecoveryPoint  string     `json:"recovery_point" gorm:"column:recovery_point;default:'started'"`
 }

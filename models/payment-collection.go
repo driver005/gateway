@@ -117,18 +117,18 @@ import (
 type PaymentCollection struct {
 	core.Model
 
-	Type             PaymentCollectionType   `json:"type"  gorm:"column:type"`
-	Status           PaymentCollectionStatus `json:"status"  gorm:"column:status"`
-	Description      string                  `json:"description"  gorm:"column:description"`
-	Amount           float64                 `json:"amount"  gorm:"column:amount"`
-	AuthorizedAmount float64                 `json:"authorized_amount"  gorm:"column:authorized_amount"`
-	RegionId         uuid.NullUUID           `json:"region_id"  gorm:"column:region_id"`
-	Region           *Region                 `json:"region"  gorm:"column:region;foreignKey:RegionId"`
-	CurrencyCode     string                  `json:"currency_code"  gorm:"column:currency_code"`
-	Currency         *Currency               `json:"currency"  gorm:"column:currency;foreignKey:CurrencyCode;foreignKey:Code"`
-	PaymentSessions  []PaymentSession        `json:"payment_sessions"  gorm:"column:payment_sessions;many2many:payment_collection_sessions"`
-	Payments         []Payment               `json:"payments"  gorm:"column:payments;many2many:payment_collection_payments"`
-	CreatedBy        uuid.UUID               `json:"created_by"  gorm:"column:created_by"`
+	Type             PaymentCollectionType   `json:"type" gorm:"column:type"`
+	Status           PaymentCollectionStatus `json:"status" gorm:"column:status"`
+	Description      string                  `json:"description" gorm:"column:description"`
+	Amount           float64                 `json:"amount" gorm:"column:amount"`
+	AuthorizedAmount float64                 `json:"authorized_amount" gorm:"column:authorized_amount"`
+	RegionId         uuid.NullUUID           `json:"region_id" gorm:"column:region_id"`
+	Region           *Region                 `json:"region" gorm:"foreignKey:RegionId"`
+	CurrencyCode     string                  `json:"currency_code" gorm:"column:currency_code"`
+	Currency         *Currency               `json:"currency" gorm:"foreignKey:CurrencyCode;foreignKey:Code"`
+	PaymentSessions  []PaymentSession        `json:"payment_sessions" gorm:"many2many:payment_collection_sessions"`
+	Payments         []Payment               `json:"payments" gorm:"many2many:payment_collection_payments"`
+	CreatedBy        uuid.NullUUID           `json:"created_by" gorm:"column:created_by"`
 }
 
 type PaymentCollectionStatus string

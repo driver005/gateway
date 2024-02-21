@@ -1044,7 +1044,7 @@ func (s *OrderService) CreateFulfillment(id uuid.UUID, itemsToFulfill []types.Fu
 			},
 			NoNotification: no_notification,
 			OrderId:        uuid.NullUUID{UUID: order.Id},
-			LocationId:     location_id,
+			LocationId:     uuid.NullUUID{UUID: location_id},
 		},
 	)
 	if err != nil {

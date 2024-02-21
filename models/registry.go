@@ -5,9 +5,9 @@ package models
 // }
 
 // type Registry interface {
-// 	Manager(ctx context.Context) *gorm.DB
+// 	Manager(ctx context.Context)  gorm.DB
 // }
 
-// func NewHandler(r Registry) *Handler {
+// func NewHandler(r Registry)  Handler {
 // 	return &Handler{r: r}
 // }

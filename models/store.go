@@ -100,13 +100,13 @@ import (
 type Store struct {
 	core.Model
 
-	Name                  string        `json:"name"  gorm:"column:name;default:'Store'"`
-	DefaultCurrencyCode   string        `json:"default_currency_code"  gorm:"column:default_currency_code;default:'usd'"`
-	DefaultCurrency       *Currency     `json:"default_currency"  gorm:"column:default_currency;foreignKey:DefaultCurrencyCode;foreignKey:Code"`
-	Currencies            []Currency    `json:"currencies"  gorm:"column:currencies;many2many:store_currencies"`
-	SwapLinkTemplate      string        `json:"swap_link_template"  gorm:"column:swap_link_template"`
-	PaymentLinkTemplate   string        `json:"payment_link_template"  gorm:"column:payment_link_template"`
-	InviteLinkTemplate    string        `json:"invite_link_template"  gorm:"column:invite_link_template"`
-	DefaultSalesChannelId uuid.NullUUID `json:"default_sales_channel_id"  gorm:"column:default_sales_channel_id"`
-	DefaultSalesChannel   *SalesChannel `json:"default_sales_channel"  gorm:"column:default_sales_channel;foreignKey:DefaultSalesChannelId"`
+	Name                  string        `json:"name" gorm:"column:name;default:'Store'"`
+	DefaultCurrencyCode   string        `json:"default_currency_code" gorm:"column:default_currency_code;default:'usd'"`
+	DefaultCurrency       *Currency     `json:"default_currency" gorm:"foreignKey:DefaultCurrencyCode;foreignKey:Code"`
+	Currencies            []Currency    `json:"currencies" gorm:"many2many:store_currencies"`
+	SwapLinkTemplate      string        `json:"swap_link_template" gorm:"column:swap_link_template"`
+	PaymentLinkTemplate   string        `json:"payment_link_template" gorm:"column:payment_link_template"`
+	InviteLinkTemplate    string        `json:"invite_link_template" gorm:"column:invite_link_template"`
+	DefaultSalesChannelId uuid.NullUUID `json:"default_sales_channel_id" gorm:"column:default_sales_channel_id"`
+	DefaultSalesChannel   *SalesChannel `json:"default_sales_channel" gorm:"foreignKey:DefaultSalesChannelId"`
 }

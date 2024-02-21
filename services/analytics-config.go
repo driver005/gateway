@@ -33,7 +33,7 @@ func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsCon
 	var model *models.AnalyticsConfig = &models.AnalyticsConfig{}
 	if err := s.r.AnalyticsConfigRepository().FindOne(s.ctx, model, sql.BuildQuery[models.AnalyticsConfig](
 		models.AnalyticsConfig{
-			UserId: userId,
+			UserId: uuid.NullUUID{UUID: userId},
 		},
 		&sql.Options{},
 	)); err != nil {
@@ -45,7 +45,7 @@ func (s *AnalyticsConfigService) Retrive(userId uuid.UUID) (*models.AnalyticsCon
 
 func (s *AnalyticsConfigService) Create(userId uuid.UUID, data *types.CreateAnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
 	model := &models.AnalyticsConfig{
-		UserId:    userId,
+		UserId:    uuid.NullUUID{UUID: userId},
 		OptOut:    data.OptOut,
 		Anonymize: data.Anonymize,
 	}
@@ -58,7 +58,7 @@ func (s *AnalyticsConfigService) Create(userId uuid.UUID, data *types.CreateAnal
 
 func (s *AnalyticsConfigService) Update(userId uuid.UUID, data *types.UpdateAnalyticsConfig) (*models.AnalyticsConfig, *utils.ApplictaionError) {
 	model := &models.AnalyticsConfig{
-		UserId:    userId,
+		UserId:    uuid.NullUUID{UUID: userId},
 		OptOut:    data.OptOut,
 		Anonymize: data.Anonymize,
 	}

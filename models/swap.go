@@ -173,25 +173,25 @@ import (
 type Swap struct {
 	core.Model
 
-	FulfillmentStatus SwapFulfillmentStatus `json:"fulfillment_status"  gorm:"column:fulfillment_status"`
-	PaymentStatus     SwapPaymentStatus     `json:"payment_status"  gorm:"column:payment_status"`
-	OrderId           uuid.NullUUID         `json:"order_id"  gorm:"column:order_id"`
-	Order             *Order                `json:"order"  gorm:"column:order;foreignKey:OrderId"`
-	AdditionalItems   []LineItem            `json:"additional_items"  gorm:"column:additional_items;foreignKey:Id"`
-	ReturnOrder       *Return               `json:"return_order"  gorm:"column:return_order;foreignKey:Id"`
-	Fulfillments      []Fulfillment         `json:"fulfillments"  gorm:"column:fulfillments;foreignKey:Id"`
-	Payment           *Payment              `json:"payment"  gorm:"column:payment;foreignKey:Id"`
-	DifferenceDue     float64               `json:"difference_due"  gorm:"column:difference_due"`
-	ShippingAddressId uuid.NullUUID         `json:"shipping_address_id"  gorm:"column:shipping_address_id"`
-	ShippingAddress   *Address              `json:"shipping_address"  gorm:"column:shipping_address;foreignKey:ShippingAddressId"`
-	ShippingMethods   []ShippingMethod      `json:"shipping_methods"  gorm:"column:shipping_methods;foreignKey:Id"`
-	CartId            uuid.NullUUID         `json:"cart_id"  gorm:"column:cart_id"`
-	Cart              *Cart                 `json:"cart"  gorm:"column:cart;foreignKey:CartId"`
-	AllowBackorder    bool                  `json:"allow_backorder"  gorm:"column:allow_backorder;default:false"`
-	IdempotencyKey    string                `json:"idempotency_key"  gorm:"column:idempotency_key"`
-	ConfirmedAt       *time.Time            `json:"confirmed_at"  gorm:"column:confirmed_at"`
-	CanceledAt        *time.Time            `json:"canceled_at"  gorm:"column:canceled_at"`
-	NoNotification    bool                  `json:"no_notification"  gorm:"column:no_notification"`
+	FulfillmentStatus SwapFulfillmentStatus `json:"fulfillment_status" gorm:"column:fulfillment_status"`
+	PaymentStatus     SwapPaymentStatus     `json:"payment_status" gorm:"column:payment_status"`
+	OrderId           uuid.NullUUID         `json:"order_id" gorm:"column:order_id"`
+	Order             *Order                `json:"order" gorm:"foreignKey:OrderId"`
+	AdditionalItems   []LineItem            `json:"additional_items" gorm:"foreignKey:Id"`
+	ReturnOrder       *Return               `json:"return_order" gorm:"foreignKey:Id"`
+	Fulfillments      []Fulfillment         `json:"fulfillments" gorm:"foreignKey:Id"`
+	Payment           *Payment              `json:"payment" gorm:"foreignKey:Id"`
+	DifferenceDue     float64               `json:"difference_due" gorm:"column:difference_due"`
+	ShippingAddressId uuid.NullUUID         `json:"shipping_address_id" gorm:"column:shipping_address_id"`
+	ShippingAddress   *Address              `json:"shipping_address" gorm:"foreignKey:ShippingAddressId"`
+	ShippingMethods   []ShippingMethod      `json:"shipping_methods" gorm:"foreignKey:Id"`
+	CartId            uuid.NullUUID         `json:"cart_id" gorm:"column:cart_id"`
+	Cart              *Cart                 `json:"cart" gorm:"foreignKey:CartId"`
+	AllowBackorder    bool                  `json:"allow_backorder" gorm:"column:allow_backorder;default:false"`
+	IdempotencyKey    string                `json:"idempotency_key" gorm:"column:idempotency_key"`
+	ConfirmedAt       *time.Time            `json:"confirmed_at" gorm:"column:confirmed_at"`
+	CanceledAt        *time.Time            `json:"canceled_at" gorm:"column:canceled_at"`
+	NoNotification    bool                  `json:"no_notification" gorm:"column:no_notification"`
 }
 
 type SwapFulfillmentStatus string

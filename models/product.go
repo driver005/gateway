@@ -226,36 +226,36 @@ import (
 type Product struct {
 	core.Model
 
-	Collection    *ProductCollection `json:"collection"  gorm:"column:collection;foreignKey:CollectionId"`
-	CollectionId  uuid.NullUUID      `json:"collection_id"  gorm:"column:collection_id"`
-	Description   string             `json:"description"  gorm:"column:description"`
-	Discountable  bool               `json:"discountable"  gorm:"column:discountable;default:false"`
-	ExternalId    string             `json:"external_id"  gorm:"column:external_id"`
-	Handle        string             `json:"handle"  gorm:"column:handle"`
-	Height        float64            `json:"height"  gorm:"column:height"`
-	HsCode        string             `json:"hs_code"  gorm:"column:hs_code"`
-	Images        []Image            `json:"images"  gorm:"column:images;many2many:product_images"`
-	IsGiftcard    bool               `json:"is_giftcard"  gorm:"column:is_giftcard;default:false"`
-	Length        float64            `json:"length"  gorm:"column:length"`
-	Material      string             `json:"material"  gorm:"column:material"`
-	MIdCode       uuid.UUID          `json:"mid_code"  gorm:"column:mid_code"`
-	Options       []ProductOption    `json:"options"  gorm:"column:options;foreignKey:Id"`
-	OriginCountry string             `json:"origin_country"  gorm:"column:origin_country"`
-	Categories    []ProductCategory  `json:"categories"  gorm:"column:categories;many2many:product_category_product"`
-	Profile       *ShippingProfile   `json:"profile"  gorm:"column:profile;foreignKey:ProfileId"`
-	ProfileId     uuid.NullUUID      `json:"profile_id"  gorm:"column:profile_id"`
-	Profiles      []ShippingProfile  `json:"profiles"  gorm:"column:profiles;many2many:product_shipping_profile"`
-	SalesChannels []SalesChannel     `json:"sales_channels"  gorm:"column:sales_channels;many2many:product_sales_channel"`
-	Status        ProductStatus      `json:"status"  gorm:"column:status;default:'draft'"`
-	Subtitle      string             `json:"subtitle"  gorm:"column:subtitle"`
-	Tags          []ProductTag       `json:"tags"  gorm:"column:tags;many2many:product_tags"`
-	Thumbnail     string             `json:"thumbnail"  gorm:"column:thumbnail"`
-	Title         string             `json:"title"  gorm:"column:title"`
-	Type          *ProductType       `json:"type"  gorm:"column:type;foreignKey:TypeId"`
-	TypeId        uuid.NullUUID      `json:"type_id"  gorm:"column:type_id"`
-	Variants      []ProductVariant   `json:"variants"  gorm:"column:variants;foreignKey:Id"`
-	Weight        float64            `json:"weight"  gorm:"column:weight"`
-	Width         float64            `json:"width"  gorm:"column:width"`
+	Collection    *ProductCollection `json:"collection" gorm:"foreignKey:CollectionId"`
+	CollectionId  uuid.NullUUID      `json:"collection_id" gorm:"column:collection_id"`
+	Description   string             `json:"description" gorm:"column:description"`
+	Discountable  bool               `json:"discountable" gorm:"column:discountable;default:false"`
+	ExternalId    string             `json:"external_id" gorm:"column:external_id"`
+	Handle        string             `json:"handle" gorm:"column:handle"`
+	Height        float64            `json:"height" gorm:"column:height"`
+	HsCode        string             `json:"hs_code" gorm:"column:hs_code"`
+	Images        []Image            `json:"images" gorm:"many2many:product_images"`
+	IsGiftcard    bool               `json:"is_giftcard" gorm:"column:is_giftcard;default:false"`
+	Length        float64            `json:"length" gorm:"column:length"`
+	Material      string             `json:"material" gorm:"column:material"`
+	MIdCode       uuid.NullUUID      `json:"mid_code" gorm:"column:mid_code"`
+	Options       []ProductOption    `json:"options" gorm:"foreignKey:Id"`
+	OriginCountry string             `json:"origin_country" gorm:"column:origin_country"`
+	Categories    []ProductCategory  `json:"categories" gorm:"many2many:product_category_product"`
+	Profile       *ShippingProfile   `json:"profile" gorm:"foreignKey:ProfileId"`
+	ProfileId     uuid.NullUUID      `json:"profile_id" gorm:"column:profile_id"`
+	Profiles      []ShippingProfile  `json:"profiles" gorm:"many2many:product_shipping_profile"`
+	SalesChannels []SalesChannel     `json:"sales_channels" gorm:"many2many:product_sales_channel"`
+	Status        ProductStatus      `json:"status" gorm:"column:status;default:'draft'"`
+	Subtitle      string             `json:"subtitle" gorm:"column:subtitle"`
+	Tags          []ProductTag       `json:"tags" gorm:"many2many:product_tags"`
+	Thumbnail     string             `json:"thumbnail" gorm:"column:thumbnail"`
+	Title         string             `json:"title" gorm:"column:title"`
+	Type          *ProductType       `json:"type" gorm:"foreignKey:TypeId"`
+	TypeId        uuid.NullUUID      `json:"type_id" gorm:"column:type_id"`
+	Variants      []ProductVariant   `json:"variants" gorm:"foreignKey:Id"`
+	Weight        float64            `json:"weight" gorm:"column:weight"`
+	Width         float64            `json:"width" gorm:"column:width"`
 }
 
 // The status of the product

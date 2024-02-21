@@ -72,10 +72,10 @@ import (
 type CustomShippingOption struct {
 	core.Model
 
-	Price            float64         `json:"price"  gorm:"column:price"`
-	ShippingOptionId uuid.NullUUID   `json:"shipping_option_id"  gorm:"column:shipping_option_id"`
-	ShippingOption   *ShippingOption `json:"shipping_option"  gorm:"column:shipping_option;foreignKey:ShippingOptionId"`
-	CartId           uuid.NullUUID   `json:"cart_id"  gorm:"column:cart_id"`
-	Cart             *Cart           `json:"cart"  gorm:"column:cart;foreignKey:CartId"`
-	IncludesTax      bool            `json:"includes_tax"  gorm:"column:includes_tax"`
+	Price            float64         `json:"price" gorm:"column:price"`
+	ShippingOptionId uuid.NullUUID   `json:"shipping_option_id" gorm:"column:shipping_option_id"`
+	ShippingOption   *ShippingOption `json:"shipping_option" gorm:"foreignKey:ShippingOptionId"`
+	CartId           uuid.NullUUID   `json:"cart_id" gorm:"column:cart_id"`
+	Cart             *Cart           `json:"cart" gorm:"foreignKey:CartId"`
+	IncludesTax      bool            `json:"includes_tax" gorm:"column:includes_tax"`
 }

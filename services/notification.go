@@ -56,7 +56,7 @@ func (s *NotificationService) RegisterInstalledProviders(providers uuid.UUIDs) *
 	for _, p := range providers {
 		var model *models.NotificationProvider = &models.NotificationProvider{}
 		model.IsInstalled = true
-		model.Id = p
+		model.Id = uuid.NullUUID{UUID: p}
 
 		if err := s.r.NotificationProviderRepository().Save(s.ctx, model); err != nil {
 			return err

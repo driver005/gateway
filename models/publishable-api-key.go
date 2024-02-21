@@ -55,8 +55,8 @@ import (
 type PublishableApiKey struct {
 	core.Model
 
-	CreatedBy uuid.NullUUID `json:"created_by"  gorm:"column:created_by"`
-	RevokedBy uuid.NullUUID `json:"revoked_by"  gorm:"column:revoked_by"`
-	RevokedAt *time.Time    `json:"revoked_at"  gorm:"column:revoked_at"`
-	Title     string        `json:"title"  gorm:"column:title"`
+	CreatedBy uuid.NullUUID `json:"created_by" gorm:"column:created_by"`
+	RevokedBy uuid.NullUUID `json:"revoked_by" gorm:"column:revoked_by"`
+	RevokedAt *time.Time    `json:"revoked_at" gorm:"column:revoked_at"`
+	Title     string        `json:"title" gorm:"column:title"`
 }

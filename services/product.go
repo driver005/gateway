@@ -501,7 +501,7 @@ func (s *ProductService) Update(id uuid.UUID, data *types.UpdateProductInput) (*
 		product.OriginCountry = data.OriginCountry
 	}
 	if !reflect.ValueOf(data.MIdCode).IsZero() {
-		product.MIdCode = data.MIdCode
+		product.MIdCode = uuid.NullUUID{UUID: data.MIdCode}
 	}
 	if !reflect.ValueOf(data.Material).IsZero() {
 		product.Material = data.Material

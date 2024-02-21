@@ -2,7 +2,6 @@ package models
 
 import (
 	"github.com/driver005/gateway/core"
-	"github.com/google/uuid"
 )
 
 //
@@ -91,14 +90,14 @@ import (
 type SalesChannel struct {
 	core.Model
 
-	Name            string              `json:"name"  gorm:"column:name"`
-	Description     string              `json:"description"  gorm:"column:description"`
-	IsDisabled      bool                `json:"is_disabled"  gorm:"column:is_disabled;default:false"`
-	LocationIds     uuid.UUIDs          `json:"location_id"  gorm:"column:location_id"`
-	Products        []Product           `json:"products"  gorm:"column:products;many2many:product_sales_channel"`
-	Carts           []Cart              `json:"carts"  gorm:"column:carts;many2many:cart_sales_channel"`
-	Orders          []Order             `json:"orders"  gorm:"column:orders;many2many:order_sales_channel"`
-	PublishableKeys []PublishableApiKey `json:"publishableKeys"  gorm:"column:publishableKeys;many2many:publishable_api_key_sales_channel"`
+	Name            string              `json:"name" gorm:"column:name"`
+	Description     string              `json:"description" gorm:"column:description"`
+	IsDisabled      bool                `json:"is_disabled" gorm:"column:is_disabled;default:false"`
+	LocationIds     core.UUIDSlice      `json:"location_id" gorm:"column:location_id"`
+	Products        []Product           `json:"products" gorm:"many2many:product_sales_channel"`
+	Carts           []Cart              `json:"carts" gorm:"many2many:cart_sales_channel"`
+	Orders          []Order             `json:"orders" gorm:"many2many:order_sales_channel"`
+	PublishableKeys []PublishableApiKey `json:"publishableKeys" gorm:"many2many:publishable_api_key_sales_channel"`
 	//TODO:add
-	Locations []SalesChannelLocation `json:"locations"  gorm:"column:locations;foreignKey:SalesChannelId"`
+	Locations []SalesChannelLocation `json:"locations" gorm:"foreignKey:SalesChannelId"`
 }

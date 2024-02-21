@@ -36,9 +36,9 @@ import "github.com/google/uuid"
 //	  type: integer
 //	  example: 1
 type FulfillmentItem struct {
-	FulfillmentId uuid.NullUUID `json:"fulfillment_id"  gorm:"column:fulfillment_id;primarykey"`
-	ItemId        uuid.NullUUID `json:"item_id"  gorm:"column:item_id;primarykey"`
-	Fulfillment   *Fulfillment  `json:"fulfillment"  gorm:"column:fulfillment;foreignKey:FulfillmentId"`
-	Item          *LineItem     `json:"item"  gorm:"column:item;foreignKey:ItemId"`
-	Quantity      int           `json:"quantity"  gorm:"column:quantity"`
+	FulfillmentId uuid.NullUUID `json:"fulfillment_id" gorm:"column:fulfillment_id;primarykey"`
+	ItemId        uuid.NullUUID `json:"item_id" gorm:"column:item_id;primarykey"`
+	Fulfillment   *Fulfillment  `json:"fulfillment" gorm:"foreignKey:FulfillmentId"`
+	Item          *LineItem     `json:"item" gorm:"foreignKey:ItemId"`
+	Quantity      int           `json:"quantity" gorm:"column:quantity"`
 }

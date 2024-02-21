@@ -38,14 +38,14 @@ package models
 //
 
 type Currency struct {
-	Code         string `json:"code"  gorm:"column:code;primarykey"`
-	Symbol       string `json:"symbol"  gorm:"column:symbol"`
-	SymbolNative string `json:"symbol_native"  gorm:"column:symbol_native"`
-	Name         string `json:"name"  gorm:"column:name"`
-	IncludesTax  bool   `json:"includes_tax"  gorm:"column:includes_tax"`
+	Code         string `json:"code" gorm:"column:code;primarykey"`
+	Symbol       string `json:"symbol" gorm:"column:symbol"`
+	SymbolNative string `json:"symbol_native" gorm:"column:symbol_native"`
+	Name         string `json:"name" gorm:"column:name"`
+	IncludesTax  bool   `json:"includes_tax" gorm:"column:includes_tax"`
 }
 
-// func (c *Currency) BeforeCreate(tx *gorm.DB) (err error) {
+// func (c  Currency) BeforeCreate(tx  gorm.DB) (err error) {
 // 	c.Id, err = uuid.NewUUID()
 // 	if err != nil {
 // 		return err

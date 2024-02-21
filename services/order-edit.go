@@ -93,7 +93,7 @@ func (s *OrderEditService) Create(data *types.CreateOrderEditInput, createdBy uu
 	orderEdit := &models.OrderEdit{
 		OrderId:      uuid.NullUUID{UUID: data.OrderId},
 		InternalNote: data.InternalNote,
-		CreatedBy:    createdBy,
+		CreatedBy:    uuid.NullUUID{UUID: createdBy},
 	}
 	if err := s.r.OrderEditRepository().Save(s.ctx, orderEdit); err != nil {
 		return nil, err
@@ -188,7 +188,7 @@ func (s *OrderEditService) Decline(id uuid.UUID, declinedBy uuid.UUID, declinedR
 	now := time.Now()
 
 	orderEdit.DeclinedAt = &now
-	orderEdit.DeclinedBy = declinedBy
+	orderEdit.DeclinedBy = uuid.NullUUID{UUID: declinedBy}
 	orderEdit.DeclinedReason = declinedReason
 	if err := s.r.OrderEditRepository().Save(s.ctx, orderEdit); err != nil {
 		return nil, err
@@ -494,7 +494,7 @@ func (s *OrderEditService) RequestConfirmation(id uuid.UUID, requestedBy uuid.UU
 
 	now := time.Now()
 	orderEdit.RequestedAt = &now
-	orderEdit.RequestedBy = requestedBy
+	orderEdit.RequestedBy = uuid.NullUUID{UUID: requestedBy}
 	if err := s.r.OrderEditRepository().Save(s.ctx, orderEdit); err != nil {
 		return nil, err
 	}
@@ -529,7 +529,7 @@ func (s *OrderEditService) Cancel(id uuid.UUID, canceledBy uuid.UUID) (*models.O
 
 	now := time.Now()
 	orderEdit.CanceledAt = &now
-	orderEdit.CanceledBy = canceledBy
+	orderEdit.CanceledBy = uuid.NullUUID{UUID: canceledBy}
 	if err := s.r.OrderEditRepository().Save(s.ctx, orderEdit); err != nil {
 		return nil, err
 	}
@@ -591,7 +591,7 @@ func (s *OrderEditService) Confirm(id uuid.UUID, confirmedBy uuid.UUID) (*models
 
 	now := time.Now()
 	orderEdit.ConfirmedAt = &now
-	orderEdit.ConfirmedBy = confirmedBy
+	orderEdit.ConfirmedBy = uuid.NullUUID{UUID: confirmedBy}
 	if err := s.r.OrderEditRepository().Save(s.ctx, orderEdit); err != nil {
 		return nil, err
 	}

@@ -97,15 +97,15 @@ import (
 type TaxRate struct {
 	core.Model
 
-	Rate                float64          `json:"rate"  gorm:"column:rate"`
-	Code                string           `json:"code"  gorm:"column:code"`
-	Name                string           `json:"name"  gorm:"column:name"`
-	RegionId            uuid.NullUUID    `json:"region_id"  gorm:"column:region_id"`
-	Region              *Region          `json:"region"  gorm:"column:region;foreignKey:RegionId"`
-	Products            []Product        `json:"products"  gorm:"column:products;many2many:product_tax_rate"`
-	ProductTypes        []ProductType    `json:"product_types"  gorm:"column:product_types;many2many:product_type_tax_rate"`
-	ShippingOptions     []ShippingOption `json:"shipping_options"  gorm:"column:shipping_options;many2many:shipping_tax_rate"`
-	ProductCount        int32            `json:"product_count"  gorm:"column:product_count"`
-	ProductTypeCount    int32            `json:"product_type_count"  gorm:"column:product_type_count"`
-	ShippingOptionCount int32            `json:"shipping_option_count"  gorm:"column:shipping_option_count"`
+	Rate                float64          `json:"rate" gorm:"column:rate"`
+	Code                string           `json:"code" gorm:"column:code"`
+	Name                string           `json:"name" gorm:"column:name"`
+	RegionId            uuid.NullUUID    `json:"region_id" gorm:"column:region_id"`
+	Region              *Region          `json:"region" gorm:"foreignKey:RegionId"`
+	Products            []Product        `json:"products" gorm:"many2many:product_tax_rate"`
+	ProductTypes        []ProductType    `json:"product_types" gorm:"many2many:product_type_tax_rate"`
+	ShippingOptions     []ShippingOption `json:"shipping_options" gorm:"many2many:shipping_tax_rate"`
+	ProductCount        int32            `json:"product_count" gorm:"column:product_count"`
+	ProductTypeCount    int32            `json:"product_type_count" gorm:"column:product_type_count"`
+	ShippingOptionCount int32            `json:"shipping_option_count" gorm:"column:shipping_option_count"`
 }

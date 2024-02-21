@@ -61,7 +61,7 @@ import (
 type ClaimImage struct {
 	core.Model
 
-	ClaimItemId uuid.NullUUID `json:"claim_item_id"  gorm:"column:claim_item_id"`
-	ClaimItem   *ClaimItem    `json:"claim_item"  gorm:"column:claim_item;foreignKey:ClaimItemId"`
-	Url         string        `json:"url"  gorm:"column:url"`
+	ClaimItemId uuid.NullUUID `json:"claim_item_id" gorm:"column:claim_item_id"`
+	ClaimItem   *ClaimItem    `json:"claim_item" gorm:"foreignKey:ClaimItemId"`
+	Url         string        `json:"url" gorm:"column:url"`
 }

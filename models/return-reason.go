@@ -77,10 +77,10 @@ import (
 type ReturnReason struct {
 	core.Model
 
-	Description          string         `json:"description"  gorm:"column:description"`
-	Label                string         `json:"label"  gorm:"column:label"`
-	Value                string         `json:"value"  gorm:"column:value"`
-	ParentReturnReasonId uuid.NullUUID  `json:"parent_return_reason_id"  gorm:"column:parent_return_reason_id"`
-	ParentReturnReason   *ReturnReason  `json:"parent_return_reason"  gorm:"column:parent_return_reason;foreignKey:ParentReturnReasonId"`
-	ReturnReasonChildren []ReturnReason `json:"return_reason_children"  gorm:"column:return_reason_children;foreignKey:Id"`
+	Description          string         `json:"description" gorm:"column:description"`
+	Label                string         `json:"label" gorm:"column:label"`
+	Value                string         `json:"value" gorm:"column:value"`
+	ParentReturnReasonId uuid.NullUUID  `json:"parent_return_reason_id" gorm:"column:parent_return_reason_id"`
+	ParentReturnReason   *ReturnReason  `json:"parent_return_reason" gorm:"foreignKey:ParentReturnReasonId"`
+	ReturnReasonChildren []ReturnReason `json:"return_reason_children" gorm:"foreignKey:Id"`
 }

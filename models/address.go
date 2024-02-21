@@ -125,17 +125,17 @@ import (
 type Address struct {
 	core.Model
 
-	Address1    string        `json:"address_1"  gorm:"column:address_1"`
-	Address2    string        `json:"address_2"  gorm:"column:address_2"`
-	City        string        `json:"city"  gorm:"column:city"`
-	Company     string        `json:"company"  gorm:"column:company"`
-	Country     *Country      `json:"country"  gorm:"column:country;foreignKey:CountryCode;foreignKey:Iso2"`
-	CountryCode string        `json:"country_code"  gorm:"column:country_code"`
-	Customer    *Customer     `json:"customer"  gorm:"column:customer;foreignKey:CustomerId"`
-	CustomerId  uuid.NullUUID `json:"customer_id"  gorm:"column:customer_id"`
-	FirstName   string        `json:"first_name"  gorm:"column:first_name"`
-	LastName    string        `json:"last_name"  gorm:"column:last_name"`
-	Phone       string        `json:"phone"  gorm:"column:phone"`
-	PostalCode  string        `json:"postal_code"  gorm:"column:postal_code"`
-	Province    string        `json:"province"  gorm:"column:province"`
+	Address1    string        `json:"address_1" gorm:"column:address_1"`
+	Address2    string        `json:"address_2" gorm:"column:address_2"`
+	City        string        `json:"city" gorm:"column:city"`
+	Company     string        `json:"company" gorm:"column:company"`
+	Country     *Country      `json:"country" gorm:"foreignKey:CountryCode;foreignKey:Iso2"`
+	CountryCode string        `json:"country_code" gorm:"column:country_code"`
+	Customer    *Customer     `json:"customer" gorm:"foreignKey:CustomerId"`
+	CustomerId  uuid.NullUUID `json:"customer_id" gorm:"column:customer_id"`
+	FirstName   string        `json:"first_name" gorm:"column:first_name"`
+	LastName    string        `json:"last_name" gorm:"column:last_name"`
+	Phone       string        `json:"phone" gorm:"column:phone"`
+	PostalCode  string        `json:"postal_code" gorm:"column:postal_code"`
+	Province    string        `json:"province" gorm:"column:province"`
 }

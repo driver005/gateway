@@ -1869,10 +1869,10 @@ func (m *Order) CancelFullfillment(context fiber.Ctx) error {
 		return err
 	}
 
-	if data.LocationId != uuid.Nil && m.r.InventoryService() != nil {
+	if data.LocationId.UUID != uuid.Nil && m.r.InventoryService() != nil {
 		for _, item := range data.Items {
 			if item.Item.VariantId.UUID != uuid.Nil {
-				if err := m.r.ProductVariantInventoryService().SetContext(context.Context()).AdjustInventory(item.Item.VariantId.UUID, item.Fulfillment.LocationId, item.Quantity); err != nil {
+				if err := m.r.ProductVariantInventoryService().SetContext(context.Context()).AdjustInventory(item.Item.VariantId.UUID, item.Fulfillment.LocationId.UUID, item.Quantity); err != nil {
 					return err
 				}
 			}

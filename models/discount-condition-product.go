@@ -55,11 +55,11 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type DiscountConditionProduct struct {
-	ProductId         uuid.NullUUID      `json:"product_id"  gorm:"column:product_id;primary_key"`
-	ConditionId       uuid.NullUUID      `json:"condition_id"  gorm:"column:condition_id;primary_key"`
-	Product           *Product           `json:"product"  gorm:"column:product;foreignKey:ProductId"`
-	DiscountCondition *DiscountCondition `json:"discount_condition"  gorm:"column:discount_condition;foreignKey:ConditionId"`
-	CreatedAt         time.Time          `json:"created_at"  gorm:"column:created_at;created_at"`
-	UpdatedAt         time.Time          `json:"updated_at"  gorm:"column:updated_at;updated_at"`
-	Metadata          core.JSONB         `json:"metadata"  gorm:"column:metadata"`
+	ProductId         uuid.NullUUID      `json:"product_id" gorm:"column:product_id;primary_key"`
+	ConditionId       uuid.NullUUID      `json:"condition_id" gorm:"column:condition_id;primary_key"`
+	Product           *Product           `json:"product" gorm:"foreignKey:ProductId"`
+	DiscountCondition *DiscountCondition `json:"discount_condition" gorm:"foreignKey:ConditionId"`
+	CreatedAt         time.Time          `json:"created_at" gorm:"column:created_at;created_at"`
+	UpdatedAt         time.Time          `json:"updated_at" gorm:"column:updated_at;updated_at"`
+	Metadata          core.JSONB         `json:"metadata" gorm:"column:metadata"`
 }

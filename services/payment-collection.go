@@ -62,7 +62,7 @@ func (s *PaymentCollectionService) Create(data *types.CreatePaymentCollectionInp
 		Type:         data.Type,
 		CurrencyCode: data.CurrencyCode,
 		Amount:       data.Amount,
-		CreatedBy:    data.CreatedBy,
+		CreatedBy:    uuid.NullUUID{UUID: data.CreatedBy},
 		Description:  data.Description,
 	}
 

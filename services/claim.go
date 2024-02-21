@@ -511,7 +511,7 @@ func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, loca
 			Metadata: metadata,
 		},
 		ClaimOrderId: uuid.NullUUID{UUID: id},
-		LocationId:   locationId,
+		LocationId:   uuid.NullUUID{UUID: locationId},
 	})
 	if err != nil {
 		return nil, err

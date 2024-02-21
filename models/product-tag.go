@@ -48,5 +48,5 @@ import "github.com/driver005/gateway/core"
 type ProductTag struct {
 	core.Model
 
-	Value string `json:"value"  gorm:"column:value"`
+	Value string `json:"value" gorm:"column:value"`
 }

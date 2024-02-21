@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"encoding/base64"
-	"fmt"
 	"strings"
 	"unsafe"
 
@@ -35,13 +34,10 @@ func (h *Handler) Authenticate() fiber.Handler {
 		}
 
 		if fail {
-			fmt.Println("Error")
 			return context.Status(fiber.StatusUnauthorized).SendString("Unauthorized")
 		} else {
-			fmt.Println("Next")
 			return context.Next()
 		}
-
 	}
 }
 
