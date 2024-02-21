@@ -44,7 +44,7 @@ func (s *OrderEditService) Retrieve(id uuid.UUID, config *sql.Options) (*models.
 		)
 	}
 	var res *models.OrderEdit = &models.OrderEdit{}
-	query := sql.BuildQuery(models.OrderEdit{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.OrderEdit{BaseModel: core.BaseModel{Id: id}}, config)
 	if err := s.r.OrderEditRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}

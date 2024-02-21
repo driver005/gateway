@@ -46,7 +46,7 @@ import "github.com/driver005/gateway/core"
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ProductType struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Value string `json:"value" gorm:"column:value"`
 }

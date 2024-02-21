@@ -17,6 +17,7 @@ type ShippingMethod struct {
 	Price            int32  `gorm:"column:price;type:integer;not null" json:"price"`
 	Data             string `gorm:"column:data;type:jsonb;not null" json:"data"`
 	ClaimOrderID     string `gorm:"column:claim_order_id;type:character varying;index:IDX_d783a66d1c91c0858752c933e6,priority:1" json:"claim_order_id"`
+	IncludesTax      bool   `gorm:"column:includes_tax;type:boolean;not null" json:"includes_tax"`
 }
 
 // TableName ShippingMethod's table name

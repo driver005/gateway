@@ -41,7 +41,7 @@ func (s *ProductCollectionService) Retrieve(collectionId uuid.UUID, config *sql.
 	}
 	var res *models.ProductCollection = &models.ProductCollection{}
 
-	query := sql.BuildQuery(models.ProductCollection{Model: core.Model{Id: collectionId}}, config)
+	query := sql.BuildQuery(models.ProductCollection{SoftDeletableModel: core.SoftDeletableModel{Id: collectionId}}, config)
 
 	if err := s.r.ProductCollectionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (s *ProductCollectionService) ListAndCount(selector *types.FilterableCollec
 
 func (s *ProductCollectionService) Create(data *types.CreateProductCollection) (*models.ProductCollection, *utils.ApplictaionError) {
 	model := &models.ProductCollection{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Title:  data.Title,

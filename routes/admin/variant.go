@@ -619,7 +619,7 @@ func (m *Variant) GetInventory(context fiber.Ctx) error {
 	for _, channel := range rawChannels {
 		locationIds, _ := m.r.SalesChannelLocationService().ListLocationIds(uuid.UUIDs{channel.Id})
 		channels = append(channels, models.SalesChannel{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Id: channel.Id,
 			},
 			Name:        channel.Name,

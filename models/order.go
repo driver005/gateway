@@ -350,7 +350,7 @@ import (
 //	  items:
 //	    $ref: "#/components/schemas/SalesChannel"
 type Order struct {
-	core.Model
+	core.BaseModel
 
 	Status               OrderStatus           `json:"status" gorm:"column:status;default:'pending'"`
 	FulfillmentStatus    FulfillmentStatus     `json:"fulfillment_status" gorm:"column:fulfillment_status;default:'not_fulfilled'"`

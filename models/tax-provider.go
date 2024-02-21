@@ -26,7 +26,7 @@ import (
 //	  type: boolean
 //	  default: true
 type TaxProvider struct {
-	core.Model
+	core.SoftDeletableModel
 
 	IsInstalled bool `json:"is_installed" gorm:"column:is_installed;default:true"`
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type ProductVariantMoneyAmount struct {
-	core.Model
+	core.SoftDeletableModel
 
 	MoneyAmountId uuid.NullUUID `gorm:"index:idx_product_variant_money_amount_money_amount_id_unique;unique"`
 	VariantId     uuid.NullUUID `gorm:"index:idx_product_variant_money_amount_variant_id"`

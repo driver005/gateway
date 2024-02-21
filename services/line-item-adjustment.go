@@ -40,7 +40,7 @@ func (s *LineItemAdjustmentService) Retrieve(id uuid.UUID, config *sql.Options) 
 		)
 	}
 	var res *models.LineItemAdjustment = &models.LineItemAdjustment{}
-	query := sql.BuildQuery(models.LineItemAdjustment{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.LineItemAdjustment{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.LineItemAdjustmentRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

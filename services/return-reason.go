@@ -48,7 +48,7 @@ func (s *ReturnReasonService) Create(data *types.CreateReturnReason) (*models.Re
 	}
 
 	model := &models.ReturnReason{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Value:                data.Value,
@@ -108,7 +108,7 @@ func (s *ReturnReasonService) Retrieve(returnReasonId uuid.UUID, config *sql.Opt
 
 	var res *models.ReturnReason = &models.ReturnReason{}
 
-	query := sql.BuildQuery(models.ReturnReason{Model: core.Model{Id: returnReasonId}}, config)
+	query := sql.BuildQuery(models.ReturnReason{SoftDeletableModel: core.SoftDeletableModel{Id: returnReasonId}}, config)
 	if err := s.r.ReturnReasonRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}

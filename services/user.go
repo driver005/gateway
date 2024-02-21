@@ -133,7 +133,7 @@ func (s *UserService) Create(data *types.CreateUserInput) (*models.User, *utils.
 	}
 
 	model := &models.User{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Email:     data.Email,

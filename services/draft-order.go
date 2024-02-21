@@ -43,7 +43,7 @@ func (s *DraftOrderService) Retrieve(draftOrderId uuid.UUID, config *sql.Options
 
 	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 
-	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: draftOrderId}}, config)
+	query := sql.BuildQuery(models.DraftOrder{BaseModel: core.BaseModel{Id: draftOrderId}}, config)
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (s *DraftOrderService) Create(data *types.DraftOrderCreate) (*models.DraftO
 			price = item.UnitPrice
 		}
 		itemsToCreate = append(itemsToCreate, models.LineItem{
-			Model: core.Model{
+			BaseModel: core.BaseModel{
 				Metadata: item.Metadata,
 			},
 			CartId:         uuid.NullUUID{UUID: createdCart.Id},
@@ -224,7 +224,7 @@ func (s *DraftOrderService) Create(data *types.DraftOrderCreate) (*models.DraftO
 func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UUID) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 
-	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, &sql.Options{})
+	query := sql.BuildQuery(models.DraftOrder{BaseModel: core.BaseModel{Id: id}}, &sql.Options{})
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (s *DraftOrderService) RegisterCartCompletion(id uuid.UUID, orderId uuid.UU
 func (s *DraftOrderService) Update(id uuid.UUID, data *models.DraftOrder) (*models.DraftOrder, *utils.ApplictaionError) {
 	var draftOrder *models.DraftOrder = &models.DraftOrder{}
 
-	query := sql.BuildQuery(models.DraftOrder{Model: core.Model{Id: id}}, &sql.Options{})
+	query := sql.BuildQuery(models.DraftOrder{BaseModel: core.BaseModel{Id: id}}, &sql.Options{})
 	if err := s.r.DraftOrderRepository().FindOne(s.ctx, draftOrder, query); err != nil {
 		return nil, err
 	}

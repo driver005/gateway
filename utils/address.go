@@ -8,7 +8,7 @@ import (
 
 func ToAddress(data *types.AddressPayload) *models.Address {
 	return &models.Address{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		FirstName:   data.FirstName,
@@ -26,7 +26,7 @@ func ToAddress(data *types.AddressPayload) *models.Address {
 
 func CreateToAddress(data *types.AddressCreatePayload) *models.Address {
 	return &models.Address{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		FirstName:   data.FirstName,

@@ -49,7 +49,7 @@ import (
 //	  type: string
 //	  format: date-time
 type SalesChannelLocation struct {
-	core.Model
+	core.SoftDeletableModel
 
 	SalesChannelId uuid.NullUUID `json:"sales_channel_id" gorm:"column:sales_channel_id"`
 	LocationId     uuid.NullUUID `json:"location_id" gorm:"column:location_id"`

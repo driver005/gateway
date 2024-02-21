@@ -100,7 +100,7 @@ func (s *PaymentProviderService) RetrieveSession(id uuid.UUID, relations []strin
 		)
 	}
 	var res *models.PaymentSession
-	query := sql.BuildQuery(models.PaymentSession{Model: core.Model{Id: id}}, &sql.Options{Relations: relations})
+	query := sql.BuildQuery(models.PaymentSession{BaseModel: core.BaseModel{Id: id}}, &sql.Options{Relations: relations})
 	if err := s.r.PaymentSessionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (s *PaymentProviderService) CreateSession(providerId uuid.UUID, session *ty
 		return nil, s.throwFromPaymentProcessorError(fail)
 	}
 
-	err = s.processUpdateRequestsData(&models.Customer{Model: core.Model{Id: context.Customer.Id}}, paymnet)
+	err = s.processUpdateRequestsData(&models.Customer{SoftDeletableModel: core.SoftDeletableModel{Id: context.Customer.Id}}, paymnet)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *PaymentProviderService) UpdateSession(paymentSession *models.PaymentSes
 		return s.RetrieveSession(paymentSession.Id, []string{})
 	}
 
-	err = s.processUpdateRequestsData(&models.Customer{Model: core.Model{Id: context.Customer.Id}}, paymnet)
+	err = s.processUpdateRequestsData(&models.Customer{SoftDeletableModel: core.SoftDeletableModel{Id: context.Customer.Id}}, paymnet)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +440,7 @@ func (s *PaymentProviderService) RetrieveRefund(id uuid.UUID, config *sql.Option
 		)
 	}
 	var res *models.Refund
-	query := sql.BuildQuery(models.Refund{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.Refund{BaseModel: core.BaseModel{Id: id}}, config)
 	if err := s.r.RefundRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}

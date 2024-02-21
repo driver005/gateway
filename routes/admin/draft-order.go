@@ -931,7 +931,7 @@ func (m *DraftOrder) CreateLineItem(context fiber.Ctx) error {
 		_, err := m.r.LineItemService().SetContext(context.Context()).Create(
 			[]models.LineItem{
 				{
-					Model: core.Model{
+					BaseModel: core.BaseModel{
 						Metadata: model.Metadata,
 					},
 					CartId:         draftOrder.CartId,

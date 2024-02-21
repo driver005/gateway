@@ -65,7 +65,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ProductOption struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Product   *Product             `json:"product" gorm:"foreignKey:ProductId"`
 	ProductId uuid.NullUUID        `json:"product_id" gorm:"column:product_id"`

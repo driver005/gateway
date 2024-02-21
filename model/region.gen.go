@@ -26,6 +26,7 @@ type Region struct {
 	GiftCardsTaxable bool           `gorm:"column:gift_cards_taxable;type:boolean;not null;default:true" json:"gift_cards_taxable"`
 	AutomaticTaxes   bool           `gorm:"column:automatic_taxes;type:boolean;not null;default:true" json:"automatic_taxes"`
 	TaxProviderID    string         `gorm:"column:tax_provider_id;type:character varying" json:"tax_provider_id"`
+	IncludesTax      bool           `gorm:"column:includes_tax;type:boolean;not null" json:"includes_tax"`
 }
 
 // TableName Region's table name

@@ -224,7 +224,7 @@ import (
 //
 
 type Product struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Collection    *ProductCollection `json:"collection" gorm:"foreignKey:CollectionId"`
 	CollectionId  uuid.NullUUID      `json:"collection_id" gorm:"column:collection_id"`

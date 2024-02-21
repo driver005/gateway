@@ -94,18 +94,18 @@ import (
 //	  type: string
 //	  format: date-time
 type Notification struct {
-	core.Model
+	core.BaseModel
 
-	EventName    string        `json:"event_name" gorm:"column:event_name"`
-	ResourceType string        `json:"resource_type" gorm:"column:resource_type"`
-	ResourceId   uuid.NullUUID `json:"resource_id" gorm:"column:resource_id"`
-	CustomerId   uuid.NullUUID `json:"customer_id" gorm:"column:customer_id"`
-	// Customer           *Customer             `json:"customer" gorm:"foreignKey:CustomerId"`
+	EventName          string                `json:"event_name" gorm:"column:event_name"`
+	ResourceType       string                `json:"resource_type" gorm:"column:resource_type"`
+	ResourceId         uuid.NullUUID         `json:"resource_id" gorm:"column:resource_id"`
+	CustomerId         uuid.NullUUID         `json:"customer_id" gorm:"column:customer_id"`
+	Customer           *Customer             `json:"customer" gorm:"foreignKey:CustomerId"`
 	To                 string                `json:"to" gorm:"column:to"`
 	Data               core.JSONB            `json:"data" gorm:"column:data"`
 	ParentId           uuid.NullUUID         `json:"parent_id" gorm:"column:parent_id"`
 	ParentNotification *NotificationProvider `json:"parent_notification" gorm:"foreignKey:ParentId"`
-	// Resends            []Notification        `json:"resends" gorm:"foreignKey:Id"`
-	ProviderId uuid.NullUUID         `json:"provider_id" gorm:"column:provider_id"`
-	Provider   *NotificationProvider `json:"provider" gorm:"foreignKey:ProviderId"`
+	Resends            []Notification        `json:"resends" gorm:"foreignKey:Id"`
+	ProviderId         uuid.NullUUID         `json:"provider_id" gorm:"column:provider_id"`
+	Provider           *NotificationProvider `json:"provider" gorm:"foreignKey:ProviderId"`
 }

@@ -15,7 +15,7 @@ const TableNamePriceList = "price_list"
 // PriceList mapped from table <price_list>
 type PriceList struct {
 	ID          string         `gorm:"column:id;type:character varying;primaryKey" json:"id"`
-	Name        string         `gorm:"column:name;type:character varying;not null" json:"name"`
+	Name        string         `gorm:"column:name;type:character varying" json:"name"`
 	Description string         `gorm:"column:description;type:character varying;not null" json:"description"`
 	Type        string         `gorm:"column:type;type:price_list_type_enum;not null;default:sale" json:"type"`
 	Status      string         `gorm:"column:status;type:price_list_status_enum;not null;default:draft" json:"status"`
@@ -24,6 +24,7 @@ type PriceList struct {
 	CreatedAt   time.Time      `gorm:"column:created_at;type:timestamp with time zone;not null;default:now()" json:"created_at"`
 	UpdatedAt   time.Time      `gorm:"column:updated_at;type:timestamp with time zone;not null;default:now()" json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;type:timestamp with time zone" json:"deleted_at"`
+	IncludesTax bool           `gorm:"column:includes_tax;type:boolean;not null" json:"includes_tax"`
 }
 
 // TableName PriceList's table name

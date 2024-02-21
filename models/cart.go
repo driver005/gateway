@@ -247,7 +247,7 @@ import (
 //	  items:
 //	    $ref: "#/components/schemas/SalesChannel"
 type Cart struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Email               string           `json:"email" gorm:"column:email"`
 	BillingAddressId    uuid.NullUUID    `json:"billing_address_id" gorm:"column:billing_address_id"`

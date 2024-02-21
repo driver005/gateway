@@ -42,7 +42,7 @@ func (s *ProductTagService) Retrieve(id uuid.UUID, config *sql.Options) (*models
 
 	var res *models.ProductTag = &models.ProductTag{}
 
-	query := sql.BuildQuery(models.ProductTag{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.ProductTag{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.ProductTagRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

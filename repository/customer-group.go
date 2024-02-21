@@ -27,7 +27,7 @@ func (r *CustomerGroupRepo) AddCustomers(ctx context.Context, groupId uuid.UUID,
 	}
 
 	for _, id := range customerIds {
-		customerGroup.Customers = append(customerGroup.Customers, models.Customer{Model: core.Model{Id: id}})
+		customerGroup.Customers = append(customerGroup.Customers, models.Customer{SoftDeletableModel: core.SoftDeletableModel{Id: id}})
 	}
 
 	if err := r.Update(ctx, customerGroup); err != nil {

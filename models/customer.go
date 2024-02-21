@@ -102,7 +102,7 @@ import (
 //
 
 type Customer struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Email             string          `json:"email" gorm:"column:email"`
 	FirstName         string          `json:"first_name" gorm:"column:first_name"`

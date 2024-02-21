@@ -187,7 +187,7 @@ import (
 //
 
 type BatchJob struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Type           string          `json:"type" gorm:"column:type"`
 	Status         BatchJobStatus  `json:"status" gorm:"column:status;default:'created'"`

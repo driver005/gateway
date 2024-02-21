@@ -37,7 +37,7 @@ func (s *ProductVariantService) SetContext(context context.Context) *ProductVari
 func (s *ProductVariantService) Retrieve(id uuid.UUID, config *sql.Options) (*models.ProductVariant, *utils.ApplictaionError) {
 	var res *models.ProductVariant = &models.ProductVariant{}
 
-	query := sql.BuildQuery(models.ProductVariant{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.ProductVariant{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.ProductVariantRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (s *ProductVariantService) Create(productId uuid.UUID, product *models.Prod
 		data.ProductId = product.Id
 
 		model := &models.ProductVariant{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Metadata: data.Metadata,
 			},
 			Title:             data.Title,
@@ -320,7 +320,7 @@ func (s *ProductVariantService) UpdateVariantPrices(data []types.UpdateVariantPr
 	for _, d := range data {
 		for _, p := range d.Prices {
 			prices = append(prices, models.MoneyAmount{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Id: p.Id,
 				},
 				CurrencyCode: p.CurrencyCode,
@@ -414,7 +414,7 @@ func (s *ProductVariantService) UpsertRegionPrices(data []types.UpdateVariantReg
 		if moneyAmount != nil {
 			if moneyAmount.Amount != d.Price.Amount {
 				dataToUpdate = append(dataToUpdate, models.MoneyAmount{
-					Model: core.Model{
+					SoftDeletableModel: core.SoftDeletableModel{
 						Id: moneyAmount.Id,
 					},
 					Amount: d.Price.Amount,
@@ -422,7 +422,7 @@ func (s *ProductVariantService) UpsertRegionPrices(data []types.UpdateVariantReg
 			}
 		} else {
 			model := &models.MoneyAmount{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Id: d.Price.Id,
 				},
 				CurrencyCode: d.Price.CurrencyCode,
@@ -434,7 +434,7 @@ func (s *ProductVariantService) UpsertRegionPrices(data []types.UpdateVariantReg
 			if err := s.r.MoneyAmountRepository().Create(s.ctx, model); err != nil {
 				return err
 			}
-			model.Variant = &models.ProductVariant{Model: core.Model{Id: d.VariantId}}
+			model.Variant = &models.ProductVariant{SoftDeletableModel: core.SoftDeletableModel{Id: d.VariantId}}
 			dataToCreate = append(dataToCreate, *model)
 		}
 	}
@@ -493,7 +493,7 @@ func (s *ProductVariantService) UpsertCurrencyPrices(data []types.UpdateVariantC
 		if moneyAmount != nil {
 			if moneyAmount.Amount != d.Price.Amount {
 				dataToUpdate = append(dataToUpdate, models.MoneyAmount{
-					Model: core.Model{
+					SoftDeletableModel: core.SoftDeletableModel{
 						Id: moneyAmount.Id,
 					},
 					Amount: d.Price.Amount,
@@ -501,7 +501,7 @@ func (s *ProductVariantService) UpsertCurrencyPrices(data []types.UpdateVariantC
 			}
 		} else {
 			model := &models.MoneyAmount{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Id: d.Price.Id,
 				},
 				CurrencyCode: d.Price.CurrencyCode,
@@ -513,7 +513,7 @@ func (s *ProductVariantService) UpsertCurrencyPrices(data []types.UpdateVariantC
 			if err := s.r.MoneyAmountRepository().Create(s.ctx, model); err != nil {
 				return err
 			}
-			model.Variant = &models.ProductVariant{Model: core.Model{Id: d.VariantId}}
+			model.Variant = &models.ProductVariant{SoftDeletableModel: core.SoftDeletableModel{Id: d.VariantId}}
 			dataToCreate = append(dataToCreate, *model)
 		}
 	}
@@ -565,7 +565,7 @@ func (s *ProductVariantService) SetRegionPrice(id uuid.UUID, price types.Product
 	data = &moneyAmount[0]
 	created := false
 	if data == nil {
-		data = &models.MoneyAmount{Amount: price.Amount, Variant: &models.ProductVariant{Model: core.Model{Id: id}}}
+		data = &models.MoneyAmount{Amount: price.Amount, Variant: &models.ProductVariant{SoftDeletableModel: core.SoftDeletableModel{Id: id}}}
 		created = true
 	} else {
 		data.Amount = price.Amount
@@ -575,7 +575,7 @@ func (s *ProductVariantService) SetRegionPrice(id uuid.UUID, price types.Product
 	}
 	if created {
 
-		err = s.r.MoneyAmountRepository().CreateProductVariantMoneyAmounts([]models.MoneyAmount{{Model: core.Model{Id: data.Id}, VariantId: uuid.NullUUID{UUID: id}}})
+		err = s.r.MoneyAmountRepository().CreateProductVariantMoneyAmounts([]models.MoneyAmount{{SoftDeletableModel: core.SoftDeletableModel{Id: data.Id}, VariantId: uuid.NullUUID{UUID: id}}})
 		if err != nil {
 			return nil, err
 		}
@@ -586,7 +586,7 @@ func (s *ProductVariantService) SetRegionPrice(id uuid.UUID, price types.Product
 // setCurrencyPrice sets the default price for the given currency
 func (s *ProductVariantService) SetCurrencyPrice(id uuid.UUID, data types.ProductVariantPrice) (*models.MoneyAmount, *utils.ApplictaionError) {
 	return s.r.MoneyAmountRepository().UpsertVariantCurrencyPrice(id, models.MoneyAmount{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Id: data.Id,
 		},
 		CurrencyCode: data.CurrencyCode,

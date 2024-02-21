@@ -43,7 +43,7 @@ func (s *ClaimItemService) Retrieve(claimItemId uuid.UUID, config *sql.Options) 
 	}
 	var res *models.ClaimItem = &models.ClaimItem{}
 
-	query := sql.BuildQuery[models.ClaimItem](models.ClaimItem{Model: core.Model{Id: claimItemId}}, config)
+	query := sql.BuildQuery[models.ClaimItem](models.ClaimItem{SoftDeletableModel: core.SoftDeletableModel{Id: claimItemId}}, config)
 
 	if err := s.r.ClaimItemRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (s *ClaimItemService) Update(id uuid.UUID, data *types.UpdateClaimItemInput
 		for _, img := range data.Images {
 			if img.Id != uuid.Nil {
 				item.Images = append(item.Images, models.ClaimImage{
-					Model: core.Model{
+					SoftDeletableModel: core.SoftDeletableModel{
 						Id: img.Id,
 					},
 					Url: img.URL,

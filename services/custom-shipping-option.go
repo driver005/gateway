@@ -39,7 +39,7 @@ func (s *CustomShippingOptionService) Retrieve(id uuid.UUID, config *sql.Options
 		)
 	}
 	var res *models.CustomShippingOption = &models.CustomShippingOption{}
-	query := sql.BuildQuery(models.CustomShippingOption{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.CustomShippingOption{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 	if err := s.r.CustomShippingOptionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *CustomShippingOptionService) Create(data []types.CreateCustomShippingOp
 	var model []models.CustomShippingOption
 	for _, d := range data {
 		model = append(model, models.CustomShippingOption{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Metadata: d.Metadata,
 			},
 			Price:            d.Price,

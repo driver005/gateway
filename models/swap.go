@@ -171,7 +171,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Swap struct {
-	core.Model
+	core.SoftDeletableModel
 
 	FulfillmentStatus SwapFulfillmentStatus `json:"fulfillment_status" gorm:"column:fulfillment_status"`
 	PaymentStatus     SwapPaymentStatus     `json:"payment_status" gorm:"column:payment_status"`

@@ -102,7 +102,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type DraftOrder struct {
-	core.Model
+	core.BaseModel
 
 	Status              DraftOrderStatus `json:"status" gorm:"column:status;default:'open'"`
 	DisplayId           uuid.NullUUID    `json:"display_id" gorm:"column:display_id"`

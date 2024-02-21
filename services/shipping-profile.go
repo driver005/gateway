@@ -86,7 +86,7 @@ func (s *ShippingProfileService) Retrieve(profileId uuid.UUID, config *sql.Optio
 	}
 	var res *models.ShippingProfile = &models.ShippingProfile{}
 
-	query := sql.BuildQuery(models.ShippingProfile{Model: core.Model{Id: profileId}}, config)
+	query := sql.BuildQuery(models.ShippingProfile{SoftDeletableModel: core.SoftDeletableModel{Id: profileId}}, config)
 
 	if err := s.r.ShippingProfileRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (s *ShippingProfileService) CreateGiftCardDefault() (*models.ShippingProfil
 
 func (s *ShippingProfileService) Create(data *types.CreateShippingProfile) (*models.ShippingProfile, *utils.ApplictaionError) {
 	model := &models.ShippingProfile{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Name: data.Name,

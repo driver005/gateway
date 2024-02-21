@@ -144,7 +144,7 @@ func (s *TaxProviderService) GetShippingTaxLines(shippingMethod *models.Shipping
 	calculationLines := []interfaces.ShippingTaxCalculationLine{
 		{
 			ShippingMethod: models.ShippingMethod{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Id: shippingMethod.Id,
 				},
 			},
@@ -161,7 +161,7 @@ func (s *TaxProviderService) GetShippingTaxLines(shippingMethod *models.Shipping
 
 	for _, pl := range providerLines {
 		smTaxLine := models.ShippingMethodTaxLine{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Metadata: pl.Metadata,
 			},
 			ShippingMethodId: uuid.NullUUID{
@@ -235,7 +235,7 @@ func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculatio
 	for _, pl := range providerLines {
 		if pl.ShippingMethodId != uuid.Nil {
 			smTaxLines = append(smTaxLines, models.ShippingMethodTaxLine{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Metadata: pl.Metadata,
 				},
 				ShippingMethodId: uuid.NullUUID{UUID: pl.ShippingMethodId},
@@ -252,7 +252,7 @@ func (s *TaxProviderService) GetTaxLines(lineItems []models.LineItem, calculatio
 			)
 		} else {
 			liTaxLines = append(liTaxLines, models.LineItemTaxLine{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Metadata: pl.Metadata,
 				},
 				ItemId: uuid.NullUUID{UUID: pl.ItemId},

@@ -70,7 +70,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type CustomShippingOption struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Price            float64         `json:"price" gorm:"column:price"`
 	ShippingOptionId uuid.NullUUID   `json:"shipping_option_id" gorm:"column:shipping_option_id"`

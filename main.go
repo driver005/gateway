@@ -1,9 +1,29 @@
 package main
 
-import "github.com/driver005/gateway/cmd"
+import (
+	"gorm.io/driver/postgres"
+	"gorm.io/gen"
+	"gorm.io/gorm"
+)
 
 func main() {
-	cmd.Execute()
+	g := gen.NewGenerator(gen.Config{
+		OutPath:           "./query",
+		FieldNullable:     false,
+		FieldCoverable:    false,
+		FieldWithIndexTag: true,
+		FieldWithTypeTag:  true,
+	})
+	gormdb, _ := gorm.Open(postgres.Open("postgres://postgres:postgres@localhost:5432/medusa-test"))
+	g.UseDB(gormdb)
+
+	g.ApplyBasic(
+		// Generate structs from all tables of current database
+		g.GenerateAllTable()...,
+	)
+	// Generate the code
+	g.Execute()
+	// cmd.Execute()
 }
 
 // gormdb, _ := gorm.Open(postgres.Open("postgres://postgres:postgres@localhost:5432/medusa-test2"))

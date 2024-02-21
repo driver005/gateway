@@ -59,7 +59,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type LineItemAdjustment struct {
-	core.Model
+	core.SoftDeletableModel
 
 	ItemId      uuid.NullUUID `json:"item_id" gorm:"column:item_id"`
 	Item        *LineItem     `json:"item" gorm:"foreignKey:ItemId"`

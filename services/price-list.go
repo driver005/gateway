@@ -42,7 +42,7 @@ func (s *PriceListService) Retrieve(id uuid.UUID, config *sql.Options) (*models.
 	}
 
 	var res *models.PriceList = &models.PriceList{}
-	query := sql.BuildQuery(models.OAuth{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.OAuth{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.PriceListRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

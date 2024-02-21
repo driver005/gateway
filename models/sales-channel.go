@@ -88,7 +88,7 @@ import (
 //
 
 type SalesChannel struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Name            string              `json:"name" gorm:"column:name"`
 	Description     string              `json:"description" gorm:"column:description"`

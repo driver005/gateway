@@ -233,7 +233,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type LineItem struct {
-	core.Model
+	core.BaseModel
 
 	CartId            uuid.NullUUID        `json:"cart_id" gorm:"column:cart_id"`
 	Cart              *Cart                `json:"cart" gorm:"foreignKey:CartId"`

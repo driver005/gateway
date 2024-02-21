@@ -130,7 +130,7 @@ func (s *RegionService) Update(regionId uuid.UUID, Update *types.UpdateRegionInp
 
 func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UUID) (*models.Region, *utils.ApplictaionError) {
 	region := &models.Region{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Name:             data.Name,
@@ -159,7 +159,7 @@ func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UU
 
 	if data.TaxProviderId != uuid.Nil {
 		var provider *models.TaxProvider = &models.TaxProvider{}
-		query := sql.BuildQuery(models.TaxProvider{Model: core.Model{Id: data.TaxProviderId}}, &sql.Options{})
+		query := sql.BuildQuery(models.TaxProvider{SoftDeletableModel: core.SoftDeletableModel{Id: data.TaxProviderId}}, &sql.Options{})
 		err := s.r.TaxProviderRepository().FindOne(s.ctx, provider, query)
 		if err != nil {
 			return nil, err
@@ -172,7 +172,7 @@ func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UU
 	if data.PaymentProviders != nil {
 		for _, paymentProvider := range data.PaymentProviders {
 			var provider *models.PaymentProvider = &models.PaymentProvider{}
-			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: paymentProvider}}, &sql.Options{})
+			query := sql.BuildQuery(models.PaymentProvider{SoftDeletableModel: core.SoftDeletableModel{Id: paymentProvider}}, &sql.Options{})
 			err := s.r.PaymentProviderRepository().FindOne(s.ctx, provider, query)
 			if err != nil {
 				return nil, err
@@ -185,7 +185,7 @@ func (s *RegionService) validateFields(data *types.UpdateRegionInput, id uuid.UU
 	if data.FulfillmentProviders != nil {
 		for _, fulfillmentProviders := range data.FulfillmentProviders {
 			var provider *models.FulfillmentProvider = &models.FulfillmentProvider{}
-			query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: fulfillmentProviders}}, &sql.Options{})
+			query := sql.BuildQuery(models.PaymentProvider{SoftDeletableModel: core.SoftDeletableModel{Id: fulfillmentProviders}}, &sql.Options{})
 			err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, provider, query)
 			if err != nil {
 				return nil, err
@@ -305,7 +305,7 @@ func (s *RegionService) Retrieve(regionId uuid.UUID, config *sql.Options) (*mode
 	}
 
 	var res *models.Region = &models.Region{}
-	query := sql.BuildQuery(models.Region{Model: core.Model{Id: regionId}}, config)
+	query := sql.BuildQuery(models.Region{SoftDeletableModel: core.SoftDeletableModel{Id: regionId}}, config)
 	if err := s.r.RegionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
@@ -432,7 +432,7 @@ func (s *RegionService) AddPaymentProvider(regionId uuid.UUID, providerId uuid.U
 	}
 
 	var paymentProvider *models.PaymentProvider = &models.PaymentProvider{}
-	query := sql.BuildQuery(models.PaymentProvider{Model: core.Model{Id: providerId}}, &sql.Options{})
+	query := sql.BuildQuery(models.PaymentProvider{SoftDeletableModel: core.SoftDeletableModel{Id: providerId}}, &sql.Options{})
 	if err := s.r.PaymentProviderRepository().FindOne(s.ctx, paymentProvider, query); err != nil {
 		return nil, err
 	}
@@ -491,7 +491,7 @@ func (s *RegionService) AddFulfillmentProvider(regionId uuid.UUID, providerId uu
 	}
 
 	var fulfillmentProvider *models.FulfillmentProvider = &models.FulfillmentProvider{}
-	query := sql.BuildQuery(models.FulfillmentProvider{Model: core.Model{Id: providerId}}, &sql.Options{})
+	query := sql.BuildQuery(models.FulfillmentProvider{SoftDeletableModel: core.SoftDeletableModel{Id: providerId}}, &sql.Options{})
 	if err := s.r.FulfillmentProviderRepository().FindOne(s.ctx, fulfillmentProvider, query); err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func (s *GiftCardService) List(selector *types.FilterableGiftCard, config *sql.O
 
 func (s *GiftCardService) CreateTransaction(data *types.CreateGiftCardTransactionInput) (uuid.UUID, *utils.ApplictaionError) {
 	model := &models.GiftCardTransaction{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			CreatedAt: data.CreatedAt,
 		},
 		GiftCardId: uuid.NullUUID{UUID: data.GiftCardId},
@@ -157,7 +157,7 @@ func (s *GiftCardService) RetrieveById(id uuid.UUID, config *sql.Options) (*mode
 		)
 	}
 
-	return s.Retrieve(&models.GiftCard{Model: core.Model{Id: id}}, config)
+	return s.Retrieve(&models.GiftCard{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 }
 
 func (s *GiftCardService) RetrieveByCode(code string, config *sql.Options) (*models.GiftCard, *utils.ApplictaionError) {

@@ -50,7 +50,7 @@ import (
 //	  type: string
 //	  format: date-time
 type ShippingOptionRequirement struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Amount           float64                       `json:"amount" gorm:"column:amount"`
 	ShippingOption   *ShippingOption               `json:"shipping_option" gorm:"foreignKey:ShippingOptionId"`

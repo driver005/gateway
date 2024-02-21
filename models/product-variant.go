@@ -179,7 +179,7 @@ import (
 //	       - it is backorderable.
 //	  type: boolean
 type ProductVariant struct {
-	core.Model
+	core.SoftDeletableModel
 
 	AllowBackorder    bool                 `json:"allow_backorder" gorm:"column:allow_backorder;default:false"`
 	Purchasable       bool                 `json:"purchasable" gorm:"column:purchasable"`

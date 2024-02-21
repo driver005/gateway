@@ -96,7 +96,7 @@ import (
 //	  type: string
 //	  format: date-time
 type PaymentSession struct {
-	core.Model
+	core.BaseModel
 
 	CartId              uuid.NullUUID        `json:"cart_id" gorm:"column:cart_id"`
 	Cart                *Cart                `json:"cart" gorm:"foreignKey:CartId"`

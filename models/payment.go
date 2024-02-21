@@ -127,7 +127,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Payment struct {
-	core.Model
+	core.BaseModel
 
 	SwapId         uuid.NullUUID `json:"swap_id" gorm:"column:swap_id"`
 	Swap           *Swap         `json:"swap" gorm:"foreignKey:SwapId"`

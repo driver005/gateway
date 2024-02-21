@@ -58,7 +58,7 @@ func (s *OAuthService) Retrieve(id uuid.UUID, config *sql.Options) (*models.OAut
 	}
 
 	var res *models.OAuth = &models.OAuth{}
-	query := sql.BuildQuery(models.OAuth{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.OAuth{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.OAuthRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

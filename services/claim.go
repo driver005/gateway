@@ -44,7 +44,7 @@ func (s *ClaimService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Clai
 		)
 	}
 	var res *models.ClaimOrder = &models.ClaimOrder{}
-	query := sql.BuildQuery(models.ClaimOrder{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.ClaimOrder{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 	if err := s.r.ClaimRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (s *ClaimService) GetRefundTotalForClaimLinesOnOrder(order *models.Order, c
 		claimLine, ok := lo.Find(order.Items, predicate)
 		if ok {
 			claimLines = append(claimLines, models.LineItem{
-				Model: core.Model{
+				BaseModel: core.BaseModel{
 					Id: claimLine.Id,
 				},
 				Quantity: ci.Quantity,
@@ -234,7 +234,7 @@ func (s *ClaimService) GetRefundTotalForClaimLinesOnOrder(order *models.Order, c
 				claimLine, ok := lo.Find(swap.AdditionalItems, predicate)
 				if ok {
 					claimLines = append(claimLines, models.LineItem{
-						Model: core.Model{
+						BaseModel: core.BaseModel{
 							Id: claimLine.Id,
 						},
 						Quantity: ci.Quantity,
@@ -248,7 +248,7 @@ func (s *ClaimService) GetRefundTotalForClaimLinesOnOrder(order *models.Order, c
 				claimLine, ok := lo.Find(claim.AdditionalItems, predicate)
 				if ok {
 					claimLines = append(claimLines, models.LineItem{
-						Model: core.Model{
+						BaseModel: core.BaseModel{
 							Id: claimLine.Id,
 						},
 						Quantity: ci.Quantity,
@@ -507,7 +507,7 @@ func (s *ClaimService) CreateFulfillment(id uuid.UUID, noNotification bool, loca
 	fulfillmentOrder.NoNotification = evaluatedNoNotification
 
 	fulfillments, err := s.r.FulfillmentService().SetContext(s.ctx).CreateFulfillment(fulfillmentOrder, lineItems, models.Fulfillment{
-		Model: core.Model{
+		BaseModel: core.BaseModel{
 			Metadata: metadata,
 		},
 		ClaimOrderId: uuid.NullUUID{UUID: id},

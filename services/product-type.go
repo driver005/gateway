@@ -42,7 +42,7 @@ func (s *ProductTypeService) Retrieve(id uuid.UUID, config *sql.Options) (*model
 
 	var res *models.ProductType = &models.ProductType{}
 
-	query := sql.BuildQuery(models.ProductType{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.ProductType{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.ProductTypeRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

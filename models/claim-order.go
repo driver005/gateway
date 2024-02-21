@@ -154,7 +154,7 @@ import (
 //	    url: https://docs.medusajs.com/development/idempotency-key/overview.md
 //	    description: Learn more how to use the idempotency key.
 type ClaimOrder struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Type              ClaimStatus            `json:"type" gorm:"column:type;default:'na'"`
 	PaymentStatus     ClaimPaymentStatus     `json:"payment_status" gorm:"column:payment_status;default:'not_fulfilled'"`

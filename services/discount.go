@@ -172,7 +172,7 @@ func (s *DiscountService) Retrieve(discountId uuid.UUID, config *sql.Options) (*
 		)
 	}
 	var discount *models.Discount = &models.Discount{}
-	query := sql.BuildQuery(models.Discount{Model: core.Model{Id: discountId}}, config)
+	query := sql.BuildQuery(models.Discount{SoftDeletableModel: core.SoftDeletableModel{Id: discountId}}, config)
 	if err := s.r.DiscountRepository().FindOne(s.ctx, discount, query); err != nil {
 		return nil, err
 	}

@@ -51,7 +51,7 @@ import "github.com/driver005/gateway/core"
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type TaxLine struct {
-	core.Model
+	core.BaseModel
 
 	Code string  `json:"code" gorm:"column:code"`
 	Name string  `json:"name" gorm:"column:name"`

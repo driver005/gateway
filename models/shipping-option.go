@@ -121,7 +121,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ShippingOption struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Amount       float64                     `json:"amount" gorm:"column:amount"`
 	Data         core.JSONB                  `json:"data" gorm:"column:data"`

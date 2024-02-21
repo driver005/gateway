@@ -67,7 +67,7 @@ import (
 //	  type: object
 //	  example: {car: "white"}
 type Note struct {
-	core.Model
+	core.SoftDeletableModel
 
 	ResourceType string        `json:"resource_type" gorm:"column:resource_type"`
 	ResourceId   uuid.NullUUID `json:"resource_id" gorm:"column:resource_id"`

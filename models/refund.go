@@ -92,7 +92,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Refund struct {
-	core.Model
+	core.BaseModel
 
 	OrderId        uuid.NullUUID `json:"order_id" gorm:"column:order_id"`
 	PaymentId      uuid.NullUUID `json:"payment_id" gorm:"column:payment_id"`

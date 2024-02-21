@@ -87,7 +87,7 @@ func (s *CartService) Retrieve(id uuid.UUID, config *sql.Options, totalsConfig T
 		return s.RetrieveLegacy(id, config, totalsConfig)
 	}
 
-	query := sql.BuildQuery(models.Cart{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.Cart{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 	if err := s.r.CartRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (s *CartService) Retrieve(id uuid.UUID, config *sql.Options, totalsConfig T
 
 func (s *CartService) RetrieveLegacy(id uuid.UUID, config *sql.Options, totalsConfig TotalsConfig) (*models.Cart, *utils.ApplictaionError) {
 	var res *models.Cart = &models.Cart{}
-	query := sql.BuildQuery(models.Cart{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.Cart{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	selects, relations, totalsToSelect := s.transformQueryForTotals(config)
 	query.Selects = selects
@@ -217,7 +217,7 @@ func (s *CartService) Create(data *types.CartCreateProps) (*models.Cart, *utils.
 		if data.ShippingAddressId != uuid.Nil {
 			var addr *models.Address
 
-			query := sql.BuildQuery(models.Address{Model: core.Model{Id: data.ShippingAddressId}}, &sql.Options{})
+			query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: data.ShippingAddressId}}, &sql.Options{})
 
 			if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 				return nil, err
@@ -248,7 +248,7 @@ func (s *CartService) Create(data *types.CartCreateProps) (*models.Cart, *utils.
 	if data.BillingAddressId != uuid.Nil {
 		var addr *models.Address
 
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: data.BillingAddressId}}, &sql.Options{})
+		query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: data.BillingAddressId}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return nil, err
@@ -282,7 +282,7 @@ func (s *CartService) Create(data *types.CartCreateProps) (*models.Cart, *utils.
 			return nil, err
 		}
 
-		// s.r.SalesChannelService().SetContext(s.ctx).Create(&types.CreateSalesChannelInput{Model: core.Model{Id: salesChannel.Id}})
+		// s.r.SalesChannelService().SetContext(s.ctx).Create(&types.CreateSalesChannelInput{BaseModel: core.BaseModel{Id: salesChannel.Id}})
 		// s.remoteLink.Create(map[string]interface{}{
 		// 	"cartService": map[string]interface{}{
 		// 		"cart_id": cart.Id,
@@ -858,7 +858,7 @@ func (s *CartService) UpdateLineItem(
 		}
 	}
 	_, err = s.r.LineItemService().SetContext(s.ctx).Update(lineItemId, nil, &models.LineItem{
-		Model: core.Model{
+		BaseModel: core.BaseModel{
 			Metadata: update.Metadata,
 		},
 		Title:       update.Title,
@@ -987,7 +987,7 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *types.CartUp
 	}
 	var billingAddress *models.Address
 	if data.BillingAddressId != uuid.Nil {
-		billingAddress = &models.Address{Model: core.Model{Id: data.BillingAddressId}}
+		billingAddress = &models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: data.BillingAddressId}}
 	} else if data.BillingAddress != nil {
 		billingAddress = utils.ToAddress(data.BillingAddress)
 	}
@@ -1000,7 +1000,7 @@ func (s *CartService) Update(id uuid.UUID, cart *models.Cart, data *types.CartUp
 
 	var shippingAddress *models.Address
 	if data.ShippingAddressId != uuid.Nil {
-		shippingAddress = &models.Address{Model: core.Model{Id: data.ShippingAddressId}}
+		shippingAddress = &models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: data.ShippingAddressId}}
 	} else if data.BillingAddress != nil {
 		shippingAddress = utils.ToAddress(data.ShippingAddress)
 	}
@@ -1216,7 +1216,7 @@ func (s *CartService) updateBillingAddress(cart *models.Cart, id uuid.UUID, addr
 	if id != uuid.Nil {
 		var addr *models.Address
 
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: id}}, &sql.Options{})
+		query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -1230,7 +1230,7 @@ func (s *CartService) updateBillingAddress(cart *models.Cart, id uuid.UUID, addr
 		if cart.BillingAddressId.UUID != uuid.Nil {
 			var addr *models.Address
 
-			query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.BillingAddressId.UUID}}, &sql.Options{})
+			query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: cart.BillingAddressId.UUID}}, &sql.Options{})
 
 			if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 				return err
@@ -1252,7 +1252,7 @@ func (s *CartService) updateShippingAddress(cart *models.Cart, id uuid.UUID, add
 	if id != uuid.Nil {
 		var addr *models.Address
 
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: id}}, &sql.Options{})
+		query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -1275,7 +1275,7 @@ func (s *CartService) updateShippingAddress(cart *models.Cart, id uuid.UUID, add
 		if cart.ShippingAddressId.UUID != uuid.Nil {
 			var addr *models.Address
 
-			query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.ShippingAddressId.UUID}}, &sql.Options{})
+			query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: cart.ShippingAddressId.UUID}}, &sql.Options{})
 
 			if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 				return err
@@ -1488,7 +1488,7 @@ func (s *CartService) AuthorizePayment(id uuid.UUID, cart *models.Cart, context 
 		now := time.Now()
 		cart.PaymentAuthorizedAt = &now
 		if err := s.r.CartRepository().Save(s.ctx, &models.Cart{
-			Model:               core.Model{Id: cart.Id},
+			SoftDeletableModel:  core.SoftDeletableModel{Id: cart.Id},
 			PaymentAuthorizedAt: cart.PaymentAuthorizedAt,
 		}); err != nil {
 			return nil, err
@@ -1631,7 +1631,7 @@ func (s *CartService) SetPaymentSession(id uuid.UUID, providerId uuid.UUID) *uti
 		}
 	}
 	if err = s.r.PaymentSessionRepository().Update(s.ctx, &models.PaymentSession{
-		Model:       core.Model{Id: paymentSession.Id},
+		BaseModel:   core.BaseModel{Id: paymentSession.Id},
 		IsSelected:  true,
 		IsInitiated: true,
 	}); err != nil {
@@ -1746,7 +1746,7 @@ func (s *CartService) SetPaymentSessions(id uuid.UUID, cart *models.Cart) *utils
 			return err
 		}
 		if err := s.r.PaymentSessionRepository().Save(s.ctx, &models.PaymentSession{
-			Model:       core.Model{Id: paymentSession.Id},
+			BaseModel:   core.BaseModel{Id: paymentSession.Id},
 			IsSelected:  true,
 			IsInitiated: true,
 		}); err != nil {
@@ -1798,7 +1798,7 @@ func (s *CartService) DeletePaymentSession(id uuid.UUID, providerId uuid.UUID) *
 				}
 			} else {
 				if err := s.r.PaymentSessionRepository().Delete(s.ctx, &models.PaymentSession{
-					Model: core.Model{Id: paymentSession.Id},
+					BaseModel: core.BaseModel{Id: paymentSession.Id},
 				}); err != nil {
 					return err
 				}
@@ -1846,8 +1846,8 @@ func (s *CartService) RefreshPaymentSession(id uuid.UUID, providerId uuid.UUID) 
 				}
 			} else {
 				if err := s.r.PaymentSessionRepository().Save(s.ctx, &models.PaymentSession{
-					Model:  core.Model{Id: paymentSession.Id},
-					Amount: cart.Total,
+					BaseModel: core.BaseModel{Id: paymentSession.Id},
+					Amount:    cart.Total,
 				}); err != nil {
 					return err
 				}
@@ -2075,7 +2075,7 @@ func (s *CartService) setRegion(cart *models.Cart, regionId uuid.UUID, countryCo
 
 	var shippingAddress *models.Address
 	if cart.SalesChannelId.UUID != uuid.Nil {
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: cart.ShippingAddressId.UUID}}, &sql.Options{})
+		query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: cart.ShippingAddressId.UUID}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, shippingAddress, query); err != nil {
 			return err

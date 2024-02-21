@@ -65,7 +65,7 @@ func (s *FulfillmentService) GetFulfillmentItems(order *types.CreateFulfillmentO
 					)
 				}
 				toReturn = append(toReturn, models.LineItem{
-					Model:             core.Model{Id: i.Id},
+					BaseModel:         core.BaseModel{Id: i.Id},
 					Quantity:          item.Quantity,
 					FulfilledQuantity: i.FulfilledQuantity,
 				})
@@ -100,7 +100,7 @@ func (s *FulfillmentService) ValidateFulfillmentLineItem(item *models.LineItem, 
 		)
 	}
 	return &models.LineItem{
-		Model:             core.Model{Id: item.Id},
+		BaseModel:         core.BaseModel{Id: item.Id},
 		Quantity:          quantity,
 		FulfilledQuantity: item.FulfilledQuantity,
 	}, nil
@@ -115,7 +115,7 @@ func (s *FulfillmentService) Retrieve(fulfillmentId uuid.UUID, config *sql.Optio
 		)
 	}
 	var res *models.Fulfillment = &models.Fulfillment{}
-	query := sql.BuildQuery(models.Fulfillment{Model: core.Model{Id: fulfillmentId}}, config)
+	query := sql.BuildQuery(models.Fulfillment{BaseModel: core.BaseModel{Id: fulfillmentId}}, config)
 	if err := s.r.FulfillmentRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,

@@ -165,7 +165,7 @@ import (
 //	  type: string
 //	  format: date-time
 type OrderEdit struct {
-	core.Model
+	core.BaseModel
 
 	Status              OrderEditStatus    `json:"status" gorm:"column:status"`
 	OrderId             uuid.NullUUID      `json:"order_id" gorm:"column:order_id"`

@@ -111,7 +111,7 @@ func (s *SwapService) Retrieve(swapId uuid.UUID, config *sql.Options) (*models.S
 
 	var swap *models.Swap = &models.Swap{}
 	newConfig := s.transformQueryForCart(config)
-	query := sql.BuildQuery(models.Swap{Model: core.Model{Id: swapId}}, newConfig["swap"])
+	query := sql.BuildQuery(models.Swap{SoftDeletableModel: core.SoftDeletableModel{Id: swapId}}, newConfig["swap"])
 	if err := s.r.SwapRepository().FindOne(s.ctx, swap, query); err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func (s *SwapService) CreateCart(swapId uuid.UUID, customShippingOptions []types
 					var taxLines []models.LineItemTaxLine
 					for _, tl := range swap.ReturnOrder.ShippingMethod.TaxLines {
 						item, err := s.r.LineItemService().SetContext(s.ctx).CreateTaxLine(&models.LineItemTaxLine{
-							Model: core.Model{
+							SoftDeletableModel: core.SoftDeletableModel{
 								Metadata: tl.Metadata,
 							},
 							Name: tl.Name,
@@ -738,7 +738,7 @@ func (s *SwapService) CreateFulfillment(swapId uuid.UUID, config *types.CreateSh
 		fulfillmentOrder,
 		items,
 		models.Fulfillment{
-			Model: core.Model{
+			BaseModel: core.BaseModel{
 				Metadata: metadata,
 			},
 			SwapId:     uuid.NullUUID{UUID: swap.Id},

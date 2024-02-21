@@ -65,7 +65,7 @@ import (
 //
 
 type Country struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Iso2        string        `json:"iso_2" gorm:"column:iso_2;uniqueIndex"`
 	Iso3        string        `json:"iso_3" gorm:"column:iso_3"`

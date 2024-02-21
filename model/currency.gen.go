@@ -12,6 +12,7 @@ type Currency struct {
 	Symbol       string `gorm:"column:symbol;type:character varying;not null" json:"symbol"`
 	SymbolNative string `gorm:"column:symbol_native;type:character varying;not null" json:"symbol_native"`
 	Name         string `gorm:"column:name;type:character varying;not null" json:"name"`
+	IncludesTax  bool   `gorm:"column:includes_tax;type:boolean;not null" json:"includes_tax"`
 }
 
 // TableName Currency's table name

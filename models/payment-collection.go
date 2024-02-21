@@ -115,7 +115,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type PaymentCollection struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Type             PaymentCollectionType   `json:"type" gorm:"column:type"`
 	Status           PaymentCollectionStatus `json:"status" gorm:"column:status"`

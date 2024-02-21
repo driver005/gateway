@@ -94,7 +94,7 @@ func (s *NotificationService) ListAndCount(selector *types.FilterableNotificatio
 
 func (s *NotificationService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Notification, *utils.ApplictaionError) {
 	var res *models.Notification = &models.Notification{}
-	query := sql.BuildQuery(&models.Notification{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(&models.Notification{BaseModel: core.BaseModel{Id: id}}, config)
 	if err := s.r.NotificationRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}

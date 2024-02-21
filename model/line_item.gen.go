@@ -34,8 +34,10 @@ type LineItem struct {
 	Metadata          string    `gorm:"column:metadata;type:jsonb" json:"metadata"`
 	ClaimOrderID      string    `gorm:"column:claim_order_id;type:character varying;index:IDX_118e3c48f09a7728f41023c94e,priority:1" json:"claim_order_id"`
 	IsReturn          bool      `gorm:"column:is_return;type:boolean;not null" json:"is_return"`
+	IncludesTax       bool      `gorm:"column:includes_tax;type:boolean;not null" json:"includes_tax"`
 	OriginalItemID    string    `gorm:"column:original_item_id;type:character varying;uniqueIndex:unique_li_original_item_id_order_edit_id,priority:1" json:"original_item_id"`
 	OrderEditID       string    `gorm:"column:order_edit_id;type:character varying;uniqueIndex:unique_li_original_item_id_order_edit_id,priority:2" json:"order_edit_id"`
+	ProductID         string    `gorm:"column:product_id;type:text" json:"product_id"`
 }
 
 // TableName LineItem's table name

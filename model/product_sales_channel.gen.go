@@ -4,12 +4,22 @@
 
 package model
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 const TableNameProductSalesChannel = "product_sales_channel"
 
 // ProductSalesChannel mapped from table <product_sales_channel>
 type ProductSalesChannel struct {
-	ProductID      string `gorm:"column:product_id;type:character varying;primaryKey;index:IDX_5a4d5e1e60f97633547821ec8d,priority:1" json:"product_id"`
-	SalesChannelID string `gorm:"column:sales_channel_id;type:character varying;primaryKey;index:IDX_37341bad297fe5cca91f921032,priority:1" json:"sales_channel_id"`
+	ProductID      string         `gorm:"column:product_id;type:character varying;not null;uniqueIndex:product_sales_channel_product_id_sales_channel_id_unique,priority:1;index:IDX_5a4d5e1e60f97633547821ec8d,priority:1" json:"product_id"`
+	SalesChannelID string         `gorm:"column:sales_channel_id;type:character varying;not null;uniqueIndex:product_sales_channel_product_id_sales_channel_id_unique,priority:2;index:IDX_37341bad297fe5cca91f921032,priority:1" json:"sales_channel_id"`
+	ID             string         `gorm:"column:id;type:text;primaryKey" json:"id"`
+	CreatedAt      time.Time      `gorm:"column:created_at;type:timestamp with time zone;not null;default:now()" json:"created_at"`
+	UpdatedAt      time.Time      `gorm:"column:updated_at;type:timestamp with time zone;not null;default:now()" json:"updated_at"`
+	DeletedAt      gorm.DeletedAt `gorm:"column:deleted_at;type:timestamp with time zone" json:"deleted_at"`
 }
 
 // TableName ProductSalesChannel's table name

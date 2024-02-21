@@ -117,7 +117,7 @@ import (
 //	  type: integer
 //	  example: 0
 type ShippingMethod struct {
-	core.Model
+	core.SoftDeletableModel
 
 	ShippingOptionId uuid.NullUUID           `json:"shipping_option_id" gorm:"column:shipping_option_id"`
 	ShippingOption   *ShippingOption         `json:"shipping_option" gorm:"foreignKey:ShippingOptionId"`

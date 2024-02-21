@@ -133,7 +133,7 @@ func (s *OrderService) RetrieveById(id uuid.UUID, config *sql.Options) (*models.
 		)
 	}
 
-	return s.Retrieve(models.Order{Model: core.Model{Id: id}}, config)
+	return s.Retrieve(models.Order{BaseModel: core.BaseModel{Id: id}}, config)
 }
 
 func (s *OrderService) RetrieveLegacy(id uuid.UUID, selector models.Order, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
@@ -153,7 +153,7 @@ func (s *OrderService) RetrieveByIdWithTotals(id uuid.UUID, config *sql.Options,
 		)
 	}
 
-	return s.RetrieveWithTotals(models.Order{Model: core.Model{Id: id}}, config, context)
+	return s.RetrieveWithTotals(models.Order{BaseModel: core.BaseModel{Id: id}}, config, context)
 }
 
 func (s *OrderService) RetrieveByCartId(cartId uuid.UUID, config *sql.Options) (*models.Order, *utils.ApplictaionError) {
@@ -274,7 +274,7 @@ func (s *OrderService) CreateFromCart(id uuid.UUID, data *models.Cart) (*models.
 		shippingMethods = append(shippingMethods, method)
 	}
 	order := &models.Order{
-		Model:             core.Model{Metadata: cart.Metadata},
+		BaseModel:         core.BaseModel{Metadata: cart.Metadata},
 		PaymentStatus:     "awaiting",
 		Discounts:         cart.Discounts,
 		GiftCards:         cart.GiftCards,
@@ -543,7 +543,7 @@ func (s *OrderService) UpdateBillingAddress(
 	}
 	var addr *models.Address
 	if order.BillingAddressId.UUID != uuid.Nil {
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: order.BillingAddressId.UUID}}, &sql.Options{})
+		query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: order.BillingAddressId.UUID}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -591,7 +591,7 @@ func (s *OrderService) UpdateShippingAddress(
 	}
 	var addr *models.Address
 	if order.ShippingAddressId.UUID != uuid.Nil {
-		query := sql.BuildQuery(models.Address{Model: core.Model{Id: order.ShippingAddressId.UUID}}, &sql.Options{})
+		query := sql.BuildQuery(models.Address{SoftDeletableModel: core.SoftDeletableModel{Id: order.ShippingAddressId.UUID}}, &sql.Options{})
 
 		if err := s.r.AddressRepository().FindOne(s.ctx, addr, query); err != nil {
 			return err
@@ -1039,7 +1039,7 @@ func (s *OrderService) CreateFulfillment(id uuid.UUID, itemsToFulfill []types.Fu
 		fulfillmentOrder,
 		itemsToFulfill,
 		models.Fulfillment{
-			Model: core.Model{
+			BaseModel: core.BaseModel{
 				Metadata: metadata,
 			},
 			NoNotification: no_notification,

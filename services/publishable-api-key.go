@@ -58,7 +58,7 @@ func (s *PublishableApiKeyService) RetrieveById(id uuid.UUID, config *sql.Option
 			nil,
 		)
 	}
-	return s.Retrieve(&models.PublishableApiKey{Model: core.Model{Id: id}}, config)
+	return s.Retrieve(&models.PublishableApiKey{BaseModel: core.BaseModel{Id: id}}, config)
 }
 
 func (s *PublishableApiKeyService) Retrieve(selector *models.PublishableApiKey, config *sql.Options) (*models.PublishableApiKey, *utils.ApplictaionError) {

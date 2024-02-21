@@ -98,7 +98,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Store struct {
-	core.Model
+	core.BaseModel
 
 	Name                  string        `json:"name" gorm:"column:name;default:'Store'"`
 	DefaultCurrencyCode   string        `json:"default_currency_code" gorm:"column:default_currency_code;default:'usd'"`

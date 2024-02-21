@@ -123,7 +123,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Address struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Address1    string        `json:"address_1" gorm:"column:address_1"`
 	Address2    string        `json:"address_2" gorm:"column:address_2"`

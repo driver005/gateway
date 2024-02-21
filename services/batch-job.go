@@ -51,7 +51,7 @@ func (s *BatchJobService) Retrive(batchJobId uuid.UUID) (*models.BatchJob, *util
 
 	if err := s.r.BatchJobRepository().FindOne(s.ctx, model, sql.BuildQuery[models.BatchJob](
 		models.BatchJob{
-			Model: core.Model{Id: batchJobId},
+			SoftDeletableModel: core.SoftDeletableModel{Id: batchJobId},
 		},
 		&sql.Options{},
 	)); err != nil {

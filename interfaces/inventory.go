@@ -10,7 +10,7 @@ import (
 )
 
 type InventoryItemDTO struct {
-	core.Model
+	core.BaseModel
 	SKU              string
 	OriginCountry    string
 	HsCode           string
@@ -27,7 +27,7 @@ type InventoryItemDTO struct {
 }
 
 type ReservationItemDTO struct {
-	core.Model
+	core.BaseModel
 	LocationId      uuid.UUID
 	InventoryItemId uuid.UUID
 	Quantity        int
@@ -37,7 +37,7 @@ type ReservationItemDTO struct {
 }
 
 type InventoryLevelDTO struct {
-	core.Model
+	core.BaseModel
 	InventoryItemId   uuid.UUID
 	LocationId        uuid.UUID
 	StockedQuantity   int

@@ -45,7 +45,7 @@ import "github.com/driver005/gateway/core"
 //
 
 type OAuth struct {
-	core.Model
+	core.SoftDeletableModel
 
 	DisplayName     string     `json:"display_name" gorm:"column:display_name"`
 	ApplicationName string     `json:"application_name" gorm:"column:application_name"`

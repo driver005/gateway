@@ -4,12 +4,22 @@
 
 package model
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 const TableNamePublishableAPIKeySalesChannel = "publishable_api_key_sales_channel"
 
 // PublishableAPIKeySalesChannel mapped from table <publishable_api_key_sales_channel>
 type PublishableAPIKeySalesChannel struct {
-	SalesChannelID   string `gorm:"column:sales_channel_id;type:character varying;primaryKey" json:"sales_channel_id"`
-	PublishableKeyID string `gorm:"column:publishable_key_id;type:character varying;primaryKey" json:"publishable_key_id"`
+	SalesChannelID   string         `gorm:"column:sales_channel_id;type:character varying;primaryKey" json:"sales_channel_id"`
+	PublishableKeyID string         `gorm:"column:publishable_key_id;type:character varying;primaryKey" json:"publishable_key_id"`
+	ID               string         `gorm:"column:id;type:text;not null;index:IDX_id_publishable_api_key_sales_channel,priority:1" json:"id"`
+	CreatedAt        time.Time      `gorm:"column:created_at;type:timestamp with time zone;not null;default:now()" json:"created_at"`
+	UpdatedAt        time.Time      `gorm:"column:updated_at;type:timestamp with time zone;not null;default:now()" json:"updated_at"`
+	DeletedAt        gorm.DeletedAt `gorm:"column:deleted_at;type:timestamp with time zone" json:"deleted_at"`
 }
 
 // TableName PublishableAPIKeySalesChannel's table name

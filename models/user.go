@@ -77,7 +77,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type User struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Role         UserRole `json:"role" gorm:"column:role;default:'member'"`
 	Email        string   `json:"email" gorm:"column:email"`

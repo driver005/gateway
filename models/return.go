@@ -132,7 +132,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Return struct {
-	core.Model
+	core.BaseModel
 
 	Status         ReturnStatus    `json:"status" gorm:"column:status;default:'requested'"`
 	Items          []ReturnItem    `json:"items" gorm:"foreignKey:ReturnId"`

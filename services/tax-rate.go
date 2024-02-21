@@ -115,7 +115,7 @@ func (s *TaxRateService) Update(id uuid.UUID, data *types.UpdateTaxRateInput) (*
 }
 
 func (s *TaxRateService) Delete(id uuid.UUID) *utils.ApplictaionError {
-	return s.r.TaxRateRepository().Delete(s.ctx, &models.TaxRate{Model: core.Model{Id: id}})
+	return s.r.TaxRateRepository().Delete(s.ctx, &models.TaxRate{BaseModel: core.BaseModel{Id: id}})
 }
 
 func (s *TaxRateService) RemoveFromProduct(id uuid.UUID, productIds uuid.UUIDs) *utils.ApplictaionError {

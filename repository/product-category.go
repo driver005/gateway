@@ -65,7 +65,7 @@ func (r *ProductCategoryRepo) GetFreeTextSearchResultsAndCount(ctx context.Conte
 
 func (r *ProductCategoryRepo) AddProducts(productCategoryId uuid.UUID, productIds uuid.UUIDs) *utils.ApplictaionError {
 	for _, productId := range productIds {
-		err := r.Db().Model(&models.ProductCategory{}).Association("Products").Append(&models.Product{Model: core.Model{Id: productId}})
+		err := r.Db().Model(&models.ProductCategory{}).Association("Products").Append(&models.Product{SoftDeletableModel: core.SoftDeletableModel{Id: productId}})
 		if err != nil {
 			return r.HandleDBError(err)
 		}
@@ -75,7 +75,7 @@ func (r *ProductCategoryRepo) AddProducts(productCategoryId uuid.UUID, productId
 
 func (r *ProductCategoryRepo) RemoveProducts(productCategoryId uuid.UUID, productIds uuid.UUIDs) *utils.ApplictaionError {
 	for _, productId := range productIds {
-		err := r.Db().Model(&models.ProductCategory{}).Association("Products").Delete(&models.Product{Model: core.Model{Id: productId}})
+		err := r.Db().Model(&models.ProductCategory{}).Association("Products").Delete(&models.Product{SoftDeletableModel: core.SoftDeletableModel{Id: productId}})
 		if err != nil {
 			return r.HandleDBError(err)
 		}

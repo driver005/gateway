@@ -40,7 +40,7 @@ func (s *DiscountConditionService) Retrieve(conditionId uuid.UUID, config *sql.O
 	}
 
 	var res *models.DiscountCondition = &models.DiscountCondition{}
-	query := sql.BuildQuery[models.DiscountCondition](models.DiscountCondition{Model: core.Model{Id: conditionId}}, &sql.Options{})
+	query := sql.BuildQuery[models.DiscountCondition](models.DiscountCondition{SoftDeletableModel: core.SoftDeletableModel{Id: conditionId}}, &sql.Options{})
 
 	if err := s.r.DiscountConditionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (s *DiscountConditionService) UpsertCondition(data *types.DiscountCondition
 	}
 
 	created := &models.DiscountCondition{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Id: data.Id,
 		},
 		Operator: data.Operator,

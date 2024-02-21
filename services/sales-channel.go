@@ -50,7 +50,7 @@ func (s *SalesChannelService) RetrieveById(salesChannelId uuid.UUID, config *sql
 		)
 	}
 
-	return s.Retrieve(&models.SalesChannel{Model: core.Model{Id: salesChannelId}}, config)
+	return s.Retrieve(&models.SalesChannel{SoftDeletableModel: core.SoftDeletableModel{Id: salesChannelId}}, config)
 }
 
 func (s *SalesChannelService) RetrieveByName(name string, config *sql.Options) (*models.SalesChannel, *utils.ApplictaionError) {

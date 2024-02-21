@@ -75,7 +75,7 @@ import (
 //	  type: string
 //	  default: started
 type IdempotencyKey struct {
-	core.Model
+	core.SoftDeletableModel
 
 	IdempotencyKey string     `json:"idempotency_key" gorm:"column:idempotency_key"`
 	LockedAt       *time.Time `json:"locked_at" gorm:"column:locked_at"`

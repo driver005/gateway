@@ -53,7 +53,7 @@ import (
 //	  type: string
 //	  format: date-time
 type PublishableApiKey struct {
-	core.Model
+	core.BaseModel
 
 	CreatedBy uuid.NullUUID `json:"created_by" gorm:"column:created_by"`
 	RevokedBy uuid.NullUUID `json:"revoked_by" gorm:"column:revoked_by"`

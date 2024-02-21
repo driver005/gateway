@@ -33,7 +33,7 @@ func (s *NoteService) SetContext(context context.Context) *NoteService {
 
 func (s *NoteService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Note, *utils.ApplictaionError) {
 	var res *models.Note = &models.Note{}
-	query := sql.BuildQuery(&models.Note{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(&models.Note{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 	if err := s.r.NoteRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *NoteService) ListAndCount(selector *types.FilterableNote, config *sql.O
 
 func (s *NoteService) Create(data *types.CreateNoteInput, config map[string]interface{}) (*models.Note, *utils.ApplictaionError) {
 	model := &models.Note{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Value:        data.Value,

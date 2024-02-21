@@ -1,6 +1,9 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/driver005/gateway/core"
+	"github.com/google/uuid"
+)
 
 // @oas:schema:PublishableApiKeySalesChannel
 // title: "Publishable API Key Sales Channel"
@@ -41,6 +44,8 @@ import "github.com/google/uuid"
 //	  type: string
 //	  format: date-time
 type PublishableApiKeySalesChannel struct {
-	SalesChannelId   uuid.NullUUID `json:"sales_channel_id" gorm:"column:sales_channel_id"`
-	PublishableKeyId uuid.NullUUID `json:"publishable_key_id" gorm:"column:publishable_key_id"`
+	core.BaseModel
+
+	SalesChannelId   uuid.NullUUID `json:"sales_channel_id" gorm:"column:sales_channel_id;primarykey"`
+	PublishableKeyId uuid.NullUUID `json:"publishable_key_id" gorm:"column:publishable_key_id;primarykey"`
 }

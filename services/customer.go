@@ -189,7 +189,7 @@ func (s *CustomerService) RetrieveById(id uuid.UUID, config *sql.Options) (*mode
 		)
 	}
 
-	return s.Retrieve(models.Customer{Model: core.Model{Id: id}}, config)
+	return s.Retrieve(models.Customer{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 }
 
 func (s *CustomerService) Create(data *types.CreateCustomerInput) (*models.Customer, *utils.ApplictaionError) {
@@ -318,7 +318,7 @@ func (s *CustomerService) Update(userId uuid.UUID, data *types.UpdateCustomerInp
 	if data.Groups != nil {
 		for _, g := range data.Groups {
 			model.Groups = append(model.Groups, models.CustomerGroup{
-				Model: core.Model{Id: g.Id},
+				SoftDeletableModel: core.SoftDeletableModel{Id: g.Id},
 			})
 		}
 	}

@@ -92,7 +92,7 @@ import (
 //	  type: string
 //	  format: date-time
 type PriceList struct {
-	core.Model
+	core.SoftDeletableModel
 
 	CustomerGroups []CustomerGroup `json:"customer_groups" gorm:"many2many:price_list_customer_groups"`
 	Description    string          `json:"description" gorm:"column:description"`

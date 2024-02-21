@@ -77,7 +77,7 @@ import (
 //	  type: string
 //	  format: date-time
 type OrderItemChange struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Type               OrderEditItemChangeType `json:"type" gorm:"column:type"`
 	OrderEditId        uuid.NullUUID           `json:"order_edit_id" gorm:"column:order_edit_id"`

@@ -40,7 +40,7 @@ func (s *PaymentService) Retrieve(id uuid.UUID, config *sql.Options) (*models.Pa
 		)
 	}
 	var res *models.Payment = &models.Payment{}
-	query := sql.BuildQuery(models.Payment{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.Payment{BaseModel: core.BaseModel{Id: id}}, config)
 	if err := s.r.PaymentRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}

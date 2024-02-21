@@ -107,7 +107,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ClaimItem struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Images       []ClaimImage    `json:"images" gorm:"foreignKey:Id"`
 	ClaimOrderId uuid.NullUUID   `json:"claim_order_id" gorm:"column:claim_order_id"`

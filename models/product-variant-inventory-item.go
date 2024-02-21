@@ -53,7 +53,7 @@ import (
 //	  type: string
 //	  format: date-time
 type ProductVariantInventoryItem struct {
-	core.Model
+	core.SoftDeletableModel
 
 	InventoryItemId  uuid.NullUUID   `json:"inventory_item_id" gorm:"column:inventory_item_id"`
 	VariantId        uuid.NullUUID   `json:"variant_id" gorm:"column:variant_id"`

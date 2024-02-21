@@ -107,7 +107,7 @@ func (s *ProductService) RetrieveById(id uuid.UUID, config *sql.Options) (*model
 			nil,
 		)
 	}
-	return s.Retrieve(models.Product{Model: core.Model{Id: id}}, config)
+	return s.Retrieve(models.Product{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 }
 
 func (s *ProductService) RetrieveByHandle(productHandle string, config *sql.Options) (*models.Product, *utils.ApplictaionError) {
@@ -229,7 +229,7 @@ func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product
 	}
 
 	if data.ProfileId != uuid.Nil {
-		product.Profiles = []models.ShippingProfile{{Model: core.Model{Id: data.ProfileId}}}
+		product.Profiles = []models.ShippingProfile{{SoftDeletableModel: core.SoftDeletableModel{Id: data.ProfileId}}}
 	}
 	if len(data.Images) > 0 {
 		var images []models.Image
@@ -247,7 +247,7 @@ func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product
 		var tags []models.ProductTag
 		for _, t := range data.Tags {
 			tags = append(tags, models.ProductTag{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Id: t.Id,
 				},
 				Value: t.Value,
@@ -260,7 +260,7 @@ func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product
 	}
 	if data.Type != nil {
 		ty, err := s.r.ProductTypeRepository().UpsertType(&models.ProductType{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Id: data.Type.Id,
 			},
 			Value: data.Type.Value,
@@ -282,7 +282,7 @@ func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product
 				salesChannelIds = append(salesChannelIds, sc.Id)
 			}
 			for _, id := range salesChannelIds {
-				product.SalesChannels = append(product.SalesChannels, models.SalesChannel{Model: core.Model{Id: id}})
+				product.SalesChannels = append(product.SalesChannels, models.SalesChannel{SoftDeletableModel: core.SoftDeletableModel{Id: id}})
 			}
 		}
 	}
@@ -293,7 +293,7 @@ func (s *ProductService) Create(data *types.CreateProductInput) (*models.Product
 			categoryIds = append(categoryIds, c.Id)
 		}
 		for _, id := range categoryIds {
-			product.Categories = append(product.Categories, models.ProductCategory{Model: core.Model{Id: id}})
+			product.Categories = append(product.Categories, models.ProductCategory{BaseModel: core.BaseModel{Id: id}})
 		}
 	}
 
@@ -367,7 +367,7 @@ func (s *ProductService) Update(id uuid.UUID, data *types.UpdateProductInput) (*
 
 	if data.Type != nil {
 		t, err := s.r.ProductTypeRepository().UpsertType(&models.ProductType{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Id: data.Type.Id,
 			},
 			Value: data.Type.Value,
@@ -381,7 +381,7 @@ func (s *ProductService) Update(id uuid.UUID, data *types.UpdateProductInput) (*
 		var tags []models.ProductTag
 		for _, t := range data.Tags {
 			tags = append(tags, models.ProductTag{
-				Model: core.Model{
+				SoftDeletableModel: core.SoftDeletableModel{
 					Id: t.Id,
 				},
 				Value: t.Value,
@@ -639,7 +639,7 @@ func (s *ProductService) UpdateOption(id uuid.UUID, optionId uuid.UUID, data *ty
 
 	var option *models.ProductOption
 
-	query := sql.BuildQuery(models.ProductOption{Model: core.Model{Id: optionId}}, &sql.Options{})
+	query := sql.BuildQuery(models.ProductOption{SoftDeletableModel: core.SoftDeletableModel{Id: optionId}}, &sql.Options{})
 
 	if err := s.r.ProductOptionRepository().FindOne(s.ctx, option, query); err != nil {
 		return nil, err
@@ -681,7 +681,7 @@ func (s *ProductService) DeleteOption(id uuid.UUID, optionId uuid.UUID) (*models
 
 	var option *models.ProductOption
 
-	query := sql.BuildQuery(models.ProductOption{Model: core.Model{Id: optionId}}, &sql.Options{})
+	query := sql.BuildQuery(models.ProductOption{SoftDeletableModel: core.SoftDeletableModel{Id: optionId}}, &sql.Options{})
 
 	if err := s.r.ProductOptionRepository().FindOne(s.ctx, option, query); err != nil {
 		return nil, err
@@ -738,7 +738,7 @@ func (s *ProductService) UpdateShippingProfile(productIds uuid.UUIDs, profileId 
 		if profileId == uuid.Nil {
 			product.Profiles = []models.ShippingProfile{}
 		} else {
-			product.Profiles = []models.ShippingProfile{{Model: core.Model{Id: profileId}}}
+			product.Profiles = []models.ShippingProfile{{SoftDeletableModel: core.SoftDeletableModel{Id: profileId}}}
 		}
 
 		products = append(products, *product)

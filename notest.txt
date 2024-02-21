@@ -1,0 +1,16 @@
+claim_item_tags.gen.go
+customer_group_customers.gen.go
+discount_regions.gen.go
+discount_rule_products.gen.go
+migrations.gen.go
+order_discounts.gen.go
+order_gift_cards.gen.go
+payment_collection_payments.gen.go
+payment_collection_sessions.gen.go
+price_list_customer_groups.gen.go
+product_category_product.gen.go
+product_images.gen.go
+product_shipping_profile.gen.go
+region_fulfillment_providers.gen.go
+region_payment_providers.gen.go
+store_currencies.gen.go

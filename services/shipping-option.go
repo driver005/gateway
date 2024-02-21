@@ -51,7 +51,7 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 
 	var existingReq *models.ShippingOptionRequirement = &models.ShippingOptionRequirement{}
 	if data.Id != uuid.Nil {
-		query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: data.Id}}, &sql.Options{})
+		query := sql.BuildQuery(models.ShippingOptionRequirement{SoftDeletableModel: core.SoftDeletableModel{Id: data.Id}}, &sql.Options{})
 		err := s.r.ShippingOptionRequirementRepository().FindOne(s.ctx, existingReq, query)
 		if err != nil {
 			return nil, utils.NewApplictaionError(
@@ -70,7 +70,7 @@ func (s *ShippingOptionService) ValidateRequirement(data *types.ValidateRequirem
 	}
 
 	model := &models.ShippingOptionRequirement{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Id: data.Id,
 		},
 		Type:   data.Type,
@@ -130,7 +130,7 @@ func (s *ShippingOptionService) Retrieve(optionId uuid.UUID, config *sql.Options
 		)
 	}
 	var res *models.ShippingOption
-	query := sql.BuildQuery(models.ShippingOption{Model: core.Model{Id: optionId}}, config)
+	query := sql.BuildQuery(models.ShippingOption{SoftDeletableModel: core.SoftDeletableModel{Id: optionId}}, config)
 	if err := s.r.ShippingOptionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.NOT_FOUND,
@@ -145,7 +145,7 @@ func (s *ShippingOptionService) Retrieve(optionId uuid.UUID, config *sql.Options
 func (s *ShippingOptionService) UpdateShippingMethod(id uuid.UUID, data *types.ShippingMethodUpdate) (*models.ShippingMethod, *utils.ApplictaionError) {
 	model := &models.ShippingMethod{}
 
-	query := sql.BuildQuery(models.ShippingMethod{Model: core.Model{Id: id}}, &sql.Options{})
+	query := sql.BuildQuery(models.ShippingMethod{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, &sql.Options{})
 	if err := s.r.ShippingMethodRepository().FindOne(s.ctx, model, query); err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (s *ShippingOptionService) CreateShippingMethod(optionId uuid.UUID, data ma
 	}
 
 	var method *models.ShippingMethod
-	query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: toCreate.Id}}, &sql.Options{
+	query := sql.BuildQuery(models.ShippingOptionRequirement{SoftDeletableModel: core.SoftDeletableModel{Id: toCreate.Id}}, &sql.Options{
 		Relations: []string{"shipping_option"},
 	})
 	if err := s.r.ShippingMethodRepository().FindOne(s.ctx, method, query); err != nil {
@@ -532,7 +532,7 @@ func (s *ShippingOptionService) AddRequirement(optionId uuid.UUID, requirement *
 
 func (s *ShippingOptionService) RemoveRequirement(requirementId uuid.UUID) (*models.ShippingOptionRequirement, *utils.ApplictaionError) {
 	var requirement *models.ShippingOptionRequirement = &models.ShippingOptionRequirement{}
-	query := sql.BuildQuery(models.ShippingOptionRequirement{Model: core.Model{Id: requirementId}}, &sql.Options{})
+	query := sql.BuildQuery(models.ShippingOptionRequirement{SoftDeletableModel: core.SoftDeletableModel{Id: requirementId}}, &sql.Options{})
 	if err := s.r.ShippingOptionRequirementRepository().FindOne(s.ctx, requirement, query); err != nil {
 		return nil, err
 	}

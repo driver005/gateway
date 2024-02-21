@@ -61,7 +61,7 @@ import (
 //	  type: number
 //	  example: 0
 type GiftCardTransaction struct {
-	core.Model
+	core.SoftDeletableModel
 
 	GiftCardId uuid.NullUUID `json:"gift_card_id" gorm:"column:gift_card_id"`
 	GiftCard   *GiftCard     `json:"gift_card" gorm:"foreignKey:GiftCardId"`

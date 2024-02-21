@@ -65,7 +65,7 @@ import (
 //
 
 type ShippingMethodTaxLine struct {
-	core.Model
+	core.SoftDeletableModel
 
 	ShippingMethodId uuid.NullUUID   `json:"shipping_method_id" gorm:"column:shipping_method_id"`
 	ShippingMethod   *ShippingMethod `json:"shipping_method" gorm:"foreignKey:ShippingMethodId"`

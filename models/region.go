@@ -123,7 +123,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Region struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Name                 string                `json:"name" gorm:"column:name"`
 	CurrencyCode         string                `json:"currency_code" gorm:"column:currency_code"`

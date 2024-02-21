@@ -75,7 +75,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type ReturnReason struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Description          string         `json:"description" gorm:"column:description"`
 	Label                string         `json:"label" gorm:"column:label"`

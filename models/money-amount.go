@@ -98,7 +98,7 @@ import (
 //	  type: string
 //	  format: date-time
 type MoneyAmount struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Amount       float64          `json:"amount" gorm:"column:amount"`
 	Currency     *Currency        `json:"currency" gorm:"foreignKey:CurrencyCode;foreignKey:Code"`

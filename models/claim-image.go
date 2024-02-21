@@ -59,7 +59,7 @@ import (
 //
 
 type ClaimImage struct {
-	core.Model
+	core.SoftDeletableModel
 
 	ClaimItemId uuid.NullUUID `json:"claim_item_id" gorm:"column:claim_item_id"`
 	ClaimItem   *ClaimItem    `json:"claim_item" gorm:"foreignKey:ClaimItemId"`

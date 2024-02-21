@@ -59,7 +59,7 @@ import "github.com/driver005/gateway/core"
 //
 
 type CustomerGroup struct {
-	core.Model
+	core.SoftDeletableModel
 
 	Name       string      `json:"name" gorm:"column:name"`
 	Customers  []Customer  `json:"customers" gorm:"many2many:customer_group_customers"`

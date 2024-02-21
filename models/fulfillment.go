@@ -141,7 +141,7 @@ import (
 //	    description: "Learn about the metadata attribute, and how to delete and update it."
 //	    url: "https://docs.medusajs.com/development/entities/overview#metadata-attribute"
 type Fulfillment struct {
-	core.Model
+	core.BaseModel
 
 	ClaimOrderId uuid.NullUUID        `json:"claim_order_id" gorm:"column:claim_order_id"`
 	ClaimOrder   *ClaimOrder          `json:"claim_order" gorm:"foreignKey:ClaimOrderId"`

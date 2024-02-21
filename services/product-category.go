@@ -70,7 +70,7 @@ func (s *ProductCategoryService) RetrieveById(id uuid.UUID, config *sql.Options)
 		)
 	}
 
-	return s.Retrieve(models.ProductCategory{Model: core.Model{Id: id}}, config)
+	return s.Retrieve(models.ProductCategory{BaseModel: core.BaseModel{Id: id}}, config)
 }
 
 func (s *ProductCategoryService) RetrieveByHandle(handle string, config *sql.Options) (*models.ProductCategory, *utils.ApplictaionError) {
@@ -86,7 +86,7 @@ func (s *ProductCategoryService) RetrieveByHandle(handle string, config *sql.Opt
 }
 
 func (s *ProductCategoryService) Create(data *types.CreateProductCategoryInput) (*models.ProductCategory, *utils.ApplictaionError) {
-	query := sql.BuildQuery(models.ProductCategory{Model: core.Model{Id: data.ParentCategoryId}}, &sql.Options{})
+	query := sql.BuildQuery(models.ProductCategory{BaseModel: core.BaseModel{Id: data.ParentCategoryId}}, &sql.Options{})
 	siblingCount, err := s.r.ProductCategoryRepository().CountBy(s.ctx, []string{"parent_category_id"}, query)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (s *ProductCategoryService) Create(data *types.CreateProductCategoryInput) 
 	}
 
 	model := &models.ProductCategory{
-		Model: core.Model{
+		BaseModel: core.BaseModel{
 			Metadata: data.Metadata,
 		},
 		Handle:           data.Handle,
@@ -351,7 +351,7 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 
 	query := sql.BuildQuery(models.ProductCategory{
 		ParentCategoryId: uuid.NullUUID{UUID: targetParentId},
-		Model:            core.Model{Id: targetCategoryId},
+		BaseModel:        core.BaseModel{Id: targetCategoryId},
 	}, &sql.Options{
 		Null: []string{"parent_category_id"},
 		Not:  []string{"id"},
@@ -364,7 +364,7 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 	var targetCategory *models.ProductCategory
 
 	query = sql.BuildQuery(models.ProductCategory{
-		Model:            core.Model{Id: targetCategoryId},
+		BaseModel:        core.BaseModel{Id: targetCategoryId},
 		ParentCategoryId: uuid.NullUUID{UUID: targetParentId},
 		Rank:             types.TempReorderRank,
 	}, &sql.Options{
@@ -393,7 +393,7 @@ func (s *ProductCategoryService) shiftSiblings(conditions types.ReorderCondition
 	var siblingsToShift []models.ProductCategory
 
 	query = sql.BuildQuery(models.ProductCategory{
-		Model:            core.Model{Id: targetCategoryId},
+		BaseModel:        core.BaseModel{Id: targetCategoryId},
 		ParentCategoryId: uuid.NullUUID{UUID: targetParentId},
 	}, &sql.Options{
 		Specification: []sql.Specification{rankCondition},

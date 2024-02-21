@@ -31,7 +31,7 @@ import "github.com/driver005/gateway/core"
 //	  type: object
 //	  example: {}
 type StagedJob struct {
-	core.Model
+	core.SoftDeletableModel
 
 	EventName string     `json:"event_name" gorm:"column:event_name"`
 	Data      core.JSONB `json:"data" gorm:"column:data"`

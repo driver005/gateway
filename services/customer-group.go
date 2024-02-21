@@ -42,7 +42,7 @@ func (s *CustomerGroupService) Retrieve(customerGroupId uuid.UUID, config *sql.O
 	}
 
 	var res *models.CustomerGroup = &models.CustomerGroup{}
-	query := sql.BuildQuery(models.CustomerGroup{Model: core.Model{Id: customerGroupId}}, config)
+	query := sql.BuildQuery(models.CustomerGroup{SoftDeletableModel: core.SoftDeletableModel{Id: customerGroupId}}, config)
 	if err := s.r.CustomerGroupRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, utils.NewApplictaionError(
 			utils.INVALID_DATA,
@@ -55,7 +55,7 @@ func (s *CustomerGroupService) Retrieve(customerGroupId uuid.UUID, config *sql.O
 
 func (s *CustomerGroupService) Create(data *types.CreateCustomerGroup) (*models.CustomerGroup, *utils.ApplictaionError) {
 	model := &models.CustomerGroup{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Name: data.Name,

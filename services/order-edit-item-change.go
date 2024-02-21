@@ -41,7 +41,7 @@ func (s *OrderItemChangeService) Retrieve(id uuid.UUID, config *sql.Options) (*m
 	}
 	var res *models.OrderItemChange = &models.OrderItemChange{}
 
-	query := sql.BuildQuery(models.OrderItemChange{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.OrderItemChange{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.OrderItemChangeRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err

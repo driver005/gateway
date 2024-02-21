@@ -45,7 +45,7 @@ func (s *LineItemService) Retrieve(lineItemId uuid.UUID, config *sql.Options) (*
 	}
 	var res *models.LineItem = &models.LineItem{}
 
-	query := sql.BuildQuery(models.LineItem{Model: core.Model{Id: lineItemId}}, config)
+	query := sql.BuildQuery(models.LineItem{BaseModel: core.BaseModel{Id: lineItemId}}, config)
 
 	if err := s.r.LineItemRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (s *LineItemService) CreateReturnLines(returnId uuid.UUID, cartId uuid.UUID
 	}
 
 	model := &models.LineItem{
-		Model: core.Model{
+		BaseModel: core.BaseModel{
 			Metadata: lineItem.Metadata,
 		},
 		CartId: uuid.NullUUID{
@@ -252,7 +252,7 @@ func (s *LineItemService) generateLineItem(variant models.ProductVariant, quanti
 		}
 	}
 	lineItem := &models.LineItem{
-		Model: core.Model{
+		BaseModel: core.BaseModel{
 			Metadata: context.Metadata,
 		},
 		UnitPrice:      unitPrice,
@@ -292,7 +292,7 @@ func (s *LineItemService) Create(data []models.LineItem) ([]models.LineItem, *ut
 
 func (s *LineItemService) Update(id uuid.UUID, selector *models.LineItem, Update *models.LineItem, config *sql.Options) (*models.LineItem, *utils.ApplictaionError) {
 	if id != uuid.Nil {
-		selector = &models.LineItem{Model: core.Model{Id: id}}
+		selector = &models.LineItem{BaseModel: core.BaseModel{Id: id}}
 	}
 
 	lineItems, err := s.List(*selector, config)

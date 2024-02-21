@@ -186,7 +186,7 @@ func (s *ReturnService) Retrieve(returnId uuid.UUID, config *sql.Options) (*mode
 
 	var res *models.Return = &models.Return{}
 
-	query := sql.BuildQuery(models.Return{Model: core.Model{Id: returnId}}, config)
+	query := sql.BuildQuery(models.Return{BaseModel: core.BaseModel{Id: returnId}}, config)
 	if err := s.r.ReturnRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
 	}

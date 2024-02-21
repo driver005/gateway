@@ -43,7 +43,7 @@ func (s *PaymentCollectionService) Retrieve(id uuid.UUID, config *sql.Options) (
 	}
 
 	var res *models.PaymentCollection = &models.PaymentCollection{}
-	query := sql.BuildQuery(models.OAuth{Model: core.Model{Id: id}}, config)
+	query := sql.BuildQuery(models.OAuth{SoftDeletableModel: core.SoftDeletableModel{Id: id}}, config)
 
 	if err := s.r.PaymentCollectionRepository().FindOne(s.ctx, res, query); err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (s *PaymentCollectionService) Retrieve(id uuid.UUID, config *sql.Options) (
 
 func (s *PaymentCollectionService) Create(data *types.CreatePaymentCollectionInput) (*models.PaymentCollection, *utils.ApplictaionError) {
 	model := &models.PaymentCollection{
-		Model: core.Model{
+		SoftDeletableModel: core.SoftDeletableModel{
 			Metadata: data.Metadata,
 		},
 		Status:       models.PaymentCollectionStatusNotPaid,

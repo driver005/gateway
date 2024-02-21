@@ -156,7 +156,7 @@ func (s *PricingService) calculateTaxes(variantPricing types.ProductVariantPrici
 // 			calculatedPrices, ok := calculatedPriceMap[priceSetId]
 // 			if ok {
 // 				pricingResult.Prices = append(pricingResult.Prices, models.MoneyAmount{
-// 					Model: core.Model{
+// 					SoftDeletableModel: core.SoftDeletableModel{
 // 						Id: calculatedPrices.OriginalPrice.MoneyAmountId,
 // 					},
 // 					CurrencyCode: calculatedPrices.CurrencyCode,
@@ -167,7 +167,7 @@ func (s *PricingService) calculateTaxes(variantPricing types.ProductVariantPrici
 // 				})
 // 				if calculatedPrices.CalculatedPrice.MoneyAmountId != calculatedPrices.OriginalPrice.MoneyAmountId {
 // 					pricingResult.Prices = append(pricingResult.Prices, models.MoneyAmount{
-// 						Model: core.Model{
+// 						SoftDeletableModel: core.SoftDeletableModel{
 // 							Id: calculatedPrices.OriginalPrice.MoneyAmountId,
 // 						},
 // 						CurrencyCode: calculatedPrices.CurrencyCode,
@@ -241,7 +241,7 @@ func (s *PricingService) GetProductVariantPricingById(variantId uuid.UUID, conte
 			return nil, err
 		}
 		regionRatesForProduct, err := s.r.TaxProviderService().SetContext(s.ctx).GetRegionRatesForProduct(uuid.UUIDs{product.ProductId.UUID}, &models.Region{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Id: pricingContext.RegionId,
 			},
 			TaxRate: pricingContext.TaxRate,
@@ -298,7 +298,7 @@ func (s *PricingService) GetProductVariantsPricing(data []interfaces.Pricing, co
 	if pricingContext.RegionId != uuid.Nil {
 		productId := variants[0].ProductId.UUID
 		productsRatesMap, err := s.r.TaxProviderService().SetContext(s.ctx).GetRegionRatesForProduct(uuid.UUIDs{productId}, &models.Region{
-			Model: core.Model{
+			SoftDeletableModel: core.SoftDeletableModel{
 				Id: pricingContext.RegionId,
 			},
 			TaxRate: pricingContext.TaxRate,
@@ -335,8 +335,8 @@ func (s *PricingService) getProductPricing(data []interfaces.ProductPricing, con
 			dataIds = append(dataIds, d.ProductId)
 		}
 		taxRatesMap, err = s.r.TaxProviderService().SetContext(s.ctx).GetRegionRatesForProduct(dataIds, &models.Region{
-			Model:   core.Model{Id: context.RegionId},
-			TaxRate: context.TaxRate,
+			SoftDeletableModel: core.SoftDeletableModel{Id: context.RegionId},
+			TaxRate:            context.TaxRate,
 		})
 		if err != nil {
 			return nil, err
@@ -605,8 +605,8 @@ func (s *PricingService) GetShippingOptionPricing(shippingOption *models.Shippin
 	var shippingOptionRates []types.TaxServiceRate
 	if context.AutomaticTaxes && context.RegionId != uuid.Nil {
 		tax, err := s.r.TaxProviderService().SetContext(s.ctx).GetRegionRatesForShipping(shippingOption.Id, &models.Region{
-			Model:   core.Model{Id: context.RegionId},
-			TaxRate: context.TaxRate,
+			SoftDeletableModel: core.SoftDeletableModel{Id: context.RegionId},
+			TaxRate:            context.TaxRate,
 		})
 		if err != nil {
 			return nil, err
