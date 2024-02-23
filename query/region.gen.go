@@ -30,16 +30,10 @@ func newRegion(db *gorm.DB, opts ...gen.DOOption) region {
 	_region.ID = field.NewString(tableName, "id")
 	_region.Name = field.NewString(tableName, "name")
 	_region.CurrencyCode = field.NewString(tableName, "currency_code")
-	_region.TaxRate = field.NewFloat32(tableName, "tax_rate")
-	_region.TaxCode = field.NewString(tableName, "tax_code")
+	_region.Metadata = field.NewString(tableName, "metadata")
 	_region.CreatedAt = field.NewTime(tableName, "created_at")
 	_region.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_region.DeletedAt = field.NewField(tableName, "deleted_at")
-	_region.Metadata = field.NewString(tableName, "metadata")
-	_region.GiftCardsTaxable = field.NewBool(tableName, "gift_cards_taxable")
-	_region.AutomaticTaxes = field.NewBool(tableName, "automatic_taxes")
-	_region.TaxProviderID = field.NewString(tableName, "tax_provider_id")
-	_region.IncludesTax = field.NewBool(tableName, "includes_tax")
 
 	_region.fillFieldMap()
 
@@ -49,20 +43,14 @@ func newRegion(db *gorm.DB, opts ...gen.DOOption) region {
 type region struct {
 	regionDo regionDo
 
-	ALL              field.Asterisk
-	ID               field.String
-	Name             field.String
-	CurrencyCode     field.String
-	TaxRate          field.Float32
-	TaxCode          field.String
-	CreatedAt        field.Time
-	UpdatedAt        field.Time
-	DeletedAt        field.Field
-	Metadata         field.String
-	GiftCardsTaxable field.Bool
-	AutomaticTaxes   field.Bool
-	TaxProviderID    field.String
-	IncludesTax      field.Bool
+	ALL          field.Asterisk
+	ID           field.String
+	Name         field.String
+	CurrencyCode field.String
+	Metadata     field.String
+	CreatedAt    field.Time
+	UpdatedAt    field.Time
+	DeletedAt    field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -82,16 +70,10 @@ func (r *region) updateTableName(table string) *region {
 	r.ID = field.NewString(table, "id")
 	r.Name = field.NewString(table, "name")
 	r.CurrencyCode = field.NewString(table, "currency_code")
-	r.TaxRate = field.NewFloat32(table, "tax_rate")
-	r.TaxCode = field.NewString(table, "tax_code")
+	r.Metadata = field.NewString(table, "metadata")
 	r.CreatedAt = field.NewTime(table, "created_at")
 	r.UpdatedAt = field.NewTime(table, "updated_at")
 	r.DeletedAt = field.NewField(table, "deleted_at")
-	r.Metadata = field.NewString(table, "metadata")
-	r.GiftCardsTaxable = field.NewBool(table, "gift_cards_taxable")
-	r.AutomaticTaxes = field.NewBool(table, "automatic_taxes")
-	r.TaxProviderID = field.NewString(table, "tax_provider_id")
-	r.IncludesTax = field.NewBool(table, "includes_tax")
 
 	r.fillFieldMap()
 
@@ -116,20 +98,14 @@ func (r *region) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *region) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 13)
+	r.fieldMap = make(map[string]field.Expr, 7)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["name"] = r.Name
 	r.fieldMap["currency_code"] = r.CurrencyCode
-	r.fieldMap["tax_rate"] = r.TaxRate
-	r.fieldMap["tax_code"] = r.TaxCode
+	r.fieldMap["metadata"] = r.Metadata
 	r.fieldMap["created_at"] = r.CreatedAt
 	r.fieldMap["updated_at"] = r.UpdatedAt
 	r.fieldMap["deleted_at"] = r.DeletedAt
-	r.fieldMap["metadata"] = r.Metadata
-	r.fieldMap["gift_cards_taxable"] = r.GiftCardsTaxable
-	r.fieldMap["automatic_taxes"] = r.AutomaticTaxes
-	r.fieldMap["tax_provider_id"] = r.TaxProviderID
-	r.fieldMap["includes_tax"] = r.IncludesTax
 }
 
 func (r region) clone(db *gorm.DB) region {

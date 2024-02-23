@@ -11,8 +11,8 @@ type BaseModel struct {
 	Id uuid.UUID `json:"id" gorm:"primarykey"`
 	// Object    string         `json:"object"`
 	Metadata  JSONB     `json:"metadata,omitempty" gorm:"default:null"`
-	CreatedAt time.Time `json:"created_at,omitempty" gorm:"column:created_at"`
-	UpdatedAt time.Time `json:"updated_at,omitempty" gorm:"column:updated_at"`
+	CreatedAt time.Time `json:"created_at,omitempty" gorm:"column:created_at;type:timestamp with time zone;not null"`
+	UpdatedAt time.Time `json:"updated_at,omitempty" gorm:"column:updated_at;type:timestamp with time zone;not null"`
 }
 
 func (m *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {

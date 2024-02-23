@@ -28,18 +28,14 @@ func newPaymentCollection(db *gorm.DB, opts ...gen.DOOption) paymentCollection {
 	tableName := _paymentCollection.paymentCollectionDo.TableName()
 	_paymentCollection.ALL = field.NewAsterisk(tableName)
 	_paymentCollection.ID = field.NewString(tableName, "id")
+	_paymentCollection.CurrencyCode = field.NewString(tableName, "currency_code")
+	_paymentCollection.Amount = field.NewFloat64(tableName, "amount")
+	_paymentCollection.RegionID = field.NewString(tableName, "region_id")
 	_paymentCollection.CreatedAt = field.NewTime(tableName, "created_at")
 	_paymentCollection.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_paymentCollection.DeletedAt = field.NewField(tableName, "deleted_at")
-	_paymentCollection.Type = field.NewString(tableName, "type")
+	_paymentCollection.CompletedAt = field.NewTime(tableName, "completed_at")
 	_paymentCollection.Status = field.NewString(tableName, "status")
-	_paymentCollection.Description = field.NewString(tableName, "description")
-	_paymentCollection.Amount = field.NewInt32(tableName, "amount")
-	_paymentCollection.AuthorizedAmount = field.NewInt32(tableName, "authorized_amount")
-	_paymentCollection.RegionID = field.NewString(tableName, "region_id")
-	_paymentCollection.CurrencyCode = field.NewString(tableName, "currency_code")
-	_paymentCollection.Metadata = field.NewString(tableName, "metadata")
-	_paymentCollection.CreatedBy = field.NewString(tableName, "created_by")
 
 	_paymentCollection.fillFieldMap()
 
@@ -49,20 +45,16 @@ func newPaymentCollection(db *gorm.DB, opts ...gen.DOOption) paymentCollection {
 type paymentCollection struct {
 	paymentCollectionDo paymentCollectionDo
 
-	ALL              field.Asterisk
-	ID               field.String
-	CreatedAt        field.Time
-	UpdatedAt        field.Time
-	DeletedAt        field.Field
-	Type             field.String
-	Status           field.String
-	Description      field.String
-	Amount           field.Int32
-	AuthorizedAmount field.Int32
-	RegionID         field.String
-	CurrencyCode     field.String
-	Metadata         field.String
-	CreatedBy        field.String
+	ALL          field.Asterisk
+	ID           field.String
+	CurrencyCode field.String
+	Amount       field.Float64
+	RegionID     field.String
+	CreatedAt    field.Time
+	UpdatedAt    field.Time
+	DeletedAt    field.Field
+	CompletedAt  field.Time
+	Status       field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -80,18 +72,14 @@ func (p paymentCollection) As(alias string) *paymentCollection {
 func (p *paymentCollection) updateTableName(table string) *paymentCollection {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
+	p.CurrencyCode = field.NewString(table, "currency_code")
+	p.Amount = field.NewFloat64(table, "amount")
+	p.RegionID = field.NewString(table, "region_id")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
 	p.DeletedAt = field.NewField(table, "deleted_at")
-	p.Type = field.NewString(table, "type")
+	p.CompletedAt = field.NewTime(table, "completed_at")
 	p.Status = field.NewString(table, "status")
-	p.Description = field.NewString(table, "description")
-	p.Amount = field.NewInt32(table, "amount")
-	p.AuthorizedAmount = field.NewInt32(table, "authorized_amount")
-	p.RegionID = field.NewString(table, "region_id")
-	p.CurrencyCode = field.NewString(table, "currency_code")
-	p.Metadata = field.NewString(table, "metadata")
-	p.CreatedBy = field.NewString(table, "created_by")
 
 	p.fillFieldMap()
 
@@ -120,20 +108,16 @@ func (p *paymentCollection) GetFieldByName(fieldName string) (field.OrderExpr, b
 }
 
 func (p *paymentCollection) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 13)
+	p.fieldMap = make(map[string]field.Expr, 9)
 	p.fieldMap["id"] = p.ID
+	p.fieldMap["currency_code"] = p.CurrencyCode
+	p.fieldMap["amount"] = p.Amount
+	p.fieldMap["region_id"] = p.RegionID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
 	p.fieldMap["deleted_at"] = p.DeletedAt
-	p.fieldMap["type"] = p.Type
+	p.fieldMap["completed_at"] = p.CompletedAt
 	p.fieldMap["status"] = p.Status
-	p.fieldMap["description"] = p.Description
-	p.fieldMap["amount"] = p.Amount
-	p.fieldMap["authorized_amount"] = p.AuthorizedAmount
-	p.fieldMap["region_id"] = p.RegionID
-	p.fieldMap["currency_code"] = p.CurrencyCode
-	p.fieldMap["metadata"] = p.Metadata
-	p.fieldMap["created_by"] = p.CreatedBy
 }
 
 func (p paymentCollection) clone(db *gorm.DB) paymentCollection {

@@ -5,7 +5,6 @@ import (
 	"github.com/driver005/gateway/models"
 	"github.com/driver005/gateway/sql"
 	"github.com/driver005/gateway/types"
-	"github.com/driver005/gateway/utils"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -21,7 +20,8 @@ func NewStore(r Registry) *Store {
 
 func (m *Store) SetRoutes(router fiber.Router) {
 	route := router.Group("/store")
-	route.Get("", m.Get)
+	//TODO: Change to /admin/store
+	route.Get("/", m.Get)
 	route.Post("", m.Update)
 
 	route.Get("/payment-providers", m.ListPaymentProviders)
@@ -133,13 +133,9 @@ func (m *Store) SetRoutes(router fiber.Router) {
 //	      schema:
 //	        $ref: "#/components/responses/500_error"
 func (m *Store) Get(context fiber.Ctx) error {
-	var config *sql.Options
-	if err := context.Bind().Query(config); err != nil {
-		return utils.NewApplictaionError(
-			utils.INVALID_DATA,
-			"Invalid query parameters",
-			nil,
-		)
+	config, err := api.BindConfig(context, m.r.Validator())
+	if err != nil {
+		return err
 	}
 
 	result, err := m.r.StoreService().SetContext(context.Context()).Retrieve(config)

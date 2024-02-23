@@ -28,22 +28,17 @@ func newCart(db *gorm.DB, opts ...gen.DOOption) cart {
 	tableName := _cart.cartDo.TableName()
 	_cart.ALL = field.NewAsterisk(tableName)
 	_cart.ID = field.NewString(tableName, "id")
-	_cart.Email = field.NewString(tableName, "email")
-	_cart.BillingAddressID = field.NewString(tableName, "billing_address_id")
-	_cart.ShippingAddressID = field.NewString(tableName, "shipping_address_id")
 	_cart.RegionID = field.NewString(tableName, "region_id")
 	_cart.CustomerID = field.NewString(tableName, "customer_id")
-	_cart.PaymentID = field.NewString(tableName, "payment_id")
-	_cart.Type = field.NewString(tableName, "type")
-	_cart.CompletedAt = field.NewTime(tableName, "completed_at")
+	_cart.SalesChannelID = field.NewString(tableName, "sales_channel_id")
+	_cart.Email = field.NewString(tableName, "email")
+	_cart.CurrencyCode = field.NewString(tableName, "currency_code")
+	_cart.ShippingAddressID = field.NewString(tableName, "shipping_address_id")
+	_cart.BillingAddressID = field.NewString(tableName, "billing_address_id")
+	_cart.Metadata = field.NewString(tableName, "metadata")
 	_cart.CreatedAt = field.NewTime(tableName, "created_at")
 	_cart.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_cart.DeletedAt = field.NewField(tableName, "deleted_at")
-	_cart.Metadata = field.NewString(tableName, "metadata")
-	_cart.IdempotencyKey = field.NewString(tableName, "idempotency_key")
-	_cart.Context = field.NewString(tableName, "context")
-	_cart.PaymentAuthorizedAt = field.NewTime(tableName, "payment_authorized_at")
-	_cart.SalesChannelID = field.NewString(tableName, "sales_channel_id")
 
 	_cart.fillFieldMap()
 
@@ -53,24 +48,19 @@ func newCart(db *gorm.DB, opts ...gen.DOOption) cart {
 type cart struct {
 	cartDo cartDo
 
-	ALL                 field.Asterisk
-	ID                  field.String
-	Email               field.String
-	BillingAddressID    field.String
-	ShippingAddressID   field.String
-	RegionID            field.String
-	CustomerID          field.String
-	PaymentID           field.String
-	Type                field.String
-	CompletedAt         field.Time
-	CreatedAt           field.Time
-	UpdatedAt           field.Time
-	DeletedAt           field.Field
-	Metadata            field.String
-	IdempotencyKey      field.String
-	Context             field.String
-	PaymentAuthorizedAt field.Time
-	SalesChannelID      field.String
+	ALL               field.Asterisk
+	ID                field.String
+	RegionID          field.String
+	CustomerID        field.String
+	SalesChannelID    field.String
+	Email             field.String
+	CurrencyCode      field.String
+	ShippingAddressID field.String
+	BillingAddressID  field.String
+	Metadata          field.String
+	CreatedAt         field.Time
+	UpdatedAt         field.Time
+	DeletedAt         field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -88,22 +78,17 @@ func (c cart) As(alias string) *cart {
 func (c *cart) updateTableName(table string) *cart {
 	c.ALL = field.NewAsterisk(table)
 	c.ID = field.NewString(table, "id")
-	c.Email = field.NewString(table, "email")
-	c.BillingAddressID = field.NewString(table, "billing_address_id")
-	c.ShippingAddressID = field.NewString(table, "shipping_address_id")
 	c.RegionID = field.NewString(table, "region_id")
 	c.CustomerID = field.NewString(table, "customer_id")
-	c.PaymentID = field.NewString(table, "payment_id")
-	c.Type = field.NewString(table, "type")
-	c.CompletedAt = field.NewTime(table, "completed_at")
+	c.SalesChannelID = field.NewString(table, "sales_channel_id")
+	c.Email = field.NewString(table, "email")
+	c.CurrencyCode = field.NewString(table, "currency_code")
+	c.ShippingAddressID = field.NewString(table, "shipping_address_id")
+	c.BillingAddressID = field.NewString(table, "billing_address_id")
+	c.Metadata = field.NewString(table, "metadata")
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
 	c.DeletedAt = field.NewField(table, "deleted_at")
-	c.Metadata = field.NewString(table, "metadata")
-	c.IdempotencyKey = field.NewString(table, "idempotency_key")
-	c.Context = field.NewString(table, "context")
-	c.PaymentAuthorizedAt = field.NewTime(table, "payment_authorized_at")
-	c.SalesChannelID = field.NewString(table, "sales_channel_id")
 
 	c.fillFieldMap()
 
@@ -128,24 +113,19 @@ func (c *cart) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *cart) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 17)
+	c.fieldMap = make(map[string]field.Expr, 12)
 	c.fieldMap["id"] = c.ID
-	c.fieldMap["email"] = c.Email
-	c.fieldMap["billing_address_id"] = c.BillingAddressID
-	c.fieldMap["shipping_address_id"] = c.ShippingAddressID
 	c.fieldMap["region_id"] = c.RegionID
 	c.fieldMap["customer_id"] = c.CustomerID
-	c.fieldMap["payment_id"] = c.PaymentID
-	c.fieldMap["type"] = c.Type
-	c.fieldMap["completed_at"] = c.CompletedAt
+	c.fieldMap["sales_channel_id"] = c.SalesChannelID
+	c.fieldMap["email"] = c.Email
+	c.fieldMap["currency_code"] = c.CurrencyCode
+	c.fieldMap["shipping_address_id"] = c.ShippingAddressID
+	c.fieldMap["billing_address_id"] = c.BillingAddressID
+	c.fieldMap["metadata"] = c.Metadata
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["deleted_at"] = c.DeletedAt
-	c.fieldMap["metadata"] = c.Metadata
-	c.fieldMap["idempotency_key"] = c.IdempotencyKey
-	c.fieldMap["context"] = c.Context
-	c.fieldMap["payment_authorized_at"] = c.PaymentAuthorizedAt
-	c.fieldMap["sales_channel_id"] = c.SalesChannelID
 }
 
 func (c cart) clone(db *gorm.DB) cart {

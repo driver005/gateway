@@ -27,8 +27,8 @@ func newProductCategoryProduct(db *gorm.DB, opts ...gen.DOOption) productCategor
 
 	tableName := _productCategoryProduct.productCategoryProductDo.TableName()
 	_productCategoryProduct.ALL = field.NewAsterisk(tableName)
-	_productCategoryProduct.ProductCategoryID = field.NewString(tableName, "product_category_id")
 	_productCategoryProduct.ProductID = field.NewString(tableName, "product_id")
+	_productCategoryProduct.ProductCategoryID = field.NewString(tableName, "product_category_id")
 
 	_productCategoryProduct.fillFieldMap()
 
@@ -39,8 +39,8 @@ type productCategoryProduct struct {
 	productCategoryProductDo productCategoryProductDo
 
 	ALL               field.Asterisk
-	ProductCategoryID field.String
 	ProductID         field.String
+	ProductCategoryID field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -57,8 +57,8 @@ func (p productCategoryProduct) As(alias string) *productCategoryProduct {
 
 func (p *productCategoryProduct) updateTableName(table string) *productCategoryProduct {
 	p.ALL = field.NewAsterisk(table)
-	p.ProductCategoryID = field.NewString(table, "product_category_id")
 	p.ProductID = field.NewString(table, "product_id")
+	p.ProductCategoryID = field.NewString(table, "product_category_id")
 
 	p.fillFieldMap()
 
@@ -88,8 +88,8 @@ func (p *productCategoryProduct) GetFieldByName(fieldName string) (field.OrderEx
 
 func (p *productCategoryProduct) fillFieldMap() {
 	p.fieldMap = make(map[string]field.Expr, 2)
-	p.fieldMap["product_category_id"] = p.ProductCategoryID
 	p.fieldMap["product_id"] = p.ProductID
+	p.fieldMap["product_category_id"] = p.ProductCategoryID
 }
 
 func (p productCategoryProduct) clone(db *gorm.DB) productCategoryProduct {

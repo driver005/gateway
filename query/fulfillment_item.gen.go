@@ -27,9 +27,17 @@ func newFulfillmentItem(db *gorm.DB, opts ...gen.DOOption) fulfillmentItem {
 
 	tableName := _fulfillmentItem.fulfillmentItemDo.TableName()
 	_fulfillmentItem.ALL = field.NewAsterisk(tableName)
+	_fulfillmentItem.ID = field.NewString(tableName, "id")
+	_fulfillmentItem.Title = field.NewString(tableName, "title")
+	_fulfillmentItem.Sku = field.NewString(tableName, "sku")
+	_fulfillmentItem.Barcode = field.NewString(tableName, "barcode")
+	_fulfillmentItem.Quantity = field.NewFloat64(tableName, "quantity")
+	_fulfillmentItem.LineItemID = field.NewString(tableName, "line_item_id")
+	_fulfillmentItem.InventoryItemID = field.NewString(tableName, "inventory_item_id")
 	_fulfillmentItem.FulfillmentID = field.NewString(tableName, "fulfillment_id")
-	_fulfillmentItem.ItemID = field.NewString(tableName, "item_id")
-	_fulfillmentItem.Quantity = field.NewInt32(tableName, "quantity")
+	_fulfillmentItem.CreatedAt = field.NewTime(tableName, "created_at")
+	_fulfillmentItem.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_fulfillmentItem.DeletedAt = field.NewField(tableName, "deleted_at")
 
 	_fulfillmentItem.fillFieldMap()
 
@@ -39,10 +47,18 @@ func newFulfillmentItem(db *gorm.DB, opts ...gen.DOOption) fulfillmentItem {
 type fulfillmentItem struct {
 	fulfillmentItemDo fulfillmentItemDo
 
-	ALL           field.Asterisk
-	FulfillmentID field.String
-	ItemID        field.String
-	Quantity      field.Int32
+	ALL             field.Asterisk
+	ID              field.String
+	Title           field.String
+	Sku             field.String
+	Barcode         field.String
+	Quantity        field.Float64
+	LineItemID      field.String
+	InventoryItemID field.String
+	FulfillmentID   field.String
+	CreatedAt       field.Time
+	UpdatedAt       field.Time
+	DeletedAt       field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -59,9 +75,17 @@ func (f fulfillmentItem) As(alias string) *fulfillmentItem {
 
 func (f *fulfillmentItem) updateTableName(table string) *fulfillmentItem {
 	f.ALL = field.NewAsterisk(table)
+	f.ID = field.NewString(table, "id")
+	f.Title = field.NewString(table, "title")
+	f.Sku = field.NewString(table, "sku")
+	f.Barcode = field.NewString(table, "barcode")
+	f.Quantity = field.NewFloat64(table, "quantity")
+	f.LineItemID = field.NewString(table, "line_item_id")
+	f.InventoryItemID = field.NewString(table, "inventory_item_id")
 	f.FulfillmentID = field.NewString(table, "fulfillment_id")
-	f.ItemID = field.NewString(table, "item_id")
-	f.Quantity = field.NewInt32(table, "quantity")
+	f.CreatedAt = field.NewTime(table, "created_at")
+	f.UpdatedAt = field.NewTime(table, "updated_at")
+	f.DeletedAt = field.NewField(table, "deleted_at")
 
 	f.fillFieldMap()
 
@@ -90,10 +114,18 @@ func (f *fulfillmentItem) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (f *fulfillmentItem) fillFieldMap() {
-	f.fieldMap = make(map[string]field.Expr, 3)
-	f.fieldMap["fulfillment_id"] = f.FulfillmentID
-	f.fieldMap["item_id"] = f.ItemID
+	f.fieldMap = make(map[string]field.Expr, 11)
+	f.fieldMap["id"] = f.ID
+	f.fieldMap["title"] = f.Title
+	f.fieldMap["sku"] = f.Sku
+	f.fieldMap["barcode"] = f.Barcode
 	f.fieldMap["quantity"] = f.Quantity
+	f.fieldMap["line_item_id"] = f.LineItemID
+	f.fieldMap["inventory_item_id"] = f.InventoryItemID
+	f.fieldMap["fulfillment_id"] = f.FulfillmentID
+	f.fieldMap["created_at"] = f.CreatedAt
+	f.fieldMap["updated_at"] = f.UpdatedAt
+	f.fieldMap["deleted_at"] = f.DeletedAt
 }
 
 func (f fulfillmentItem) clone(db *gorm.DB) fulfillmentItem {

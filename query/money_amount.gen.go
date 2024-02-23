@@ -29,14 +29,12 @@ func newMoneyAmount(db *gorm.DB, opts ...gen.DOOption) moneyAmount {
 	_moneyAmount.ALL = field.NewAsterisk(tableName)
 	_moneyAmount.ID = field.NewString(tableName, "id")
 	_moneyAmount.CurrencyCode = field.NewString(tableName, "currency_code")
-	_moneyAmount.Amount = field.NewInt32(tableName, "amount")
-	_moneyAmount.RegionID = field.NewString(tableName, "region_id")
+	_moneyAmount.Amount = field.NewFloat64(tableName, "amount")
+	_moneyAmount.MinQuantity = field.NewFloat64(tableName, "min_quantity")
+	_moneyAmount.MaxQuantity = field.NewFloat64(tableName, "max_quantity")
 	_moneyAmount.CreatedAt = field.NewTime(tableName, "created_at")
 	_moneyAmount.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_moneyAmount.DeletedAt = field.NewField(tableName, "deleted_at")
-	_moneyAmount.MinQuantity = field.NewInt32(tableName, "min_quantity")
-	_moneyAmount.MaxQuantity = field.NewInt32(tableName, "max_quantity")
-	_moneyAmount.PriceListID = field.NewString(tableName, "price_list_id")
 
 	_moneyAmount.fillFieldMap()
 
@@ -49,14 +47,12 @@ type moneyAmount struct {
 	ALL          field.Asterisk
 	ID           field.String
 	CurrencyCode field.String
-	Amount       field.Int32
-	RegionID     field.String
+	Amount       field.Float64
+	MinQuantity  field.Float64
+	MaxQuantity  field.Float64
 	CreatedAt    field.Time
 	UpdatedAt    field.Time
 	DeletedAt    field.Field
-	MinQuantity  field.Int32
-	MaxQuantity  field.Int32
-	PriceListID  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -75,14 +71,12 @@ func (m *moneyAmount) updateTableName(table string) *moneyAmount {
 	m.ALL = field.NewAsterisk(table)
 	m.ID = field.NewString(table, "id")
 	m.CurrencyCode = field.NewString(table, "currency_code")
-	m.Amount = field.NewInt32(table, "amount")
-	m.RegionID = field.NewString(table, "region_id")
+	m.Amount = field.NewFloat64(table, "amount")
+	m.MinQuantity = field.NewFloat64(table, "min_quantity")
+	m.MaxQuantity = field.NewFloat64(table, "max_quantity")
 	m.CreatedAt = field.NewTime(table, "created_at")
 	m.UpdatedAt = field.NewTime(table, "updated_at")
 	m.DeletedAt = field.NewField(table, "deleted_at")
-	m.MinQuantity = field.NewInt32(table, "min_quantity")
-	m.MaxQuantity = field.NewInt32(table, "max_quantity")
-	m.PriceListID = field.NewString(table, "price_list_id")
 
 	m.fillFieldMap()
 
@@ -109,17 +103,15 @@ func (m *moneyAmount) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *moneyAmount) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 10)
+	m.fieldMap = make(map[string]field.Expr, 8)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["currency_code"] = m.CurrencyCode
 	m.fieldMap["amount"] = m.Amount
-	m.fieldMap["region_id"] = m.RegionID
+	m.fieldMap["min_quantity"] = m.MinQuantity
+	m.fieldMap["max_quantity"] = m.MaxQuantity
 	m.fieldMap["created_at"] = m.CreatedAt
 	m.fieldMap["updated_at"] = m.UpdatedAt
 	m.fieldMap["deleted_at"] = m.DeletedAt
-	m.fieldMap["min_quantity"] = m.MinQuantity
-	m.fieldMap["max_quantity"] = m.MaxQuantity
-	m.fieldMap["price_list_id"] = m.PriceListID
 }
 
 func (m moneyAmount) clone(db *gorm.DB) moneyAmount {

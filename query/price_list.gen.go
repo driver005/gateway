@@ -28,16 +28,17 @@ func newPriceList(db *gorm.DB, opts ...gen.DOOption) priceList {
 	tableName := _priceList.priceListDo.TableName()
 	_priceList.ALL = field.NewAsterisk(tableName)
 	_priceList.ID = field.NewString(tableName, "id")
-	_priceList.Name = field.NewString(tableName, "name")
-	_priceList.Description = field.NewString(tableName, "description")
-	_priceList.Type = field.NewString(tableName, "type")
 	_priceList.Status = field.NewString(tableName, "status")
 	_priceList.StartsAt = field.NewTime(tableName, "starts_at")
 	_priceList.EndsAt = field.NewTime(tableName, "ends_at")
+	_priceList.RulesCount = field.NewInt32(tableName, "rules_count")
+	_priceList.Title = field.NewString(tableName, "title")
+	_priceList.Name = field.NewString(tableName, "name")
+	_priceList.Description = field.NewString(tableName, "description")
+	_priceList.Type = field.NewString(tableName, "type")
 	_priceList.CreatedAt = field.NewTime(tableName, "created_at")
 	_priceList.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_priceList.DeletedAt = field.NewField(tableName, "deleted_at")
-	_priceList.IncludesTax = field.NewBool(tableName, "includes_tax")
 
 	_priceList.fillFieldMap()
 
@@ -49,16 +50,17 @@ type priceList struct {
 
 	ALL         field.Asterisk
 	ID          field.String
-	Name        field.String
-	Description field.String
-	Type        field.String
 	Status      field.String
 	StartsAt    field.Time
 	EndsAt      field.Time
+	RulesCount  field.Int32
+	Title       field.String
+	Name        field.String
+	Description field.String
+	Type        field.String
 	CreatedAt   field.Time
 	UpdatedAt   field.Time
 	DeletedAt   field.Field
-	IncludesTax field.Bool
 
 	fieldMap map[string]field.Expr
 }
@@ -76,16 +78,17 @@ func (p priceList) As(alias string) *priceList {
 func (p *priceList) updateTableName(table string) *priceList {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
-	p.Name = field.NewString(table, "name")
-	p.Description = field.NewString(table, "description")
-	p.Type = field.NewString(table, "type")
 	p.Status = field.NewString(table, "status")
 	p.StartsAt = field.NewTime(table, "starts_at")
 	p.EndsAt = field.NewTime(table, "ends_at")
+	p.RulesCount = field.NewInt32(table, "rules_count")
+	p.Title = field.NewString(table, "title")
+	p.Name = field.NewString(table, "name")
+	p.Description = field.NewString(table, "description")
+	p.Type = field.NewString(table, "type")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
 	p.DeletedAt = field.NewField(table, "deleted_at")
-	p.IncludesTax = field.NewBool(table, "includes_tax")
 
 	p.fillFieldMap()
 
@@ -112,18 +115,19 @@ func (p *priceList) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *priceList) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 11)
+	p.fieldMap = make(map[string]field.Expr, 12)
 	p.fieldMap["id"] = p.ID
-	p.fieldMap["name"] = p.Name
-	p.fieldMap["description"] = p.Description
-	p.fieldMap["type"] = p.Type
 	p.fieldMap["status"] = p.Status
 	p.fieldMap["starts_at"] = p.StartsAt
 	p.fieldMap["ends_at"] = p.EndsAt
+	p.fieldMap["rules_count"] = p.RulesCount
+	p.fieldMap["title"] = p.Title
+	p.fieldMap["name"] = p.Name
+	p.fieldMap["description"] = p.Description
+	p.fieldMap["type"] = p.Type
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
 	p.fieldMap["deleted_at"] = p.DeletedAt
-	p.fieldMap["includes_tax"] = p.IncludesTax
 }
 
 func (p priceList) clone(db *gorm.DB) priceList {

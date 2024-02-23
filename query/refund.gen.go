@@ -28,15 +28,10 @@ func newRefund(db *gorm.DB, opts ...gen.DOOption) refund {
 	tableName := _refund.refundDo.TableName()
 	_refund.ALL = field.NewAsterisk(tableName)
 	_refund.ID = field.NewString(tableName, "id")
-	_refund.OrderID = field.NewString(tableName, "order_id")
-	_refund.Amount = field.NewInt32(tableName, "amount")
-	_refund.Note = field.NewString(tableName, "note")
-	_refund.Reason = field.NewString(tableName, "reason")
-	_refund.CreatedAt = field.NewTime(tableName, "created_at")
-	_refund.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_refund.Metadata = field.NewString(tableName, "metadata")
-	_refund.IdempotencyKey = field.NewString(tableName, "idempotency_key")
+	_refund.Amount = field.NewFloat64(tableName, "amount")
 	_refund.PaymentID = field.NewString(tableName, "payment_id")
+	_refund.CreatedAt = field.NewTime(tableName, "created_at")
+	_refund.CreatedBy = field.NewString(tableName, "created_by")
 
 	_refund.fillFieldMap()
 
@@ -46,17 +41,12 @@ func newRefund(db *gorm.DB, opts ...gen.DOOption) refund {
 type refund struct {
 	refundDo refundDo
 
-	ALL            field.Asterisk
-	ID             field.String
-	OrderID        field.String
-	Amount         field.Int32
-	Note           field.String
-	Reason         field.String
-	CreatedAt      field.Time
-	UpdatedAt      field.Time
-	Metadata       field.String
-	IdempotencyKey field.String
-	PaymentID      field.String
+	ALL       field.Asterisk
+	ID        field.String
+	Amount    field.Float64
+	PaymentID field.String
+	CreatedAt field.Time
+	CreatedBy field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -74,15 +64,10 @@ func (r refund) As(alias string) *refund {
 func (r *refund) updateTableName(table string) *refund {
 	r.ALL = field.NewAsterisk(table)
 	r.ID = field.NewString(table, "id")
-	r.OrderID = field.NewString(table, "order_id")
-	r.Amount = field.NewInt32(table, "amount")
-	r.Note = field.NewString(table, "note")
-	r.Reason = field.NewString(table, "reason")
-	r.CreatedAt = field.NewTime(table, "created_at")
-	r.UpdatedAt = field.NewTime(table, "updated_at")
-	r.Metadata = field.NewString(table, "metadata")
-	r.IdempotencyKey = field.NewString(table, "idempotency_key")
+	r.Amount = field.NewFloat64(table, "amount")
 	r.PaymentID = field.NewString(table, "payment_id")
+	r.CreatedAt = field.NewTime(table, "created_at")
+	r.CreatedBy = field.NewString(table, "created_by")
 
 	r.fillFieldMap()
 
@@ -107,17 +92,12 @@ func (r *refund) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *refund) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 10)
+	r.fieldMap = make(map[string]field.Expr, 5)
 	r.fieldMap["id"] = r.ID
-	r.fieldMap["order_id"] = r.OrderID
 	r.fieldMap["amount"] = r.Amount
-	r.fieldMap["note"] = r.Note
-	r.fieldMap["reason"] = r.Reason
-	r.fieldMap["created_at"] = r.CreatedAt
-	r.fieldMap["updated_at"] = r.UpdatedAt
-	r.fieldMap["metadata"] = r.Metadata
-	r.fieldMap["idempotency_key"] = r.IdempotencyKey
 	r.fieldMap["payment_id"] = r.PaymentID
+	r.fieldMap["created_at"] = r.CreatedAt
+	r.fieldMap["created_by"] = r.CreatedBy
 }
 
 func (r refund) clone(db *gorm.DB) refund {

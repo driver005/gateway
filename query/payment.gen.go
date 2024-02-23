@@ -28,20 +28,22 @@ func newPayment(db *gorm.DB, opts ...gen.DOOption) payment {
 	tableName := _payment.paymentDo.TableName()
 	_payment.ALL = field.NewAsterisk(tableName)
 	_payment.ID = field.NewString(tableName, "id")
-	_payment.SwapID = field.NewString(tableName, "swap_id")
+	_payment.Amount = field.NewFloat64(tableName, "amount")
+	_payment.AuthorizedAmount = field.NewFloat64(tableName, "authorized_amount")
+	_payment.CurrencyCode = field.NewString(tableName, "currency_code")
+	_payment.ProviderID = field.NewString(tableName, "provider_id")
 	_payment.CartID = field.NewString(tableName, "cart_id")
 	_payment.OrderID = field.NewString(tableName, "order_id")
-	_payment.Amount = field.NewInt32(tableName, "amount")
-	_payment.CurrencyCode = field.NewString(tableName, "currency_code")
-	_payment.AmountRefunded = field.NewInt32(tableName, "amount_refunded")
-	_payment.ProviderID = field.NewString(tableName, "provider_id")
+	_payment.OrderEditID = field.NewString(tableName, "order_edit_id")
+	_payment.CustomerID = field.NewString(tableName, "customer_id")
 	_payment.Data = field.NewString(tableName, "data")
-	_payment.CapturedAt = field.NewTime(tableName, "captured_at")
-	_payment.CanceledAt = field.NewTime(tableName, "canceled_at")
 	_payment.CreatedAt = field.NewTime(tableName, "created_at")
 	_payment.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_payment.Metadata = field.NewString(tableName, "metadata")
-	_payment.IdempotencyKey = field.NewString(tableName, "idempotency_key")
+	_payment.DeletedAt = field.NewField(tableName, "deleted_at")
+	_payment.CapturedAt = field.NewTime(tableName, "captured_at")
+	_payment.CanceledAt = field.NewTime(tableName, "canceled_at")
+	_payment.PaymentCollectionID = field.NewString(tableName, "payment_collection_id")
+	_payment.SessionID = field.NewString(tableName, "session_id")
 
 	_payment.fillFieldMap()
 
@@ -51,22 +53,24 @@ func newPayment(db *gorm.DB, opts ...gen.DOOption) payment {
 type payment struct {
 	paymentDo paymentDo
 
-	ALL            field.Asterisk
-	ID             field.String
-	SwapID         field.String
-	CartID         field.String
-	OrderID        field.String
-	Amount         field.Int32
-	CurrencyCode   field.String
-	AmountRefunded field.Int32
-	ProviderID     field.String
-	Data           field.String
-	CapturedAt     field.Time
-	CanceledAt     field.Time
-	CreatedAt      field.Time
-	UpdatedAt      field.Time
-	Metadata       field.String
-	IdempotencyKey field.String
+	ALL                 field.Asterisk
+	ID                  field.String
+	Amount              field.Float64
+	AuthorizedAmount    field.Float64
+	CurrencyCode        field.String
+	ProviderID          field.String
+	CartID              field.String
+	OrderID             field.String
+	OrderEditID         field.String
+	CustomerID          field.String
+	Data                field.String
+	CreatedAt           field.Time
+	UpdatedAt           field.Time
+	DeletedAt           field.Field
+	CapturedAt          field.Time
+	CanceledAt          field.Time
+	PaymentCollectionID field.String
+	SessionID           field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -84,20 +88,22 @@ func (p payment) As(alias string) *payment {
 func (p *payment) updateTableName(table string) *payment {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
-	p.SwapID = field.NewString(table, "swap_id")
+	p.Amount = field.NewFloat64(table, "amount")
+	p.AuthorizedAmount = field.NewFloat64(table, "authorized_amount")
+	p.CurrencyCode = field.NewString(table, "currency_code")
+	p.ProviderID = field.NewString(table, "provider_id")
 	p.CartID = field.NewString(table, "cart_id")
 	p.OrderID = field.NewString(table, "order_id")
-	p.Amount = field.NewInt32(table, "amount")
-	p.CurrencyCode = field.NewString(table, "currency_code")
-	p.AmountRefunded = field.NewInt32(table, "amount_refunded")
-	p.ProviderID = field.NewString(table, "provider_id")
+	p.OrderEditID = field.NewString(table, "order_edit_id")
+	p.CustomerID = field.NewString(table, "customer_id")
 	p.Data = field.NewString(table, "data")
-	p.CapturedAt = field.NewTime(table, "captured_at")
-	p.CanceledAt = field.NewTime(table, "canceled_at")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
-	p.Metadata = field.NewString(table, "metadata")
-	p.IdempotencyKey = field.NewString(table, "idempotency_key")
+	p.DeletedAt = field.NewField(table, "deleted_at")
+	p.CapturedAt = field.NewTime(table, "captured_at")
+	p.CanceledAt = field.NewTime(table, "canceled_at")
+	p.PaymentCollectionID = field.NewString(table, "payment_collection_id")
+	p.SessionID = field.NewString(table, "session_id")
 
 	p.fillFieldMap()
 
@@ -122,22 +128,24 @@ func (p *payment) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *payment) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 15)
+	p.fieldMap = make(map[string]field.Expr, 17)
 	p.fieldMap["id"] = p.ID
-	p.fieldMap["swap_id"] = p.SwapID
+	p.fieldMap["amount"] = p.Amount
+	p.fieldMap["authorized_amount"] = p.AuthorizedAmount
+	p.fieldMap["currency_code"] = p.CurrencyCode
+	p.fieldMap["provider_id"] = p.ProviderID
 	p.fieldMap["cart_id"] = p.CartID
 	p.fieldMap["order_id"] = p.OrderID
-	p.fieldMap["amount"] = p.Amount
-	p.fieldMap["currency_code"] = p.CurrencyCode
-	p.fieldMap["amount_refunded"] = p.AmountRefunded
-	p.fieldMap["provider_id"] = p.ProviderID
+	p.fieldMap["order_edit_id"] = p.OrderEditID
+	p.fieldMap["customer_id"] = p.CustomerID
 	p.fieldMap["data"] = p.Data
-	p.fieldMap["captured_at"] = p.CapturedAt
-	p.fieldMap["canceled_at"] = p.CanceledAt
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
-	p.fieldMap["metadata"] = p.Metadata
-	p.fieldMap["idempotency_key"] = p.IdempotencyKey
+	p.fieldMap["deleted_at"] = p.DeletedAt
+	p.fieldMap["captured_at"] = p.CapturedAt
+	p.fieldMap["canceled_at"] = p.CanceledAt
+	p.fieldMap["payment_collection_id"] = p.PaymentCollectionID
+	p.fieldMap["session_id"] = p.SessionID
 }
 
 func (p payment) clone(db *gorm.DB) payment {

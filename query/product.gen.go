@@ -29,28 +29,28 @@ func newProduct(db *gorm.DB, opts ...gen.DOOption) product {
 	_product.ALL = field.NewAsterisk(tableName)
 	_product.ID = field.NewString(tableName, "id")
 	_product.Title = field.NewString(tableName, "title")
+	_product.Handle = field.NewString(tableName, "handle")
 	_product.Subtitle = field.NewString(tableName, "subtitle")
 	_product.Description = field.NewString(tableName, "description")
-	_product.Handle = field.NewString(tableName, "handle")
 	_product.IsGiftcard = field.NewBool(tableName, "is_giftcard")
+	_product.Status = field.NewString(tableName, "status")
 	_product.Thumbnail = field.NewString(tableName, "thumbnail")
-	_product.Weight = field.NewInt32(tableName, "weight")
-	_product.Length = field.NewInt32(tableName, "length")
-	_product.Height = field.NewInt32(tableName, "height")
-	_product.Width = field.NewInt32(tableName, "width")
-	_product.HsCode = field.NewString(tableName, "hs_code")
+	_product.Weight = field.NewString(tableName, "weight")
+	_product.Length = field.NewString(tableName, "length")
+	_product.Height = field.NewString(tableName, "height")
+	_product.Width = field.NewString(tableName, "width")
 	_product.OriginCountry = field.NewString(tableName, "origin_country")
+	_product.HsCode = field.NewString(tableName, "hs_code")
 	_product.MidCode = field.NewString(tableName, "mid_code")
 	_product.Material = field.NewString(tableName, "material")
+	_product.CollectionID = field.NewString(tableName, "collection_id")
+	_product.TypeID = field.NewString(tableName, "type_id")
+	_product.Discountable = field.NewBool(tableName, "discountable")
+	_product.ExternalID = field.NewString(tableName, "external_id")
 	_product.CreatedAt = field.NewTime(tableName, "created_at")
 	_product.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_product.DeletedAt = field.NewField(tableName, "deleted_at")
 	_product.Metadata = field.NewString(tableName, "metadata")
-	_product.CollectionID = field.NewString(tableName, "collection_id")
-	_product.TypeID = field.NewString(tableName, "type_id")
-	_product.Discountable = field.NewBool(tableName, "discountable")
-	_product.Status = field.NewString(tableName, "status")
-	_product.ExternalID = field.NewString(tableName, "external_id")
 
 	_product.fillFieldMap()
 
@@ -63,28 +63,28 @@ type product struct {
 	ALL           field.Asterisk
 	ID            field.String
 	Title         field.String
+	Handle        field.String
 	Subtitle      field.String
 	Description   field.String
-	Handle        field.String
 	IsGiftcard    field.Bool
+	Status        field.String
 	Thumbnail     field.String
-	Weight        field.Int32
-	Length        field.Int32
-	Height        field.Int32
-	Width         field.Int32
-	HsCode        field.String
+	Weight        field.String
+	Length        field.String
+	Height        field.String
+	Width         field.String
 	OriginCountry field.String
+	HsCode        field.String
 	MidCode       field.String
 	Material      field.String
+	CollectionID  field.String
+	TypeID        field.String
+	Discountable  field.Bool
+	ExternalID    field.String
 	CreatedAt     field.Time
 	UpdatedAt     field.Time
 	DeletedAt     field.Field
 	Metadata      field.String
-	CollectionID  field.String
-	TypeID        field.String
-	Discountable  field.Bool
-	Status        field.String
-	ExternalID    field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -103,28 +103,28 @@ func (p *product) updateTableName(table string) *product {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
 	p.Title = field.NewString(table, "title")
+	p.Handle = field.NewString(table, "handle")
 	p.Subtitle = field.NewString(table, "subtitle")
 	p.Description = field.NewString(table, "description")
-	p.Handle = field.NewString(table, "handle")
 	p.IsGiftcard = field.NewBool(table, "is_giftcard")
+	p.Status = field.NewString(table, "status")
 	p.Thumbnail = field.NewString(table, "thumbnail")
-	p.Weight = field.NewInt32(table, "weight")
-	p.Length = field.NewInt32(table, "length")
-	p.Height = field.NewInt32(table, "height")
-	p.Width = field.NewInt32(table, "width")
-	p.HsCode = field.NewString(table, "hs_code")
+	p.Weight = field.NewString(table, "weight")
+	p.Length = field.NewString(table, "length")
+	p.Height = field.NewString(table, "height")
+	p.Width = field.NewString(table, "width")
 	p.OriginCountry = field.NewString(table, "origin_country")
+	p.HsCode = field.NewString(table, "hs_code")
 	p.MidCode = field.NewString(table, "mid_code")
 	p.Material = field.NewString(table, "material")
+	p.CollectionID = field.NewString(table, "collection_id")
+	p.TypeID = field.NewString(table, "type_id")
+	p.Discountable = field.NewBool(table, "discountable")
+	p.ExternalID = field.NewString(table, "external_id")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
 	p.DeletedAt = field.NewField(table, "deleted_at")
 	p.Metadata = field.NewString(table, "metadata")
-	p.CollectionID = field.NewString(table, "collection_id")
-	p.TypeID = field.NewString(table, "type_id")
-	p.Discountable = field.NewBool(table, "discountable")
-	p.Status = field.NewString(table, "status")
-	p.ExternalID = field.NewString(table, "external_id")
 
 	p.fillFieldMap()
 
@@ -152,28 +152,28 @@ func (p *product) fillFieldMap() {
 	p.fieldMap = make(map[string]field.Expr, 24)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["title"] = p.Title
+	p.fieldMap["handle"] = p.Handle
 	p.fieldMap["subtitle"] = p.Subtitle
 	p.fieldMap["description"] = p.Description
-	p.fieldMap["handle"] = p.Handle
 	p.fieldMap["is_giftcard"] = p.IsGiftcard
+	p.fieldMap["status"] = p.Status
 	p.fieldMap["thumbnail"] = p.Thumbnail
 	p.fieldMap["weight"] = p.Weight
 	p.fieldMap["length"] = p.Length
 	p.fieldMap["height"] = p.Height
 	p.fieldMap["width"] = p.Width
-	p.fieldMap["hs_code"] = p.HsCode
 	p.fieldMap["origin_country"] = p.OriginCountry
+	p.fieldMap["hs_code"] = p.HsCode
 	p.fieldMap["mid_code"] = p.MidCode
 	p.fieldMap["material"] = p.Material
+	p.fieldMap["collection_id"] = p.CollectionID
+	p.fieldMap["type_id"] = p.TypeID
+	p.fieldMap["discountable"] = p.Discountable
+	p.fieldMap["external_id"] = p.ExternalID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
 	p.fieldMap["deleted_at"] = p.DeletedAt
 	p.fieldMap["metadata"] = p.Metadata
-	p.fieldMap["collection_id"] = p.CollectionID
-	p.fieldMap["type_id"] = p.TypeID
-	p.fieldMap["discountable"] = p.Discountable
-	p.fieldMap["status"] = p.Status
-	p.fieldMap["external_id"] = p.ExternalID
 }
 
 func (p product) clone(db *gorm.DB) product {

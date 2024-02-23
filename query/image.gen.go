@@ -29,10 +29,10 @@ func newImage(db *gorm.DB, opts ...gen.DOOption) image {
 	_image.ALL = field.NewAsterisk(tableName)
 	_image.ID = field.NewString(tableName, "id")
 	_image.URL = field.NewString(tableName, "url")
+	_image.Metadata = field.NewString(tableName, "metadata")
+	_image.DeletedAt = field.NewField(tableName, "deleted_at")
 	_image.CreatedAt = field.NewTime(tableName, "created_at")
 	_image.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_image.DeletedAt = field.NewField(tableName, "deleted_at")
-	_image.Metadata = field.NewString(tableName, "metadata")
 
 	_image.fillFieldMap()
 
@@ -45,10 +45,10 @@ type image struct {
 	ALL       field.Asterisk
 	ID        field.String
 	URL       field.String
+	Metadata  field.String
+	DeletedAt field.Field
 	CreatedAt field.Time
 	UpdatedAt field.Time
-	DeletedAt field.Field
-	Metadata  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -67,10 +67,10 @@ func (i *image) updateTableName(table string) *image {
 	i.ALL = field.NewAsterisk(table)
 	i.ID = field.NewString(table, "id")
 	i.URL = field.NewString(table, "url")
+	i.Metadata = field.NewString(table, "metadata")
+	i.DeletedAt = field.NewField(table, "deleted_at")
 	i.CreatedAt = field.NewTime(table, "created_at")
 	i.UpdatedAt = field.NewTime(table, "updated_at")
-	i.DeletedAt = field.NewField(table, "deleted_at")
-	i.Metadata = field.NewString(table, "metadata")
 
 	i.fillFieldMap()
 
@@ -98,10 +98,10 @@ func (i *image) fillFieldMap() {
 	i.fieldMap = make(map[string]field.Expr, 6)
 	i.fieldMap["id"] = i.ID
 	i.fieldMap["url"] = i.URL
+	i.fieldMap["metadata"] = i.Metadata
+	i.fieldMap["deleted_at"] = i.DeletedAt
 	i.fieldMap["created_at"] = i.CreatedAt
 	i.fieldMap["updated_at"] = i.UpdatedAt
-	i.fieldMap["deleted_at"] = i.DeletedAt
-	i.fieldMap["metadata"] = i.Metadata
 }
 
 func (i image) clone(db *gorm.DB) image {

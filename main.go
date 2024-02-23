@@ -1,29 +1,29 @@
 package main
 
 import (
-	"gorm.io/driver/postgres"
-	"gorm.io/gen"
-	"gorm.io/gorm"
+	"github.com/driver005/gateway/workflow"
 )
 
 func main() {
-	g := gen.NewGenerator(gen.Config{
-		OutPath:           "./query",
-		FieldNullable:     false,
-		FieldCoverable:    false,
-		FieldWithIndexTag: true,
-		FieldWithTypeTag:  true,
-	})
-	gormdb, _ := gorm.Open(postgres.Open("postgres://postgres:postgres@localhost:5432/medusa-test"))
-	g.UseDB(gormdb)
-
-	g.ApplyBasic(
-		// Generate structs from all tables of current database
-		g.GenerateAllTable()...,
-	)
-	// Generate the code
-	g.Execute()
+	test := workflow.NewWorkflow()
+	test.GetWorkflow()
 	// cmd.Execute()
+	// g := gen.NewGenerator(gen.Config{
+	// 	OutPath:           "./query",
+	// 	FieldNullable:     false,
+	// 	FieldCoverable:    false,
+	// 	FieldWithIndexTag: true,
+	// 	FieldWithTypeTag:  true,
+	// })
+	// gormdb, _ := gorm.Open(postgres.Open("postgres://postgres:postgres@localhost:5432/medusa-user"))
+	// g.UseDB(gormdb)
+
+	// g.ApplyBasic(
+	// 	// Generate structs from all tables of current database
+	// 	g.GenerateAllTable()...,
+	// )
+	// // Generate the code
+	// g.Execute()
 }
 
 // gormdb, _ := gorm.Open(postgres.Open("postgres://postgres:postgres@localhost:5432/medusa-test2"))
@@ -126,8 +126,7 @@ func main() {
 // 	FieldWithIndexTag: true,
 // 	FieldWithTypeTag:  true,
 // })
-
-// gormdb, _ := gorm.Open(postgres.Open("postgres://postgres:postgres@localhost:5432/medusa"))
+// gormdb, _ := gorm.Open(postgres.Open("postgres://postgres:postgres@localhost:5432/medusa-test"))
 // g.UseDB(gormdb)
 
 // g.ApplyBasic(

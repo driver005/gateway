@@ -30,10 +30,10 @@ func newShippingProfile(db *gorm.DB, opts ...gen.DOOption) shippingProfile {
 	_shippingProfile.ID = field.NewString(tableName, "id")
 	_shippingProfile.Name = field.NewString(tableName, "name")
 	_shippingProfile.Type = field.NewString(tableName, "type")
+	_shippingProfile.Metadata = field.NewString(tableName, "metadata")
 	_shippingProfile.CreatedAt = field.NewTime(tableName, "created_at")
 	_shippingProfile.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_shippingProfile.DeletedAt = field.NewField(tableName, "deleted_at")
-	_shippingProfile.Metadata = field.NewString(tableName, "metadata")
 
 	_shippingProfile.fillFieldMap()
 
@@ -47,10 +47,10 @@ type shippingProfile struct {
 	ID        field.String
 	Name      field.String
 	Type      field.String
+	Metadata  field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
-	Metadata  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -70,10 +70,10 @@ func (s *shippingProfile) updateTableName(table string) *shippingProfile {
 	s.ID = field.NewString(table, "id")
 	s.Name = field.NewString(table, "name")
 	s.Type = field.NewString(table, "type")
+	s.Metadata = field.NewString(table, "metadata")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 	s.DeletedAt = field.NewField(table, "deleted_at")
-	s.Metadata = field.NewString(table, "metadata")
 
 	s.fillFieldMap()
 
@@ -106,10 +106,10 @@ func (s *shippingProfile) fillFieldMap() {
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["name"] = s.Name
 	s.fieldMap["type"] = s.Type
+	s.fieldMap["metadata"] = s.Metadata
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
 	s.fieldMap["deleted_at"] = s.DeletedAt
-	s.fieldMap["metadata"] = s.Metadata
 }
 
 func (s shippingProfile) clone(db *gorm.DB) shippingProfile {

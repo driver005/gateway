@@ -29,19 +29,16 @@ func newShippingOption(db *gorm.DB, opts ...gen.DOOption) shippingOption {
 	_shippingOption.ALL = field.NewAsterisk(tableName)
 	_shippingOption.ID = field.NewString(tableName, "id")
 	_shippingOption.Name = field.NewString(tableName, "name")
-	_shippingOption.RegionID = field.NewString(tableName, "region_id")
-	_shippingOption.ProfileID = field.NewString(tableName, "profile_id")
-	_shippingOption.ProviderID = field.NewString(tableName, "provider_id")
 	_shippingOption.PriceType = field.NewString(tableName, "price_type")
-	_shippingOption.Amount = field.NewInt32(tableName, "amount")
-	_shippingOption.IsReturn = field.NewBool(tableName, "is_return")
+	_shippingOption.ServiceZoneID = field.NewString(tableName, "service_zone_id")
+	_shippingOption.ShippingProfileID = field.NewString(tableName, "shipping_profile_id")
+	_shippingOption.ServiceProviderID = field.NewString(tableName, "service_provider_id")
 	_shippingOption.Data = field.NewString(tableName, "data")
+	_shippingOption.Metadata = field.NewString(tableName, "metadata")
+	_shippingOption.ShippingOptionTypeID = field.NewString(tableName, "shipping_option_type_id")
 	_shippingOption.CreatedAt = field.NewTime(tableName, "created_at")
 	_shippingOption.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_shippingOption.DeletedAt = field.NewField(tableName, "deleted_at")
-	_shippingOption.Metadata = field.NewString(tableName, "metadata")
-	_shippingOption.AdminOnly = field.NewBool(tableName, "admin_only")
-	_shippingOption.IncludesTax = field.NewBool(tableName, "includes_tax")
 
 	_shippingOption.fillFieldMap()
 
@@ -51,22 +48,19 @@ func newShippingOption(db *gorm.DB, opts ...gen.DOOption) shippingOption {
 type shippingOption struct {
 	shippingOptionDo shippingOptionDo
 
-	ALL         field.Asterisk
-	ID          field.String
-	Name        field.String
-	RegionID    field.String
-	ProfileID   field.String
-	ProviderID  field.String
-	PriceType   field.String
-	Amount      field.Int32
-	IsReturn    field.Bool
-	Data        field.String
-	CreatedAt   field.Time
-	UpdatedAt   field.Time
-	DeletedAt   field.Field
-	Metadata    field.String
-	AdminOnly   field.Bool
-	IncludesTax field.Bool
+	ALL                  field.Asterisk
+	ID                   field.String
+	Name                 field.String
+	PriceType            field.String
+	ServiceZoneID        field.String
+	ShippingProfileID    field.String
+	ServiceProviderID    field.String
+	Data                 field.String
+	Metadata             field.String
+	ShippingOptionTypeID field.String
+	CreatedAt            field.Time
+	UpdatedAt            field.Time
+	DeletedAt            field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -85,19 +79,16 @@ func (s *shippingOption) updateTableName(table string) *shippingOption {
 	s.ALL = field.NewAsterisk(table)
 	s.ID = field.NewString(table, "id")
 	s.Name = field.NewString(table, "name")
-	s.RegionID = field.NewString(table, "region_id")
-	s.ProfileID = field.NewString(table, "profile_id")
-	s.ProviderID = field.NewString(table, "provider_id")
 	s.PriceType = field.NewString(table, "price_type")
-	s.Amount = field.NewInt32(table, "amount")
-	s.IsReturn = field.NewBool(table, "is_return")
+	s.ServiceZoneID = field.NewString(table, "service_zone_id")
+	s.ShippingProfileID = field.NewString(table, "shipping_profile_id")
+	s.ServiceProviderID = field.NewString(table, "service_provider_id")
 	s.Data = field.NewString(table, "data")
+	s.Metadata = field.NewString(table, "metadata")
+	s.ShippingOptionTypeID = field.NewString(table, "shipping_option_type_id")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 	s.DeletedAt = field.NewField(table, "deleted_at")
-	s.Metadata = field.NewString(table, "metadata")
-	s.AdminOnly = field.NewBool(table, "admin_only")
-	s.IncludesTax = field.NewBool(table, "includes_tax")
 
 	s.fillFieldMap()
 
@@ -126,22 +117,19 @@ func (s *shippingOption) GetFieldByName(fieldName string) (field.OrderExpr, bool
 }
 
 func (s *shippingOption) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 15)
+	s.fieldMap = make(map[string]field.Expr, 12)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["name"] = s.Name
-	s.fieldMap["region_id"] = s.RegionID
-	s.fieldMap["profile_id"] = s.ProfileID
-	s.fieldMap["provider_id"] = s.ProviderID
 	s.fieldMap["price_type"] = s.PriceType
-	s.fieldMap["amount"] = s.Amount
-	s.fieldMap["is_return"] = s.IsReturn
+	s.fieldMap["service_zone_id"] = s.ServiceZoneID
+	s.fieldMap["shipping_profile_id"] = s.ShippingProfileID
+	s.fieldMap["service_provider_id"] = s.ServiceProviderID
 	s.fieldMap["data"] = s.Data
+	s.fieldMap["metadata"] = s.Metadata
+	s.fieldMap["shipping_option_type_id"] = s.ShippingOptionTypeID
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
 	s.fieldMap["deleted_at"] = s.DeletedAt
-	s.fieldMap["metadata"] = s.Metadata
-	s.fieldMap["admin_only"] = s.AdminOnly
-	s.fieldMap["includes_tax"] = s.IncludesTax
 }
 
 func (s shippingOption) clone(db *gorm.DB) shippingOption {

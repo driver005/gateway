@@ -28,16 +28,14 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	tableName := _user.userDo.TableName()
 	_user.ALL = field.NewAsterisk(tableName)
 	_user.ID = field.NewString(tableName, "id")
-	_user.Email = field.NewString(tableName, "email")
 	_user.FirstName = field.NewString(tableName, "first_name")
 	_user.LastName = field.NewString(tableName, "last_name")
-	_user.PasswordHash = field.NewString(tableName, "password_hash")
-	_user.APIToken = field.NewString(tableName, "api_token")
+	_user.Email = field.NewString(tableName, "email")
+	_user.AvatarURL = field.NewString(tableName, "avatar_url")
+	_user.Metadata = field.NewString(tableName, "metadata")
 	_user.CreatedAt = field.NewTime(tableName, "created_at")
 	_user.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_user.DeletedAt = field.NewField(tableName, "deleted_at")
-	_user.Metadata = field.NewString(tableName, "metadata")
-	_user.Role = field.NewString(tableName, "role")
 
 	_user.fillFieldMap()
 
@@ -47,18 +45,16 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 type user struct {
 	userDo userDo
 
-	ALL          field.Asterisk
-	ID           field.String
-	Email        field.String
-	FirstName    field.String
-	LastName     field.String
-	PasswordHash field.String
-	APIToken     field.String
-	CreatedAt    field.Time
-	UpdatedAt    field.Time
-	DeletedAt    field.Field
-	Metadata     field.String
-	Role         field.String
+	ALL       field.Asterisk
+	ID        field.String
+	FirstName field.String
+	LastName  field.String
+	Email     field.String
+	AvatarURL field.String
+	Metadata  field.String
+	CreatedAt field.Time
+	UpdatedAt field.Time
+	DeletedAt field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -76,16 +72,14 @@ func (u user) As(alias string) *user {
 func (u *user) updateTableName(table string) *user {
 	u.ALL = field.NewAsterisk(table)
 	u.ID = field.NewString(table, "id")
-	u.Email = field.NewString(table, "email")
 	u.FirstName = field.NewString(table, "first_name")
 	u.LastName = field.NewString(table, "last_name")
-	u.PasswordHash = field.NewString(table, "password_hash")
-	u.APIToken = field.NewString(table, "api_token")
+	u.Email = field.NewString(table, "email")
+	u.AvatarURL = field.NewString(table, "avatar_url")
+	u.Metadata = field.NewString(table, "metadata")
 	u.CreatedAt = field.NewTime(table, "created_at")
 	u.UpdatedAt = field.NewTime(table, "updated_at")
 	u.DeletedAt = field.NewField(table, "deleted_at")
-	u.Metadata = field.NewString(table, "metadata")
-	u.Role = field.NewString(table, "role")
 
 	u.fillFieldMap()
 
@@ -110,18 +104,16 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 11)
+	u.fieldMap = make(map[string]field.Expr, 9)
 	u.fieldMap["id"] = u.ID
-	u.fieldMap["email"] = u.Email
 	u.fieldMap["first_name"] = u.FirstName
 	u.fieldMap["last_name"] = u.LastName
-	u.fieldMap["password_hash"] = u.PasswordHash
-	u.fieldMap["api_token"] = u.APIToken
+	u.fieldMap["email"] = u.Email
+	u.fieldMap["avatar_url"] = u.AvatarURL
+	u.fieldMap["metadata"] = u.Metadata
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
 	u.fieldMap["deleted_at"] = u.DeletedAt
-	u.fieldMap["metadata"] = u.Metadata
-	u.fieldMap["role"] = u.Role
 }
 
 func (u user) clone(db *gorm.DB) user {

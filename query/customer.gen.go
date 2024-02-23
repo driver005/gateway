@@ -28,17 +28,17 @@ func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
 	tableName := _customer.customerDo.TableName()
 	_customer.ALL = field.NewAsterisk(tableName)
 	_customer.ID = field.NewString(tableName, "id")
-	_customer.Email = field.NewString(tableName, "email")
+	_customer.CompanyName = field.NewString(tableName, "company_name")
 	_customer.FirstName = field.NewString(tableName, "first_name")
 	_customer.LastName = field.NewString(tableName, "last_name")
-	_customer.BillingAddressID = field.NewString(tableName, "billing_address_id")
-	_customer.PasswordHash = field.NewString(tableName, "password_hash")
+	_customer.Email = field.NewString(tableName, "email")
 	_customer.Phone = field.NewString(tableName, "phone")
 	_customer.HasAccount = field.NewBool(tableName, "has_account")
+	_customer.Metadata = field.NewString(tableName, "metadata")
 	_customer.CreatedAt = field.NewTime(tableName, "created_at")
 	_customer.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_customer.DeletedAt = field.NewField(tableName, "deleted_at")
-	_customer.Metadata = field.NewString(tableName, "metadata")
+	_customer.CreatedBy = field.NewString(tableName, "created_by")
 
 	_customer.fillFieldMap()
 
@@ -48,19 +48,19 @@ func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
 type customer struct {
 	customerDo customerDo
 
-	ALL              field.Asterisk
-	ID               field.String
-	Email            field.String
-	FirstName        field.String
-	LastName         field.String
-	BillingAddressID field.String
-	PasswordHash     field.String
-	Phone            field.String
-	HasAccount       field.Bool
-	CreatedAt        field.Time
-	UpdatedAt        field.Time
-	DeletedAt        field.Field
-	Metadata         field.String
+	ALL         field.Asterisk
+	ID          field.String
+	CompanyName field.String
+	FirstName   field.String
+	LastName    field.String
+	Email       field.String
+	Phone       field.String
+	HasAccount  field.Bool
+	Metadata    field.String
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
+	DeletedAt   field.Field
+	CreatedBy   field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -78,17 +78,17 @@ func (c customer) As(alias string) *customer {
 func (c *customer) updateTableName(table string) *customer {
 	c.ALL = field.NewAsterisk(table)
 	c.ID = field.NewString(table, "id")
-	c.Email = field.NewString(table, "email")
+	c.CompanyName = field.NewString(table, "company_name")
 	c.FirstName = field.NewString(table, "first_name")
 	c.LastName = field.NewString(table, "last_name")
-	c.BillingAddressID = field.NewString(table, "billing_address_id")
-	c.PasswordHash = field.NewString(table, "password_hash")
+	c.Email = field.NewString(table, "email")
 	c.Phone = field.NewString(table, "phone")
 	c.HasAccount = field.NewBool(table, "has_account")
+	c.Metadata = field.NewString(table, "metadata")
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
 	c.DeletedAt = field.NewField(table, "deleted_at")
-	c.Metadata = field.NewString(table, "metadata")
+	c.CreatedBy = field.NewString(table, "created_by")
 
 	c.fillFieldMap()
 
@@ -115,17 +115,17 @@ func (c *customer) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 func (c *customer) fillFieldMap() {
 	c.fieldMap = make(map[string]field.Expr, 12)
 	c.fieldMap["id"] = c.ID
-	c.fieldMap["email"] = c.Email
+	c.fieldMap["company_name"] = c.CompanyName
 	c.fieldMap["first_name"] = c.FirstName
 	c.fieldMap["last_name"] = c.LastName
-	c.fieldMap["billing_address_id"] = c.BillingAddressID
-	c.fieldMap["password_hash"] = c.PasswordHash
+	c.fieldMap["email"] = c.Email
 	c.fieldMap["phone"] = c.Phone
 	c.fieldMap["has_account"] = c.HasAccount
+	c.fieldMap["metadata"] = c.Metadata
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["deleted_at"] = c.DeletedAt
-	c.fieldMap["metadata"] = c.Metadata
+	c.fieldMap["created_by"] = c.CreatedBy
 }
 
 func (c customer) clone(db *gorm.DB) customer {

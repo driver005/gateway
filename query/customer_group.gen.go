@@ -29,10 +29,11 @@ func newCustomerGroup(db *gorm.DB, opts ...gen.DOOption) customerGroup {
 	_customerGroup.ALL = field.NewAsterisk(tableName)
 	_customerGroup.ID = field.NewString(tableName, "id")
 	_customerGroup.Name = field.NewString(tableName, "name")
+	_customerGroup.Metadata = field.NewString(tableName, "metadata")
+	_customerGroup.CreatedBy = field.NewString(tableName, "created_by")
 	_customerGroup.CreatedAt = field.NewTime(tableName, "created_at")
 	_customerGroup.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_customerGroup.DeletedAt = field.NewField(tableName, "deleted_at")
-	_customerGroup.Metadata = field.NewString(tableName, "metadata")
 
 	_customerGroup.fillFieldMap()
 
@@ -45,10 +46,11 @@ type customerGroup struct {
 	ALL       field.Asterisk
 	ID        field.String
 	Name      field.String
+	Metadata  field.String
+	CreatedBy field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
-	Metadata  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -67,10 +69,11 @@ func (c *customerGroup) updateTableName(table string) *customerGroup {
 	c.ALL = field.NewAsterisk(table)
 	c.ID = field.NewString(table, "id")
 	c.Name = field.NewString(table, "name")
+	c.Metadata = field.NewString(table, "metadata")
+	c.CreatedBy = field.NewString(table, "created_by")
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
 	c.DeletedAt = field.NewField(table, "deleted_at")
-	c.Metadata = field.NewString(table, "metadata")
 
 	c.fillFieldMap()
 
@@ -99,13 +102,14 @@ func (c *customerGroup) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (c *customerGroup) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 6)
+	c.fieldMap = make(map[string]field.Expr, 7)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["name"] = c.Name
+	c.fieldMap["metadata"] = c.Metadata
+	c.fieldMap["created_by"] = c.CreatedBy
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["deleted_at"] = c.DeletedAt
-	c.fieldMap["metadata"] = c.Metadata
 }
 
 func (c customerGroup) clone(db *gorm.DB) customerGroup {

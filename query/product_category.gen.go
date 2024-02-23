@@ -29,16 +29,15 @@ func newProductCategory(db *gorm.DB, opts ...gen.DOOption) productCategory {
 	_productCategory.ALL = field.NewAsterisk(tableName)
 	_productCategory.ID = field.NewString(tableName, "id")
 	_productCategory.Name = field.NewString(tableName, "name")
+	_productCategory.Description = field.NewString(tableName, "description")
 	_productCategory.Handle = field.NewString(tableName, "handle")
-	_productCategory.ParentCategoryID = field.NewString(tableName, "parent_category_id")
 	_productCategory.Mpath = field.NewString(tableName, "mpath")
 	_productCategory.IsActive = field.NewBool(tableName, "is_active")
 	_productCategory.IsInternal = field.NewBool(tableName, "is_internal")
+	_productCategory.Rank = field.NewFloat64(tableName, "rank")
+	_productCategory.ParentCategoryID = field.NewString(tableName, "parent_category_id")
 	_productCategory.CreatedAt = field.NewTime(tableName, "created_at")
 	_productCategory.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_productCategory.Rank = field.NewInt32(tableName, "rank")
-	_productCategory.Description = field.NewString(tableName, "description")
-	_productCategory.Metadata = field.NewString(tableName, "metadata")
 
 	_productCategory.fillFieldMap()
 
@@ -51,16 +50,15 @@ type productCategory struct {
 	ALL              field.Asterisk
 	ID               field.String
 	Name             field.String
+	Description      field.String
 	Handle           field.String
-	ParentCategoryID field.String
 	Mpath            field.String
 	IsActive         field.Bool
 	IsInternal       field.Bool
+	Rank             field.Float64
+	ParentCategoryID field.String
 	CreatedAt        field.Time
 	UpdatedAt        field.Time
-	Rank             field.Int32
-	Description      field.String
-	Metadata         field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -79,16 +77,15 @@ func (p *productCategory) updateTableName(table string) *productCategory {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
 	p.Name = field.NewString(table, "name")
+	p.Description = field.NewString(table, "description")
 	p.Handle = field.NewString(table, "handle")
-	p.ParentCategoryID = field.NewString(table, "parent_category_id")
 	p.Mpath = field.NewString(table, "mpath")
 	p.IsActive = field.NewBool(table, "is_active")
 	p.IsInternal = field.NewBool(table, "is_internal")
+	p.Rank = field.NewFloat64(table, "rank")
+	p.ParentCategoryID = field.NewString(table, "parent_category_id")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
-	p.Rank = field.NewInt32(table, "rank")
-	p.Description = field.NewString(table, "description")
-	p.Metadata = field.NewString(table, "metadata")
 
 	p.fillFieldMap()
 
@@ -117,19 +114,18 @@ func (p *productCategory) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (p *productCategory) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 12)
+	p.fieldMap = make(map[string]field.Expr, 11)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["name"] = p.Name
+	p.fieldMap["description"] = p.Description
 	p.fieldMap["handle"] = p.Handle
-	p.fieldMap["parent_category_id"] = p.ParentCategoryID
 	p.fieldMap["mpath"] = p.Mpath
 	p.fieldMap["is_active"] = p.IsActive
 	p.fieldMap["is_internal"] = p.IsInternal
+	p.fieldMap["rank"] = p.Rank
+	p.fieldMap["parent_category_id"] = p.ParentCategoryID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
-	p.fieldMap["rank"] = p.Rank
-	p.fieldMap["description"] = p.Description
-	p.fieldMap["metadata"] = p.Metadata
 }
 
 func (p productCategory) clone(db *gorm.DB) productCategory {

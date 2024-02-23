@@ -30,10 +30,10 @@ func newProductCollection(db *gorm.DB, opts ...gen.DOOption) productCollection {
 	_productCollection.ID = field.NewString(tableName, "id")
 	_productCollection.Title = field.NewString(tableName, "title")
 	_productCollection.Handle = field.NewString(tableName, "handle")
+	_productCollection.Metadata = field.NewString(tableName, "metadata")
+	_productCollection.DeletedAt = field.NewField(tableName, "deleted_at")
 	_productCollection.CreatedAt = field.NewTime(tableName, "created_at")
 	_productCollection.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_productCollection.DeletedAt = field.NewField(tableName, "deleted_at")
-	_productCollection.Metadata = field.NewString(tableName, "metadata")
 
 	_productCollection.fillFieldMap()
 
@@ -47,10 +47,10 @@ type productCollection struct {
 	ID        field.String
 	Title     field.String
 	Handle    field.String
+	Metadata  field.String
+	DeletedAt field.Field
 	CreatedAt field.Time
 	UpdatedAt field.Time
-	DeletedAt field.Field
-	Metadata  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -70,10 +70,10 @@ func (p *productCollection) updateTableName(table string) *productCollection {
 	p.ID = field.NewString(table, "id")
 	p.Title = field.NewString(table, "title")
 	p.Handle = field.NewString(table, "handle")
+	p.Metadata = field.NewString(table, "metadata")
+	p.DeletedAt = field.NewField(table, "deleted_at")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
-	p.DeletedAt = field.NewField(table, "deleted_at")
-	p.Metadata = field.NewString(table, "metadata")
 
 	p.fillFieldMap()
 
@@ -106,10 +106,10 @@ func (p *productCollection) fillFieldMap() {
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["title"] = p.Title
 	p.fieldMap["handle"] = p.Handle
+	p.fieldMap["metadata"] = p.Metadata
+	p.fieldMap["deleted_at"] = p.DeletedAt
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
-	p.fieldMap["deleted_at"] = p.DeletedAt
-	p.fieldMap["metadata"] = p.Metadata
 }
 
 func (p productCollection) clone(db *gorm.DB) productCollection {

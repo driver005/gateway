@@ -31,7 +31,6 @@ func newCurrency(db *gorm.DB, opts ...gen.DOOption) currency {
 	_currency.Symbol = field.NewString(tableName, "symbol")
 	_currency.SymbolNative = field.NewString(tableName, "symbol_native")
 	_currency.Name = field.NewString(tableName, "name")
-	_currency.IncludesTax = field.NewBool(tableName, "includes_tax")
 
 	_currency.fillFieldMap()
 
@@ -46,7 +45,6 @@ type currency struct {
 	Symbol       field.String
 	SymbolNative field.String
 	Name         field.String
-	IncludesTax  field.Bool
 
 	fieldMap map[string]field.Expr
 }
@@ -67,7 +65,6 @@ func (c *currency) updateTableName(table string) *currency {
 	c.Symbol = field.NewString(table, "symbol")
 	c.SymbolNative = field.NewString(table, "symbol_native")
 	c.Name = field.NewString(table, "name")
-	c.IncludesTax = field.NewBool(table, "includes_tax")
 
 	c.fillFieldMap()
 
@@ -92,12 +89,11 @@ func (c *currency) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *currency) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 5)
+	c.fieldMap = make(map[string]field.Expr, 4)
 	c.fieldMap["code"] = c.Code
 	c.fieldMap["symbol"] = c.Symbol
 	c.fieldMap["symbol_native"] = c.SymbolNative
 	c.fieldMap["name"] = c.Name
-	c.fieldMap["includes_tax"] = c.IncludesTax
 }
 
 func (c currency) clone(db *gorm.DB) currency {

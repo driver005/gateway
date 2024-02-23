@@ -31,10 +31,10 @@ func newProductOptionValue(db *gorm.DB, opts ...gen.DOOption) productOptionValue
 	_productOptionValue.Value = field.NewString(tableName, "value")
 	_productOptionValue.OptionID = field.NewString(tableName, "option_id")
 	_productOptionValue.VariantID = field.NewString(tableName, "variant_id")
+	_productOptionValue.Metadata = field.NewString(tableName, "metadata")
+	_productOptionValue.DeletedAt = field.NewField(tableName, "deleted_at")
 	_productOptionValue.CreatedAt = field.NewTime(tableName, "created_at")
 	_productOptionValue.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_productOptionValue.DeletedAt = field.NewField(tableName, "deleted_at")
-	_productOptionValue.Metadata = field.NewString(tableName, "metadata")
 
 	_productOptionValue.fillFieldMap()
 
@@ -49,10 +49,10 @@ type productOptionValue struct {
 	Value     field.String
 	OptionID  field.String
 	VariantID field.String
+	Metadata  field.String
+	DeletedAt field.Field
 	CreatedAt field.Time
 	UpdatedAt field.Time
-	DeletedAt field.Field
-	Metadata  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -73,10 +73,10 @@ func (p *productOptionValue) updateTableName(table string) *productOptionValue {
 	p.Value = field.NewString(table, "value")
 	p.OptionID = field.NewString(table, "option_id")
 	p.VariantID = field.NewString(table, "variant_id")
+	p.Metadata = field.NewString(table, "metadata")
+	p.DeletedAt = field.NewField(table, "deleted_at")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
-	p.DeletedAt = field.NewField(table, "deleted_at")
-	p.Metadata = field.NewString(table, "metadata")
 
 	p.fillFieldMap()
 
@@ -110,10 +110,10 @@ func (p *productOptionValue) fillFieldMap() {
 	p.fieldMap["value"] = p.Value
 	p.fieldMap["option_id"] = p.OptionID
 	p.fieldMap["variant_id"] = p.VariantID
+	p.fieldMap["metadata"] = p.Metadata
+	p.fieldMap["deleted_at"] = p.DeletedAt
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
-	p.fieldMap["deleted_at"] = p.DeletedAt
-	p.fieldMap["metadata"] = p.Metadata
 }
 
 func (p productOptionValue) clone(db *gorm.DB) productOptionValue {

@@ -28,13 +28,12 @@ func newSalesChannel(db *gorm.DB, opts ...gen.DOOption) salesChannel {
 	tableName := _salesChannel.salesChannelDo.TableName()
 	_salesChannel.ALL = field.NewAsterisk(tableName)
 	_salesChannel.ID = field.NewString(tableName, "id")
-	_salesChannel.CreatedAt = field.NewTime(tableName, "created_at")
-	_salesChannel.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_salesChannel.DeletedAt = field.NewField(tableName, "deleted_at")
 	_salesChannel.Name = field.NewString(tableName, "name")
 	_salesChannel.Description = field.NewString(tableName, "description")
 	_salesChannel.IsDisabled = field.NewBool(tableName, "is_disabled")
-	_salesChannel.Metadata = field.NewString(tableName, "metadata")
+	_salesChannel.CreatedAt = field.NewTime(tableName, "created_at")
+	_salesChannel.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_salesChannel.DeletedAt = field.NewField(tableName, "deleted_at")
 
 	_salesChannel.fillFieldMap()
 
@@ -46,13 +45,12 @@ type salesChannel struct {
 
 	ALL         field.Asterisk
 	ID          field.String
-	CreatedAt   field.Time
-	UpdatedAt   field.Time
-	DeletedAt   field.Field
 	Name        field.String
 	Description field.String
 	IsDisabled  field.Bool
-	Metadata    field.String
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
+	DeletedAt   field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -70,13 +68,12 @@ func (s salesChannel) As(alias string) *salesChannel {
 func (s *salesChannel) updateTableName(table string) *salesChannel {
 	s.ALL = field.NewAsterisk(table)
 	s.ID = field.NewString(table, "id")
-	s.CreatedAt = field.NewTime(table, "created_at")
-	s.UpdatedAt = field.NewTime(table, "updated_at")
-	s.DeletedAt = field.NewField(table, "deleted_at")
 	s.Name = field.NewString(table, "name")
 	s.Description = field.NewString(table, "description")
 	s.IsDisabled = field.NewBool(table, "is_disabled")
-	s.Metadata = field.NewString(table, "metadata")
+	s.CreatedAt = field.NewTime(table, "created_at")
+	s.UpdatedAt = field.NewTime(table, "updated_at")
+	s.DeletedAt = field.NewField(table, "deleted_at")
 
 	s.fillFieldMap()
 
@@ -105,15 +102,14 @@ func (s *salesChannel) GetFieldByName(fieldName string) (field.OrderExpr, bool) 
 }
 
 func (s *salesChannel) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 8)
+	s.fieldMap = make(map[string]field.Expr, 7)
 	s.fieldMap["id"] = s.ID
-	s.fieldMap["created_at"] = s.CreatedAt
-	s.fieldMap["updated_at"] = s.UpdatedAt
-	s.fieldMap["deleted_at"] = s.DeletedAt
 	s.fieldMap["name"] = s.Name
 	s.fieldMap["description"] = s.Description
 	s.fieldMap["is_disabled"] = s.IsDisabled
-	s.fieldMap["metadata"] = s.Metadata
+	s.fieldMap["created_at"] = s.CreatedAt
+	s.fieldMap["updated_at"] = s.UpdatedAt
+	s.fieldMap["deleted_at"] = s.DeletedAt
 }
 
 func (s salesChannel) clone(db *gorm.DB) salesChannel {

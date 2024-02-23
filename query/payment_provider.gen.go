@@ -28,7 +28,7 @@ func newPaymentProvider(db *gorm.DB, opts ...gen.DOOption) paymentProvider {
 	tableName := _paymentProvider.paymentProviderDo.TableName()
 	_paymentProvider.ALL = field.NewAsterisk(tableName)
 	_paymentProvider.ID = field.NewString(tableName, "id")
-	_paymentProvider.IsInstalled = field.NewBool(tableName, "is_installed")
+	_paymentProvider.IsEnabled = field.NewBool(tableName, "is_enabled")
 
 	_paymentProvider.fillFieldMap()
 
@@ -38,9 +38,9 @@ func newPaymentProvider(db *gorm.DB, opts ...gen.DOOption) paymentProvider {
 type paymentProvider struct {
 	paymentProviderDo paymentProviderDo
 
-	ALL         field.Asterisk
-	ID          field.String
-	IsInstalled field.Bool
+	ALL       field.Asterisk
+	ID        field.String
+	IsEnabled field.Bool
 
 	fieldMap map[string]field.Expr
 }
@@ -58,7 +58,7 @@ func (p paymentProvider) As(alias string) *paymentProvider {
 func (p *paymentProvider) updateTableName(table string) *paymentProvider {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
-	p.IsInstalled = field.NewBool(table, "is_installed")
+	p.IsEnabled = field.NewBool(table, "is_enabled")
 
 	p.fillFieldMap()
 
@@ -89,7 +89,7 @@ func (p *paymentProvider) GetFieldByName(fieldName string) (field.OrderExpr, boo
 func (p *paymentProvider) fillFieldMap() {
 	p.fieldMap = make(map[string]field.Expr, 2)
 	p.fieldMap["id"] = p.ID
-	p.fieldMap["is_installed"] = p.IsInstalled
+	p.fieldMap["is_enabled"] = p.IsEnabled
 }
 
 func (p paymentProvider) clone(db *gorm.DB) paymentProvider {

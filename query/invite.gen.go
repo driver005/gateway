@@ -28,15 +28,14 @@ func newInvite(db *gorm.DB, opts ...gen.DOOption) invite {
 	tableName := _invite.inviteDo.TableName()
 	_invite.ALL = field.NewAsterisk(tableName)
 	_invite.ID = field.NewString(tableName, "id")
-	_invite.UserEmail = field.NewString(tableName, "user_email")
-	_invite.Role = field.NewString(tableName, "role")
+	_invite.Email = field.NewString(tableName, "email")
 	_invite.Accepted = field.NewBool(tableName, "accepted")
+	_invite.Token = field.NewString(tableName, "token")
+	_invite.ExpiresAt = field.NewTime(tableName, "expires_at")
+	_invite.Metadata = field.NewString(tableName, "metadata")
 	_invite.CreatedAt = field.NewTime(tableName, "created_at")
 	_invite.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_invite.DeletedAt = field.NewField(tableName, "deleted_at")
-	_invite.Metadata = field.NewString(tableName, "metadata")
-	_invite.Token = field.NewString(tableName, "token")
-	_invite.ExpiresAt = field.NewTime(tableName, "expires_at")
 
 	_invite.fillFieldMap()
 
@@ -48,15 +47,14 @@ type invite struct {
 
 	ALL       field.Asterisk
 	ID        field.String
-	UserEmail field.String
-	Role      field.String
+	Email     field.String
 	Accepted  field.Bool
+	Token     field.String
+	ExpiresAt field.Time
+	Metadata  field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
-	Metadata  field.String
-	Token     field.String
-	ExpiresAt field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -74,15 +72,14 @@ func (i invite) As(alias string) *invite {
 func (i *invite) updateTableName(table string) *invite {
 	i.ALL = field.NewAsterisk(table)
 	i.ID = field.NewString(table, "id")
-	i.UserEmail = field.NewString(table, "user_email")
-	i.Role = field.NewString(table, "role")
+	i.Email = field.NewString(table, "email")
 	i.Accepted = field.NewBool(table, "accepted")
+	i.Token = field.NewString(table, "token")
+	i.ExpiresAt = field.NewTime(table, "expires_at")
+	i.Metadata = field.NewString(table, "metadata")
 	i.CreatedAt = field.NewTime(table, "created_at")
 	i.UpdatedAt = field.NewTime(table, "updated_at")
 	i.DeletedAt = field.NewField(table, "deleted_at")
-	i.Metadata = field.NewString(table, "metadata")
-	i.Token = field.NewString(table, "token")
-	i.ExpiresAt = field.NewTime(table, "expires_at")
 
 	i.fillFieldMap()
 
@@ -107,17 +104,16 @@ func (i *invite) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (i *invite) fillFieldMap() {
-	i.fieldMap = make(map[string]field.Expr, 10)
+	i.fieldMap = make(map[string]field.Expr, 9)
 	i.fieldMap["id"] = i.ID
-	i.fieldMap["user_email"] = i.UserEmail
-	i.fieldMap["role"] = i.Role
+	i.fieldMap["email"] = i.Email
 	i.fieldMap["accepted"] = i.Accepted
+	i.fieldMap["token"] = i.Token
+	i.fieldMap["expires_at"] = i.ExpiresAt
+	i.fieldMap["metadata"] = i.Metadata
 	i.fieldMap["created_at"] = i.CreatedAt
 	i.fieldMap["updated_at"] = i.UpdatedAt
 	i.fieldMap["deleted_at"] = i.DeletedAt
-	i.fieldMap["metadata"] = i.Metadata
-	i.fieldMap["token"] = i.Token
-	i.fieldMap["expires_at"] = i.ExpiresAt
 }
 
 func (i invite) clone(db *gorm.DB) invite {

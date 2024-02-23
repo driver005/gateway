@@ -28,17 +28,13 @@ func newPaymentSession(db *gorm.DB, opts ...gen.DOOption) paymentSession {
 	tableName := _paymentSession.paymentSessionDo.TableName()
 	_paymentSession.ALL = field.NewAsterisk(tableName)
 	_paymentSession.ID = field.NewString(tableName, "id")
-	_paymentSession.CartID = field.NewString(tableName, "cart_id")
+	_paymentSession.CurrencyCode = field.NewString(tableName, "currency_code")
+	_paymentSession.Amount = field.NewFloat64(tableName, "amount")
 	_paymentSession.ProviderID = field.NewString(tableName, "provider_id")
-	_paymentSession.IsSelected = field.NewBool(tableName, "is_selected")
-	_paymentSession.Status = field.NewString(tableName, "status")
 	_paymentSession.Data = field.NewString(tableName, "data")
-	_paymentSession.CreatedAt = field.NewTime(tableName, "created_at")
-	_paymentSession.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_paymentSession.IdempotencyKey = field.NewString(tableName, "idempotency_key")
-	_paymentSession.PaymentAuthorizedAt = field.NewTime(tableName, "payment_authorized_at")
-	_paymentSession.Amount = field.NewInt32(tableName, "amount")
-	_paymentSession.IsInitiated = field.NewBool(tableName, "is_initiated")
+	_paymentSession.Status = field.NewString(tableName, "status")
+	_paymentSession.AuthorizedAt = field.NewTime(tableName, "authorized_at")
+	_paymentSession.PaymentCollectionID = field.NewString(tableName, "payment_collection_id")
 
 	_paymentSession.fillFieldMap()
 
@@ -50,17 +46,13 @@ type paymentSession struct {
 
 	ALL                 field.Asterisk
 	ID                  field.String
-	CartID              field.String
+	CurrencyCode        field.String
+	Amount              field.Float64
 	ProviderID          field.String
-	IsSelected          field.Bool
-	Status              field.String
 	Data                field.String
-	CreatedAt           field.Time
-	UpdatedAt           field.Time
-	IdempotencyKey      field.String
-	PaymentAuthorizedAt field.Time
-	Amount              field.Int32
-	IsInitiated         field.Bool
+	Status              field.String
+	AuthorizedAt        field.Time
+	PaymentCollectionID field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -78,17 +70,13 @@ func (p paymentSession) As(alias string) *paymentSession {
 func (p *paymentSession) updateTableName(table string) *paymentSession {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
-	p.CartID = field.NewString(table, "cart_id")
+	p.CurrencyCode = field.NewString(table, "currency_code")
+	p.Amount = field.NewFloat64(table, "amount")
 	p.ProviderID = field.NewString(table, "provider_id")
-	p.IsSelected = field.NewBool(table, "is_selected")
-	p.Status = field.NewString(table, "status")
 	p.Data = field.NewString(table, "data")
-	p.CreatedAt = field.NewTime(table, "created_at")
-	p.UpdatedAt = field.NewTime(table, "updated_at")
-	p.IdempotencyKey = field.NewString(table, "idempotency_key")
-	p.PaymentAuthorizedAt = field.NewTime(table, "payment_authorized_at")
-	p.Amount = field.NewInt32(table, "amount")
-	p.IsInitiated = field.NewBool(table, "is_initiated")
+	p.Status = field.NewString(table, "status")
+	p.AuthorizedAt = field.NewTime(table, "authorized_at")
+	p.PaymentCollectionID = field.NewString(table, "payment_collection_id")
 
 	p.fillFieldMap()
 
@@ -117,19 +105,15 @@ func (p *paymentSession) GetFieldByName(fieldName string) (field.OrderExpr, bool
 }
 
 func (p *paymentSession) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 12)
+	p.fieldMap = make(map[string]field.Expr, 8)
 	p.fieldMap["id"] = p.ID
-	p.fieldMap["cart_id"] = p.CartID
-	p.fieldMap["provider_id"] = p.ProviderID
-	p.fieldMap["is_selected"] = p.IsSelected
-	p.fieldMap["status"] = p.Status
-	p.fieldMap["data"] = p.Data
-	p.fieldMap["created_at"] = p.CreatedAt
-	p.fieldMap["updated_at"] = p.UpdatedAt
-	p.fieldMap["idempotency_key"] = p.IdempotencyKey
-	p.fieldMap["payment_authorized_at"] = p.PaymentAuthorizedAt
+	p.fieldMap["currency_code"] = p.CurrencyCode
 	p.fieldMap["amount"] = p.Amount
-	p.fieldMap["is_initiated"] = p.IsInitiated
+	p.fieldMap["provider_id"] = p.ProviderID
+	p.fieldMap["data"] = p.Data
+	p.fieldMap["status"] = p.Status
+	p.fieldMap["authorized_at"] = p.AuthorizedAt
+	p.fieldMap["payment_collection_id"] = p.PaymentCollectionID
 }
 
 func (p paymentSession) clone(db *gorm.DB) paymentSession {

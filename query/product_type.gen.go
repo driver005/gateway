@@ -29,10 +29,10 @@ func newProductType(db *gorm.DB, opts ...gen.DOOption) productType {
 	_productType.ALL = field.NewAsterisk(tableName)
 	_productType.ID = field.NewString(tableName, "id")
 	_productType.Value = field.NewString(tableName, "value")
+	_productType.Metadata = field.NewString(tableName, "metadata")
+	_productType.DeletedAt = field.NewField(tableName, "deleted_at")
 	_productType.CreatedAt = field.NewTime(tableName, "created_at")
 	_productType.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_productType.DeletedAt = field.NewField(tableName, "deleted_at")
-	_productType.Metadata = field.NewString(tableName, "metadata")
 
 	_productType.fillFieldMap()
 
@@ -45,10 +45,10 @@ type productType struct {
 	ALL       field.Asterisk
 	ID        field.String
 	Value     field.String
+	Metadata  field.String
+	DeletedAt field.Field
 	CreatedAt field.Time
 	UpdatedAt field.Time
-	DeletedAt field.Field
-	Metadata  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -67,10 +67,10 @@ func (p *productType) updateTableName(table string) *productType {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewString(table, "id")
 	p.Value = field.NewString(table, "value")
+	p.Metadata = field.NewString(table, "metadata")
+	p.DeletedAt = field.NewField(table, "deleted_at")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
-	p.DeletedAt = field.NewField(table, "deleted_at")
-	p.Metadata = field.NewString(table, "metadata")
 
 	p.fillFieldMap()
 
@@ -100,10 +100,10 @@ func (p *productType) fillFieldMap() {
 	p.fieldMap = make(map[string]field.Expr, 6)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["value"] = p.Value
+	p.fieldMap["metadata"] = p.Metadata
+	p.fieldMap["deleted_at"] = p.DeletedAt
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
-	p.fieldMap["deleted_at"] = p.DeletedAt
-	p.fieldMap["metadata"] = p.Metadata
 }
 
 func (p productType) clone(db *gorm.DB) productType {
