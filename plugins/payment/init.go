@@ -1,10 +1,17 @@
 package payment
 
 import (
-	"github.com/driver005/gateway/plugins/payment/migrations"
-	"github.com/pressly/goose/v3"
+	"github.com/driver005/gateway/internall/modules"
+	"gorm.io/gorm"
 )
 
-func Init() {
-	goose.AddNamedMigrationContext("20240502183800_payment.go", migrations.Up, migrations.Down)
+func Init(db *gorm.DB) {
+	module := modules.NewModule(
+		"payment",
+		db,
+		".snapshot-medusa-payment.json",
+		"plugins",
+	)
+
+	module.Migrate()
 }
