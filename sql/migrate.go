@@ -1,5 +1,15 @@
 package sql
 
+import (
+	"database/sql"
+
+	"github.com/pressly/goose/v3"
+)
+
+func InitMigrate(up func(tx *sql.Tx) error, down func(tx *sql.Tx) error) {
+	goose.AddMigration(up, down)
+}
+
 // func (m *Manager) InitMigrate() {
 // 	var err error
 

@@ -1,0 +1,1 @@
+DROP TABLE "customer_group_customer" CASCADE;
